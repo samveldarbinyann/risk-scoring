@@ -3,6 +3,7 @@ package com.riskscoring.riskai.config;
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.event.SignalsComputed;
+import com.riskscoring.riskai.exception.InvalidVerdictException;
 import com.riskscoring.riskai.kafka.RiskAiEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +23,7 @@ public class KafkaErrorHandlerConfig {
 
     @Bean
     public DefaultErrorHandler kafkaErrorHandler(RiskAiEventPublisher eventPublisher) {
-        return new DefaultErrorHandler(
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
                 (record, exception) -> {
                     log.error("Giving up on {} after {} retries", record.topic(), MAX_RETRIES, exception);
 
@@ -32,5 +33,9 @@ public class KafkaErrorHandlerConfig {
                     }
                 },
                 new FixedBackOff(RETRY_INTERVAL_MS, MAX_RETRIES));
+
+        errorHandler.addNotRetryableExceptions(InvalidVerdictException.class);
+
+        return errorHandler;
     }
 }

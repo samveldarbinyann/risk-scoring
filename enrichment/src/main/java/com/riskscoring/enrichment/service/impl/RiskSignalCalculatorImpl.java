@@ -55,29 +55,29 @@ public class RiskSignalCalculatorImpl implements RiskSignalCalculator {
         List<FlaggedExposure> exposures = new ArrayList<>();
 
         flaggedLabel(labels, event.address())
-                .map(label -> new FlaggedExposure(
-                        event.address(),
-                        label.getCategory(),
-                        label.getName(),
-                        label.getSource(),
-                        TransferDirection.BOTH,
-                        SELF_HOPS,
-                        event.snapshot().balanceWei()))
+                .map(label -> toExposure(label, event.address(), TransferDirection.BOTH,
+                        SELF_HOPS, event.snapshot().balanceWei()))
                 .ifPresent(exposures::add);
 
         event.counterparties().forEach(counterparty ->
                 flaggedLabel(labels, counterparty.address())
-                        .map(label -> new FlaggedExposure(
-                                counterparty.address(),
-                                label.getCategory(),
-                                label.getName(),
-                                label.getSource(),
-                                counterparty.direction(),
-                                counterparty.hops(),
-                                counterparty.totalValueWei()))
+                        .map(label -> toExposure(label, counterparty.address(), counterparty.direction(),
+                                counterparty.hops(), counterparty.totalValueWei()))
                         .ifPresent(exposures::add));
 
         return List.copyOf(exposures);
+    }
+
+    private FlaggedExposure toExposure(Label label, String address, TransferDirection direction,
+                                       int hops, String valueWei) {
+        return new FlaggedExposure(
+                address,
+                label.getCategory(),
+                label.getName(),
+                label.getSource(),
+                direction,
+                hops,
+                valueWei);
     }
 
     private MixerExposure mixerExposure(List<Counterparty> counterparties, Map<String, Label> labels) {
