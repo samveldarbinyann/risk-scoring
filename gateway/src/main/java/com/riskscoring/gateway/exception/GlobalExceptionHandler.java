@@ -25,6 +25,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", details);
     }
 
+    @ExceptionHandler(UnsupportedChainException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedChain(UnsupportedChainException exception) {
+        return build(HttpStatus.BAD_REQUEST, "UNSUPPORTED_CHAIN", exception.getMessage());
+    }
+
     @ExceptionHandler(ScanNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleScanNotFound(ScanNotFoundException exception) {
         return build(HttpStatus.NOT_FOUND, "SCAN_NOT_FOUND", exception.getMessage());

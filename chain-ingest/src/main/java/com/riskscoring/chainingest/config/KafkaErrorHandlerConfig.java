@@ -1,10 +1,11 @@
-package com.riskscoring.riskai.config;
+package com.riskscoring.chainingest.config;
 
+import com.riskscoring.chainingest.exception.EtherscanRejectedException;
+import com.riskscoring.chainingest.exception.UnsupportedChainException;
+import com.riskscoring.chainingest.kafka.ChainEventPublisher;
 import com.riskscoring.common.event.ScanProgress;
+import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.common.event.ScanStage;
-import com.riskscoring.common.event.SignalsComputed;
-import com.riskscoring.riskai.exception.InvalidVerdictException;
-import com.riskscoring.riskai.kafka.RiskAiEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,23 +20,25 @@ public class KafkaErrorHandlerConfig {
 
     private static final long RETRY_INTERVAL_MS = 5_000L;
     private static final long MAX_RETRIES = 2L;
-    private static final String FAILURE_MESSAGE = "AI analysis failed";
+    private static final String FAILURE_MESSAGE = "Chain data fetch failed";
 
     @Bean
-    public DefaultErrorHandler kafkaErrorHandler(RiskAiEventPublisher eventPublisher) {
+    public DefaultErrorHandler kafkaErrorHandler(ChainEventPublisher eventPublisher) {
         DefaultErrorHandler errorHandler = new DefaultErrorHandler(
                 (record, exception) -> {
                     log.error("Giving up on {}-{} offset {}", record.topic(), record.partition(),
                             record.offset(), exception);
 
-                    if (record.value() instanceof SignalsComputed event) {
+                    if (record.value() instanceof ScanRequested event) {
                         eventPublisher.publishScanProgress(new ScanProgress(
                                 event.scanId(), ScanStage.FAILED, FAILURE_MESSAGE, Instant.now()));
                     }
                 },
                 new FixedBackOff(RETRY_INTERVAL_MS, MAX_RETRIES));
 
-        errorHandler.addNotRetryableExceptions(InvalidVerdictException.class);
+        errorHandler.addNotRetryableExceptions(
+                UnsupportedChainException.class,
+                EtherscanRejectedException.class);
 
         return errorHandler;
     }

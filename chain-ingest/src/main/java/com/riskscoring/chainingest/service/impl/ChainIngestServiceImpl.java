@@ -2,11 +2,8 @@ package com.riskscoring.chainingest.service.impl;
 
 import com.riskscoring.chainingest.client.ChainData;
 import com.riskscoring.chainingest.client.ChainDataClient;
-import com.riskscoring.chainingest.config.ChainIngestProperties;
-import com.riskscoring.chainingest.entity.AddressCache;
 import com.riskscoring.chainingest.kafka.ChainEventPublisher;
-import com.riskscoring.chainingest.mapper.AddressCacheMapper;
-import com.riskscoring.chainingest.repository.AddressCacheRepository;
+import com.riskscoring.chainingest.service.AddressCacheService;
 import com.riskscoring.chainingest.service.ChainIngestService;
 import com.riskscoring.common.event.ChainFetched;
 import com.riskscoring.common.event.ScanProgress;
@@ -15,34 +12,30 @@ import com.riskscoring.common.event.ScanStage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ChainIngestServiceImpl implements ChainIngestService {
 
+    private static final String FETCH_STARTED_MESSAGE = "Fetching on-chain data";
+    private static final String FETCH_DONE_MESSAGE = "Found %d transfers across %d counterparties";
+
     private final ChainDataClient chainDataClient;
-    private final AddressCacheRepository addressCacheRepository;
-    private final AddressCacheMapper addressCacheMapper;
+    private final AddressCacheService addressCacheService;
     private final ChainEventPublisher chainEventPublisher;
-    private final ChainIngestProperties properties;
 
     @Override
-    @Transactional
     public void ingest(ScanRequested event) {
-        publishProgress(event, ScanStage.FETCHING, "Fetching on-chain data");
+        publishProgress(event, FETCH_STARTED_MESSAGE);
 
-        Optional<AddressCache> existing = addressCacheRepository
-                .findByChainIdAndAddress(event.chainId(), event.address());
+        ChainData chainData = addressCacheService.findFresh(event.address(), event.chainId())
+                .orElseGet(() -> fetchAndCache(event));
 
-        ChainData chainData = existing
-                .filter(this::isFresh)
-                .map(this::fromCache)
-                .orElseGet(() -> fetchAndCache(event, existing));
+        publishProgress(event, FETCH_DONE_MESSAGE.formatted(
+                chainData.snapshot().txCount(), chainData.counterparties().size()));
 
         chainEventPublisher.publishChainFetched(new ChainFetched(
                 event.scanId(),
@@ -54,30 +47,15 @@ public class ChainIngestServiceImpl implements ChainIngestService {
         ));
     }
 
-    private ChainData fromCache(AddressCache cache) {
-        log.info("Cache hit for chainId={} address={}", cache.getChainId(), cache.getAddress());
-        return addressCacheMapper.toChainData(cache);
-    }
-
-    private ChainData fetchAndCache(ScanRequested event, Optional<AddressCache> existing) {
+    private ChainData fetchAndCache(ScanRequested event) {
         ChainData chainData = chainDataClient.fetch(event.address(), event.chainId());
-
-        AddressCache cache = existing.orElseGet(
-                () -> addressCacheMapper.newEntity(event.address(), event.chainId()));
-
-        addressCacheMapper.updateSnapshot(cache, chainData.snapshot(), Instant.now());
-        cache.replaceCounterparties(addressCacheMapper.toEntities(chainData.counterparties()));
-        addressCacheRepository.save(cache);
+        addressCacheService.store(event.address(), event.chainId(), chainData);
 
         return chainData;
     }
 
-    private boolean isFresh(AddressCache cache) {
-        return cache.getFetchedAt().isAfter(Instant.now().minus(properties.cacheTtl()));
-    }
-
-    private void publishProgress(ScanRequested event, ScanStage stage, String message) {
+    private void publishProgress(ScanRequested event, String message) {
         chainEventPublisher.publishScanProgress(
-                new ScanProgress(event.scanId(), stage, message, Instant.now()));
+                new ScanProgress(event.scanId(), ScanStage.FETCHING, message, Instant.now()));
     }
 }

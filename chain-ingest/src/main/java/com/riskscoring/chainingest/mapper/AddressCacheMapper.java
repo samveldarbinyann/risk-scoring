@@ -21,7 +21,8 @@ public class AddressCacheMapper {
                 cache.getTxCount(),
                 cache.getBalanceWei().toString(),
                 cache.getFirstSeenAt(),
-                cache.getLastSeenAt()
+                cache.getLastSeenAt(),
+                cache.isSampleTruncated()
         );
 
         List<Counterparty> counterparties = cache.getCounterparties().stream()
@@ -51,6 +52,7 @@ public class AddressCacheMapper {
         cache.setBalanceWei(new BigInteger(snapshot.balanceWei()));
         cache.setFirstSeenAt(snapshot.firstSeenAt());
         cache.setLastSeenAt(snapshot.lastSeenAt());
+        cache.setSampleTruncated(snapshot.sampleTruncated());
         cache.setFetchedAt(fetchedAt);
     }
 

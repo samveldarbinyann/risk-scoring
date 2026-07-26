@@ -7,6 +7,7 @@ public record EvidenceBundle(
         int chainId,
         int ageDays,
         long txCount,
+        boolean sampleTruncated,
         String balanceWei,
         int counterpartyCount,
         List<FlaggedExposure> flagged,

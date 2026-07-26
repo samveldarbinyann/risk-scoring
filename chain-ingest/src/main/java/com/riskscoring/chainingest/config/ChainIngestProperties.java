@@ -8,6 +8,21 @@ import java.time.Duration;
 public record ChainIngestProperties(
         Duration cacheTtl,
         int maxCounterparties,
-        int knownAddressPercent
+        int maxHops,
+        int hop2ExpandTop,
+        int hop2Reserve,
+        Etherscan etherscan
 ) {
+
+    public record Etherscan(
+            String baseUrl,
+            String apiKey,
+            int pageSize,
+            int callsPerSecond,
+            int rateLimitRetries,
+            Duration rateLimitBackoff,
+            Duration connectTimeout,
+            Duration readTimeout
+    ) {
+    }
 }

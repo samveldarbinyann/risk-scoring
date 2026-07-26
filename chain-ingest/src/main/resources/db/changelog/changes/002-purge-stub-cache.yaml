@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-purge-stub-cache
+      author: sam
+      changes:
+        - delete:
+            tableName: counterparty_cache
+        - delete:
+            tableName: address_cache
+        - addColumn:
+            tableName: address_cache
+            columns:
+              - column:
+                  name: sample_truncated
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

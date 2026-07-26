@@ -43,6 +43,7 @@ public class RiskSignalCalculatorImpl implements RiskSignalCalculator {
                 event.chainId(),
                 event.snapshot().ageDays(),
                 event.snapshot().txCount(),
+                event.snapshot().sampleTruncated(),
                 event.snapshot().balanceWei(),
                 counterparties.size(),
                 flaggedExposures(event, labelsByAddress),

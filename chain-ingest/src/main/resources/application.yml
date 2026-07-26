@@ -25,9 +25,11 @@ spring:
     consumer:
       group-id: chain-ingest
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
         spring.json.trusted.packages: com.riskscoring.common.event,com.riskscoring.common.model
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -36,8 +38,19 @@ spring:
 
 chain-ingest:
   cache-ttl: 6h
-  max-counterparties: 8
-  known-address-percent: 40
+  max-counterparties: 25
+  max-hops: 2
+  hop2-expand-top: 3
+  hop2-reserve: 5
+  etherscan:
+    base-url: ${ETHERSCAN_BASE_URL:https://api.etherscan.io/v2/api}
+    api-key: ${ETHERSCAN_API_KEY}
+    page-size: 100
+    calls-per-second: 3
+    rate-limit-retries: 4
+    rate-limit-backoff: 1s
+    connect-timeout: 10s
+    read-timeout: 30s
 
 logging:
   level:

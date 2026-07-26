@@ -27,6 +27,11 @@ public class PromptBuilderImpl implements PromptBuilder {
             - A young wallet is only suspicious together with other signals. An old, active wallet with
               clean counterparties is normally LOW even if it has many transactions.
             - Direction matters: receiving funds FROM a flagged address is worse than sending TO it.
+            - txCount and counterparties are what was actually observed in a capped sample of the most
+              recent activity. When sampleTruncated is true the address is busier than shown: treat
+              txCount as a lower bound and never conclude the address is low-activity or dormant.
+            - totalValueWei covers native-currency transfers only. A counterparty with value "0" may
+              still have moved tokens, so a zero amount is not evidence that nothing was transferred.
 
             Scoring scale:
             - LOW 0-25, MEDIUM 26-50, HIGH 51-80, CRITICAL 81-100.

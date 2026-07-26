@@ -53,6 +53,9 @@ public class AddressCache {
     @Column(name = "last_seen_at")
     private Instant lastSeenAt;
 
+    @Column(name = "sample_truncated", nullable = false)
+    private boolean sampleTruncated;
+
     @Column(name = "fetched_at", nullable = false)
     private Instant fetchedAt;
 

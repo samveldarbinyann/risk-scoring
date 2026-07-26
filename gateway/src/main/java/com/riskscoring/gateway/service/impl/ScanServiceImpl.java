@@ -1,12 +1,14 @@
 package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.common.event.ScanSource;
+import com.riskscoring.common.model.EvmChain;
 import com.riskscoring.gateway.dto.ScanAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.gateway.exception.ScanNotFoundException;
+import com.riskscoring.gateway.exception.UnsupportedChainException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
 import com.riskscoring.gateway.repository.ScanRepository;
@@ -30,6 +32,9 @@ public class ScanServiceImpl implements ScanService {
     @Override
     @Transactional
     public ScanAcceptedResponse requestScan(ScanCreateRequest request) {
+        EvmChain.byId(request.chainId())
+                .orElseThrow(() -> new UnsupportedChainException(request.chainId()));
+
         Scan scan = Scan.builder()
                 .id(UUID.randomUUID())
                 .address(request.address().toLowerCase(Locale.ROOT))

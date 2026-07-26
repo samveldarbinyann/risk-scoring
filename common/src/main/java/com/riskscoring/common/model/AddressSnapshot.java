@@ -7,6 +7,7 @@ public record AddressSnapshot(
         long txCount,
         String balanceWei,
         Instant firstSeenAt,
-        Instant lastSeenAt
+        Instant lastSeenAt,
+        boolean sampleTruncated
 ) {
 }
