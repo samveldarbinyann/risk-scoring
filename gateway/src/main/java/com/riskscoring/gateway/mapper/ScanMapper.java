@@ -1,7 +1,9 @@
 package com.riskscoring.gateway.mapper;
 
+import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.gateway.dto.ScanAcceptedResponse;
+import com.riskscoring.gateway.dto.ScanProgressMessage;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,10 @@ public class ScanMapper {
                 scan.getRequestedAt(),
                 scan.getSource()
         );
+    }
+
+    public ScanProgressMessage toProgressMessage(ScanProgress event) {
+        return new ScanProgressMessage(event.scanId(), event.stage(), event.message(), event.at());
     }
 
     public ScanAcceptedResponse toAcceptedResponse(Scan scan) {

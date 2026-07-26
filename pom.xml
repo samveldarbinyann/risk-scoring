@@ -27,6 +27,7 @@
         <module>common</module>
         <module>gateway</module>
         <module>chain-ingest</module>
+        <module>enrichment</module>
     </modules>
 
     <build>

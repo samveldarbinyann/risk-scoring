@@ -1,7 +1,6 @@
-package com.riskscoring.gateway.entity;
+package com.riskscoring.enrichment.entity;
 
-import com.riskscoring.common.event.ScanSource;
-import com.riskscoring.common.event.ScanStage;
+import com.riskscoring.common.model.LabelCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,46 +19,45 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "scan")
+@Table(name = "label")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Scan {
+public class Label {
 
     @Id
     private UUID id;
 
-    @Column(nullable = false, length = 42)
-    private String address;
-
     @Column(name = "chain_id", nullable = false)
     private int chainId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
-    private ScanStage status;
+    @Column(nullable = false, length = 42)
+    private String address;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
-    private ScanSource source;
+    private LabelCategory category;
 
-    @Column(name = "requested_at", nullable = false)
-    private Instant requestedAt;
+    @Column(nullable = false, length = 128)
+    private String name;
 
-    @Column(name = "completed_at")
-    private Instant completedAt;
+    @Column(nullable = false, length = 64)
+    private String source;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof Scan scan)) {
+        if (!(other instanceof Label label)) {
             return false;
         }
-        return id != null && id.equals(scan.id);
+        return id != null && id.equals(label.id);
     }
 
     @Override

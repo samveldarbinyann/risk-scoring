@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,9 +26,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CachedCounterparty {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class CounterpartyCache {
 
     @Id
     private UUID id;
@@ -57,7 +58,7 @@ public class CachedCounterparty {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof CachedCounterparty counterparty)) {
+        if (!(other instanceof CounterpartyCache counterparty)) {
             return false;
         }
         return id != null && id.equals(counterparty.id);

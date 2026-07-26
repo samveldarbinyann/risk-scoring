@@ -1,7 +1,8 @@
 package com.riskscoring.chainingest.mapper;
 
+import com.riskscoring.chainingest.client.ChainData;
 import com.riskscoring.chainingest.entity.AddressCache;
-import com.riskscoring.chainingest.entity.CachedCounterparty;
+import com.riskscoring.chainingest.entity.CounterpartyCache;
 import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
 import org.springframework.stereotype.Component;
@@ -14,18 +15,16 @@ import java.util.UUID;
 @Component
 public class AddressCacheMapper {
 
-    public AddressSnapshot toSnapshot(AddressCache cache) {
-        return new AddressSnapshot(
+    public ChainData toChainData(AddressCache cache) {
+        AddressSnapshot snapshot = new AddressSnapshot(
                 cache.getAgeDays(),
                 cache.getTxCount(),
                 cache.getBalanceWei().toString(),
                 cache.getFirstSeenAt(),
                 cache.getLastSeenAt()
         );
-    }
 
-    public List<Counterparty> toCounterparties(AddressCache cache) {
-        return cache.getCounterparties().stream()
+        List<Counterparty> counterparties = cache.getCounterparties().stream()
                 .map(counterparty -> new Counterparty(
                         counterparty.getAddress(),
                         counterparty.getDirection(),
@@ -34,19 +33,15 @@ public class AddressCacheMapper {
                         counterparty.getHops()
                 ))
                 .toList();
+
+        return new ChainData(snapshot, counterparties);
     }
 
-    public AddressCache toEntity(AddressSnapshot snapshot, String address, int chainId, Instant fetchedAt) {
+    public AddressCache newEntity(String address, int chainId) {
         return AddressCache.builder()
                 .id(UUID.randomUUID())
                 .chainId(chainId)
                 .address(address)
-                .ageDays(snapshot.ageDays())
-                .txCount(snapshot.txCount())
-                .balanceWei(new BigInteger(snapshot.balanceWei()))
-                .firstSeenAt(snapshot.firstSeenAt())
-                .lastSeenAt(snapshot.lastSeenAt())
-                .fetchedAt(fetchedAt)
                 .build();
     }
 
@@ -59,9 +54,9 @@ public class AddressCacheMapper {
         cache.setFetchedAt(fetchedAt);
     }
 
-    public List<CachedCounterparty> toEntities(List<Counterparty> counterparties) {
+    public List<CounterpartyCache> toEntities(List<Counterparty> counterparties) {
         return counterparties.stream()
-                .map(counterparty -> CachedCounterparty.builder()
+                .map(counterparty -> CounterpartyCache.builder()
                         .id(UUID.randomUUID())
                         .address(counterparty.address())
                         .direction(counterparty.direction())

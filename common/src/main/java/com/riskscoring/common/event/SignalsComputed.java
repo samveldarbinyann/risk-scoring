@@ -1,13 +1,15 @@
 package com.riskscoring.common.event;
 
+import com.riskscoring.common.model.EvidenceBundle;
+
 import java.time.Instant;
 import java.util.UUID;
 
-public record ScanRequested(
+public record SignalsComputed(
         UUID scanId,
         String address,
         int chainId,
-        Instant requestedAt,
-        ScanSource source
+        EvidenceBundle evidence,
+        Instant computedAt
 ) {
 }

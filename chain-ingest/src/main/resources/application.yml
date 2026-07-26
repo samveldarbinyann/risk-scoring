@@ -1,6 +1,3 @@
-server:
-  port: 8082
-
 spring:
   application:
     name: chain-ingest
@@ -40,6 +37,7 @@ spring:
 chain-ingest:
   cache-ttl: 6h
   max-counterparties: 8
+  known-address-percent: 40
 
 logging:
   level:

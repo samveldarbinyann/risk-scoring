@@ -1,11 +1,7 @@
-package com.riskscoring.gateway.entity;
+package com.riskscoring.enrichment.entity;
 
-import com.riskscoring.common.event.ScanSource;
-import com.riskscoring.common.event.ScanStage;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -14,22 +10,27 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "scan")
+@Table(name = "evidence_record")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Scan {
+public class EvidenceRecord {
 
     @Id
     private UUID id;
+
+    @Column(name = "scan_id", nullable = false)
+    private UUID scanId;
 
     @Column(nullable = false, length = 42)
     private String address;
@@ -37,29 +38,22 @@ public class Scan {
     @Column(name = "chain_id", nullable = false)
     private int chainId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
-    private ScanStage status;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false, columnDefinition = "jsonb")
+    private String payload;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
-    private ScanSource source;
-
-    @Column(name = "requested_at", nullable = false)
-    private Instant requestedAt;
-
-    @Column(name = "completed_at")
-    private Instant completedAt;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
     @Override
     public boolean equals(Object other) {
         if (this == other) {
             return true;
         }
-        if (!(other instanceof Scan scan)) {
+        if (!(other instanceof EvidenceRecord record)) {
             return false;
         }
-        return id != null && id.equals(scan.id);
+        return id != null && id.equals(record.id);
     }
 
     @Override

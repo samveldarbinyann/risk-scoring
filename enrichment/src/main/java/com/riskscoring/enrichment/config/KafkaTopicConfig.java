@@ -1,4 +1,4 @@
-package com.riskscoring.chainingest.config;
+package com.riskscoring.enrichment.config;
 
 import com.riskscoring.common.Topics;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -13,16 +13,8 @@ public class KafkaTopicConfig {
     private static final short REPLICAS = 1;
 
     @Bean
-    public NewTopic chainFetchedTopic() {
-        return TopicBuilder.name(Topics.CHAIN_FETCHED)
-                .partitions(PARTITIONS)
-                .replicas(REPLICAS)
-                .build();
-    }
-
-    @Bean
-    public NewTopic scanProgressTopic() {
-        return TopicBuilder.name(Topics.SCAN_PROGRESS)
+    public NewTopic signalsComputedTopic() {
+        return TopicBuilder.name(Topics.SIGNALS_COMPUTED)
                 .partitions(PARTITIONS)
                 .replicas(REPLICAS)
                 .build();

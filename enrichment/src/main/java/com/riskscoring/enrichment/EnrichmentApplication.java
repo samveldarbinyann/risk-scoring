@@ -1,4 +1,4 @@
-package com.riskscoring.chainingest;
+package com.riskscoring.enrichment;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,9 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
-public class ChainIngestApplication {
+public class EnrichmentApplication {
 
     static void main(String[] args) {
-        SpringApplication.run(ChainIngestApplication.class, args);
+        SpringApplication.run(EnrichmentApplication.class, args);
     }
 }
