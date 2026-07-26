@@ -1,0 +1,80 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-scan-report
+      author: sam
+      changes:
+        - createTable:
+            tableName: scan_report
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_scan_report
+                    nullable: false
+              - column:
+                  name: scan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uq_scan_report_scan_id
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: risk_level
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: score
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: explanation
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: decisive_signals
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: manual_checks
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: model
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prompt_version
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: scan_report
+            indexName: idx_scan_report_address_chain
+            columns:
+              - column:
+                  name: address
+              - column:
+                  name: chain_id

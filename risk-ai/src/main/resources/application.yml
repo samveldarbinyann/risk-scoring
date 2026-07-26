@@ -1,0 +1,50 @@
+spring:
+  application:
+    name: risk-ai
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:risk}
+    username: ${DB_USER:risk}
+    password: ${DB_PASSWORD:risk}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: riskai
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: riskai
+    liquibase-schema: riskai
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: risk-ai
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.riskscoring.common.event,com.riskscoring.common.model
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      acks: all
+
+risk-ai:
+  max-verdict-attempts: 3
+  prompt-version: v1
+  llm:
+    base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+    api-key: ${DEEPSEEK_API_KEY}
+    model: ${LLM_MODEL:deepseek-chat}
+    temperature: 0.2
+    connect-timeout: 10s
+    read-timeout: 120s
+
+logging:
+  level:
+    com.riskscoring: DEBUG
