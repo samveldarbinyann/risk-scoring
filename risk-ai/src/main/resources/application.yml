@@ -29,6 +29,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
       properties:
         spring.json.trusted.packages: com.riskscoring.common.event,com.riskscoring.common.model
+        max.poll.interval.ms: 600000
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
@@ -43,7 +44,7 @@ risk-ai:
     model: ${LLM_MODEL:deepseek-chat}
     temperature: 0.2
     connect-timeout: 10s
-    read-timeout: 120s
+    read-timeout: 45s
 
 logging:
   level:

@@ -20,11 +20,11 @@ public class VerdictParserImpl implements VerdictParser {
     private static final int MIN_SCORE = 0;
     private static final int MAX_SCORE = 100;
 
-    private static final Map<RiskLevel, int[]> SCORE_RANGES = Map.of(
-            RiskLevel.LOW, new int[]{0, 25},
-            RiskLevel.MEDIUM, new int[]{26, 50},
-            RiskLevel.HIGH, new int[]{51, 80},
-            RiskLevel.CRITICAL, new int[]{81, 100}
+    private static final Map<RiskLevel, ScoreRange> SCORE_RANGES = Map.of(
+            RiskLevel.LOW, new ScoreRange(0, 25),
+            RiskLevel.MEDIUM, new ScoreRange(26, 50),
+            RiskLevel.HIGH, new ScoreRange(51, 80),
+            RiskLevel.CRITICAL, new ScoreRange(81, 100)
     );
 
     private final ObjectMapper objectMapper;
@@ -43,11 +43,11 @@ public class VerdictParserImpl implements VerdictParser {
             throw new InvalidVerdictException("explanation is empty");
         }
 
-        int[] range = SCORE_RANGES.get(verdict.riskLevel());
-        if (verdict.score() < range[0] || verdict.score() > range[1]) {
+        ScoreRange range = SCORE_RANGES.get(verdict.riskLevel());
+        if (verdict.score() < range.min() || verdict.score() > range.max()) {
             throw new InvalidVerdictException(
                     "score %d does not match risk level %s (expected %d-%d)"
-                            .formatted(verdict.score(), verdict.riskLevel(), range[0], range[1]));
+                            .formatted(verdict.score(), verdict.riskLevel(), range.min(), range.max()));
         }
 
         return new Verdict(
@@ -69,5 +69,8 @@ public class VerdictParserImpl implements VerdictParser {
 
     private List<String> orEmpty(List<String> values) {
         return values == null ? List.of() : values;
+    }
+
+    private record ScoreRange(int min, int max) {
     }
 }

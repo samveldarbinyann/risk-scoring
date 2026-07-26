@@ -5,14 +5,19 @@ import com.riskscoring.common.model.Verdict;
 import com.riskscoring.riskai.entity.ScanReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class ScanReportMapper {
+
+    private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
+    };
 
     private final ObjectMapper objectMapper;
 
@@ -32,5 +37,15 @@ public class ScanReportMapper {
                 .promptVersion(promptVersion)
                 .createdAt(createdAt)
                 .build();
+    }
+
+    public Verdict toVerdict(ScanReport report) {
+        return new Verdict(
+                report.getRiskLevel(),
+                report.getScore(),
+                report.getExplanation(),
+                objectMapper.readValue(report.getDecisiveSignals(), STRING_LIST),
+                objectMapper.readValue(report.getManualChecks(), STRING_LIST)
+        );
     }
 }

@@ -10,6 +10,7 @@ import com.riskscoring.riskai.client.LlmClient;
 import com.riskscoring.riskai.config.RiskAiProperties;
 import com.riskscoring.riskai.exception.InvalidVerdictException;
 import com.riskscoring.riskai.kafka.RiskAiEventPublisher;
+import com.riskscoring.riskai.entity.ScanReport;
 import com.riskscoring.riskai.mapper.ScanReportMapper;
 import com.riskscoring.riskai.repository.ScanReportRepository;
 import com.riskscoring.riskai.service.PromptBuilder;
@@ -18,9 +19,9 @@ import com.riskscoring.riskai.service.VerdictParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,10 +39,12 @@ public class RiskAiServiceImpl implements RiskAiService {
     private final RiskAiProperties properties;
 
     @Override
-    @Transactional
     public void analyze(SignalsComputed event) {
-        if (scanReportRepository.existsByScanId(event.scanId())) {
-            log.info("Report for scanId={} already exists, skipping", event.scanId());
+        Optional<ScanReport> stored = scanReportRepository.findByScanId(event.scanId());
+        if (stored.isPresent()) {
+            ScanReport report = stored.get();
+            log.info("Report for scanId={} already exists, republishing completion", event.scanId());
+            publishCompletion(event, scanReportMapper.toVerdict(report), report.getModel(), report.getCreatedAt());
             return;
         }
 
@@ -49,19 +52,24 @@ public class RiskAiServiceImpl implements RiskAiService {
                 new ScanProgress(event.scanId(), ScanStage.ANALYZING, PROGRESS_MESSAGE, Instant.now()));
 
         Verdict verdict = askForVerdict(event.evidence());
+        Instant completedAt = Instant.now();
 
         scanReportRepository.save(scanReportMapper.toEntity(
-                event, verdict, llmClient.model(), properties.promptVersion(), Instant.now()));
+                event, verdict, llmClient.model(), properties.promptVersion(), completedAt));
 
         log.info("Verdict for scanId={} is {} score={}", event.scanId(), verdict.riskLevel(), verdict.score());
 
+        publishCompletion(event, verdict, llmClient.model(), completedAt);
+    }
+
+    private void publishCompletion(SignalsComputed event, Verdict verdict, String model, Instant completedAt) {
         eventPublisher.publishScanCompleted(new ScanCompleted(
                 event.scanId(),
                 event.address(),
                 event.chainId(),
                 verdict,
-                llmClient.model(),
-                Instant.now()
+                model,
+                completedAt
         ));
         eventPublisher.publishScanProgress(
                 new ScanProgress(event.scanId(), ScanStage.COMPLETED, verdict.riskLevel().name(), Instant.now()));
