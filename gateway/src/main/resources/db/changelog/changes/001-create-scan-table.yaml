@@ -1,0 +1,58 @@
+
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-scan-table
+      author: sam
+      changes:
+        - createTable:
+            tableName: scan
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_scan
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: timestamptz
+        - createIndex:
+            tableName: scan
+            indexName: idx_scan_address_chain
+            columns:
+              - column:
+                  name: address
+              - column:
+                  name: chain_id
+        - createIndex:
+            tableName: scan
+            indexName: idx_scan_status
+            columns:
+              - column:
+                  name: status

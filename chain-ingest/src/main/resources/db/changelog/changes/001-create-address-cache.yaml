@@ -1,0 +1,106 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-address-cache
+      author: sam
+      changes:
+        - createTable:
+            tableName: address_cache
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_address_cache
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: age_days
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tx_count
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance_wei
+                  type: numeric(78, 0)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_seen_at
+                  type: timestamptz
+              - column:
+                  name: last_seen_at
+                  type: timestamptz
+              - column:
+                  name: fetched_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: address_cache
+            columnNames: chain_id, address
+            constraintName: uq_address_cache_chain_address
+
+        - createTable:
+            tableName: counterparty_cache
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_counterparty_cache
+                    nullable: false
+              - column:
+                  name: address_cache_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_counterparty_address_cache
+                    referencedTableName: address_cache
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: direction
+                  type: varchar(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tx_count
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_value_wei
+                  type: numeric(78, 0)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hops
+                  type: int
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: counterparty_cache
+            indexName: idx_counterparty_address_cache
+            columns:
+              - column:
+                  name: address_cache_id
