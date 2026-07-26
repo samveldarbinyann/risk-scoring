@@ -19,12 +19,4 @@ public class KafkaTopicConfig {
                 .replicas(REPLICAS)
                 .build();
     }
-
-    @Bean
-    public NewTopic scanProgressTopic() {
-        return TopicBuilder.name(Topics.SCAN_PROGRESS)
-                .partitions(PARTITIONS)
-                .replicas(REPLICAS)
-                .build();
-    }
 }

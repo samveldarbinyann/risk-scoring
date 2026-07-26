@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,8 +25,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AddressCache {
 
     @Id
@@ -57,9 +58,9 @@ public class AddressCache {
 
     @Builder.Default
     @OneToMany(mappedBy = "addressCache", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CachedCounterparty> counterparties = new ArrayList<>();
+    private List<CounterpartyCache> counterparties = new ArrayList<>();
 
-    public void replaceCounterparties(List<CachedCounterparty> replacements) {
+    public void replaceCounterparties(List<CounterpartyCache> replacements) {
         counterparties.clear();
         replacements.forEach(counterparty -> counterparty.setAddressCache(this));
         counterparties.addAll(replacements);

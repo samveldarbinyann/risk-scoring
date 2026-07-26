@@ -7,6 +7,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "chain-ingest")
 public record ChainIngestProperties(
         Duration cacheTtl,
-        int maxCounterparties
+        int maxCounterparties,
+        int knownAddressPercent
 ) {
 }

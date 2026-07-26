@@ -36,13 +36,13 @@ public class ChainIngestServiceImpl implements ChainIngestService {
     public void ingest(ScanRequested event) {
         publishProgress(event, ScanStage.FETCHING, "Fetching on-chain data");
 
-        Optional<AddressCache> cached = addressCacheRepository
-                .findByChainIdAndAddress(event.chainId(), event.address())
-                .filter(this::isFresh);
+        Optional<AddressCache> existing = addressCacheRepository
+                .findByChainIdAndAddress(event.chainId(), event.address());
 
-        ChainData chainData = cached
+        ChainData chainData = existing
+                .filter(this::isFresh)
                 .map(this::fromCache)
-                .orElseGet(() -> fetchAndCache(event));
+                .orElseGet(() -> fetchAndCache(event, existing));
 
         chainEventPublisher.publishChainFetched(new ChainFetched(
                 event.scanId(),
@@ -56,22 +56,16 @@ public class ChainIngestServiceImpl implements ChainIngestService {
 
     private ChainData fromCache(AddressCache cache) {
         log.info("Cache hit for chainId={} address={}", cache.getChainId(), cache.getAddress());
-        return new ChainData(
-                addressCacheMapper.toSnapshot(cache),
-                addressCacheMapper.toCounterparties(cache)
-        );
+        return addressCacheMapper.toChainData(cache);
     }
 
-    private ChainData fetchAndCache(ScanRequested event) {
+    private ChainData fetchAndCache(ScanRequested event, Optional<AddressCache> existing) {
         ChainData chainData = chainDataClient.fetch(event.address(), event.chainId());
-        Instant fetchedAt = Instant.now();
 
-        AddressCache cache = addressCacheRepository
-                .findByChainIdAndAddress(event.chainId(), event.address())
-                .orElseGet(() -> addressCacheMapper.toEntity(
-                        chainData.snapshot(), event.address(), event.chainId(), fetchedAt));
+        AddressCache cache = existing.orElseGet(
+                () -> addressCacheMapper.newEntity(event.address(), event.chainId()));
 
-        addressCacheMapper.updateSnapshot(cache, chainData.snapshot(), fetchedAt);
+        addressCacheMapper.updateSnapshot(cache, chainData.snapshot(), Instant.now());
         cache.replaceCounterparties(addressCacheMapper.toEntities(chainData.counterparties()));
         addressCacheRepository.save(cache);
 

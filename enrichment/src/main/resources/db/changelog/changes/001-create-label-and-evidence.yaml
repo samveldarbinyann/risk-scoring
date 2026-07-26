@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-label-and-evidence
+      author: sam
+      changes:
+        - createTable:
+            tableName: label
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_label
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: label
+            columnNames: chain_id, address
+            constraintName: uq_label_chain_address
+
+        - createTable:
+            tableName: evidence_record
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_evidence_record
+                    nullable: false
+              - column:
+                  name: scan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: evidence_record
+            indexName: idx_evidence_scan
+            columns:
+              - column:
+                  name: scan_id

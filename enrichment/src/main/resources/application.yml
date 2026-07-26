@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: enrichment
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:risk}
+    username: ${DB_USER:risk}
+    password: ${DB_PASSWORD:risk}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: enrichment
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: enrichment
+    liquibase-schema: enrichment
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: enrichment
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.riskscoring.common.event,com.riskscoring.common.model
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      acks: all
+
+enrichment:
+  fresh-wallet-days: 30
+  round-amounts-percent-threshold: 50
+
+logging:
+  level:
+    com.riskscoring: DEBUG

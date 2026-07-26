@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-create-label-and-evidence.yaml
+  - include:
+      file: db/changelog/changes/002-seed-ethereum-labels.yaml
