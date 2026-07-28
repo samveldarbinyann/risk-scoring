@@ -7,15 +7,15 @@ import { LocaleSwitch } from "@/components/layout/LocaleSwitch";
 interface NavItem {
   to: string;
   labelKey: MessageKey;
-  enabled: boolean;
 }
 
+// Для незалогиненных пользователей доступен только скан + маркетинговые страницы.
+// Дашборд/watchlist/алерты/настройки появятся в хидере после реализации auth.
 const NAV_ITEMS: NavItem[] = [
-  { to: "/", labelKey: "nav.newScan", enabled: true },
-  { to: "/dashboard", labelKey: "nav.dashboard", enabled: false },
-  { to: "/watchlist", labelKey: "nav.watchlist", enabled: false },
-  { to: "/alerts", labelKey: "nav.alerts", enabled: false },
-  { to: "/settings", labelKey: "nav.settings", enabled: false },
+  { to: "/", labelKey: "nav.home" },
+  { to: "/pricing", labelKey: "nav.pricing" },
+  { to: "/docs", labelKey: "nav.docs" },
+  { to: "/contact", labelKey: "nav.contact" },
 ];
 
 const AUTH_LINK_CLASSES = "rounded-base px-3 py-1.5 font-sans text-sm font-medium transition-colors";
@@ -33,11 +33,7 @@ export function NavBar() {
               to={item.to}
               end={item.to === "/"}
               className={({ isActive }) =>
-                cn(
-                  "font-sans text-sm transition-colors",
-                  item.enabled ? "text-text-dim hover:text-text" : "text-text-faint hover:text-text-dim",
-                  isActive && item.enabled && "text-accent",
-                )
+                cn("font-sans text-sm text-text-dim transition-colors hover:text-text", isActive && "text-accent")
               }
             >
               {t(item.labelKey)}

@@ -11,6 +11,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     public static final String SCAN_TOPIC_PREFIX = "/topic/scans/";
+    public static final String SCAN_GROUP_TOPIC_PREFIX = "/topic/scan-groups/";
 
     private static final String ENDPOINT = "/ws";
     private static final String BROKER_PREFIX = "/topic";

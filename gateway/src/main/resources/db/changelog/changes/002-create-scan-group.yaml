@@ -1,0 +1,50 @@
+
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-scan-group
+      author: sam
+      changes:
+        - createTable:
+            tableName: scan_group
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_scan_group
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requested_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: scan_group
+            indexName: idx_scan_group_address
+            columns:
+              - column:
+                  name: address
+        - addColumn:
+            tableName: scan
+            columns:
+              - column:
+                  name: group_id
+                  type: uuid
+        - addForeignKeyConstraint:
+            baseTableName: scan
+            baseColumnNames: group_id
+            referencedTableName: scan_group
+            referencedColumnNames: id
+            constraintName: fk_scan_group_id
+        - createIndex:
+            tableName: scan
+            indexName: idx_scan_group_id
+            columns:
+              - column:
+                  name: group_id

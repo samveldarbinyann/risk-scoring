@@ -1,4 +1,10 @@
-import type { ErrorResponse, ScanAcceptedResponse, ScanCreateRequest, ScanReportView, ScanView } from "@/lib/types";
+import type {
+  ErrorResponse,
+  ScanCreateRequest,
+  ScanGroupAcceptedResponse,
+  ScanGroupReportView,
+  ScanGroupView,
+} from "@/lib/types";
 import type { Locale } from "@/lib/i18n/messageKeys";
 
 const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8081";
@@ -27,19 +33,19 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function createScan(payload: ScanCreateRequest): Promise<ScanAcceptedResponse> {
-  return apiRequest<ScanAcceptedResponse>("/api/scans", {
+export function createScan(payload: ScanCreateRequest): Promise<ScanGroupAcceptedResponse> {
+  return apiRequest<ScanGroupAcceptedResponse>("/api/scans", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function getScan(scanId: string): Promise<ScanView> {
-  return apiRequest<ScanView>(`/api/scans/${scanId}`);
+export function getScanGroup(groupId: string): Promise<ScanGroupView> {
+  return apiRequest<ScanGroupView>(`/api/scans/groups/${groupId}`);
 }
 
-export function getScanReport(scanId: string): Promise<ScanReportView> {
-  return apiRequest<ScanReportView>(`/api/scans/${scanId}/report`);
+export function getScanGroupReport(groupId: string): Promise<ScanGroupReportView> {
+  return apiRequest<ScanGroupReportView>(`/api/scans/groups/${groupId}/report`);
 }
 
 export function getMessages(): Promise<Record<string, string>> {

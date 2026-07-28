@@ -1,7 +1,9 @@
 package com.riskscoring.gateway.controller;
 
-import com.riskscoring.gateway.dto.ScanAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
+import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
+import com.riskscoring.gateway.dto.ScanGroupReportView;
+import com.riskscoring.gateway.dto.ScanGroupView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.service.ScanService;
@@ -27,8 +29,18 @@ public class ScanController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public ScanAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request) {
+    public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request) {
         return scanService.requestScan(request);
+    }
+
+    @GetMapping("/groups/{groupId}")
+    public ScanGroupView getScanGroup(@PathVariable UUID groupId) {
+        return scanService.getScanGroup(groupId);
+    }
+
+    @GetMapping("/groups/{groupId}/report")
+    public ScanGroupReportView getScanGroupReport(@PathVariable UUID groupId) {
+        return scanService.getScanGroupReport(groupId);
     }
 
     @GetMapping("/{scanId}")
