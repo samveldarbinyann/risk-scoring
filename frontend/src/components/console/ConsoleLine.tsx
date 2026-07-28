@@ -8,9 +8,10 @@ interface ConsoleLineProps {
   stage: ScanStage;
   message: string;
   at: string;
+  chain?: string;
 }
 
-export function ConsoleLine({ stage, message, at }: ConsoleLineProps) {
+export function ConsoleLine({ stage, message, at, chain }: ConsoleLineProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -19,6 +20,7 @@ export function ConsoleLine({ stage, message, at }: ConsoleLineProps) {
       className="flex items-baseline gap-3 font-mono text-sm"
     >
       <span className="shrink-0 text-text-faint">{formatTime(at)}</span>
+      {chain && <span className="shrink-0 text-xs text-text-dim">[{chain}]</span>}
       <span className={cn("shrink-0 text-xs uppercase tracking-wider", STAGE_TONE[stage])}>{stage}</span>
       <span className="text-text">{message}</span>
     </motion.div>

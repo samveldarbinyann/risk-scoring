@@ -9,7 +9,7 @@ interface HeroInputProps {
 export function HeroInput({ value, onChange, onSubmit, placeholder, disabled }: HeroInputProps) {
   return (
     <div
-      className="flex w-full max-w-2xl items-center gap-3 rounded-base border border-border
+      className="flex w-full flex-1 items-center gap-3 rounded-base border border-border
                     bg-surface px-6 py-4 font-mono transition-[border-color,box-shadow]
                     focus-within:border-accent focus-within:shadow-[0_0_0_1px_var(--color-accent),0_0_28px_-6px_var(--color-accent)]"
     >

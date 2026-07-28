@@ -2,17 +2,27 @@ package com.riskscoring.gateway.mapper;
 
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanRequested;
+import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.model.Language;
-import com.riskscoring.gateway.dto.ScanAcceptedResponse;
+import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
+import com.riskscoring.gateway.dto.ScanGroupChainStatus;
+import com.riskscoring.gateway.dto.ScanGroupView;
 import com.riskscoring.gateway.dto.ScanProgressMessage;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
+import com.riskscoring.gateway.entity.ScanGroup;
 import com.riskscoring.gateway.repository.ScanReportRow;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 @Component
 public class ScanMapper {
+
+    private static final Set<ScanStage> TERMINAL_STAGES = Set.of(ScanStage.COMPLETED, ScanStage.FAILED);
 
     public ScanRequested toEvent(Scan scan, Language language) {
         return new ScanRequested(
@@ -29,8 +39,22 @@ public class ScanMapper {
         return new ScanProgressMessage(event.scanId(), event.stage(), event.message(), event.at());
     }
 
-    public ScanAcceptedResponse toAcceptedResponse(Scan scan) {
-        return new ScanAcceptedResponse(scan.getId(), scan.getStatus());
+    public ScanGroupAcceptedResponse toGroupAcceptedResponse(ScanGroup group, List<Scan> scans) {
+        return new ScanGroupAcceptedResponse(
+                group.getId(),
+                group.getAddress(),
+                scans.stream().map(Scan::getChainId).toList()
+        );
+    }
+
+    public ScanGroupView toGroupView(UUID groupId, List<Scan> scans) {
+        List<ScanGroupChainStatus> chains = scans.stream()
+                .map(scan -> new ScanGroupChainStatus(scan.getChainId(), scan.getId(), scan.getStatus()))
+                .toList();
+
+        boolean completed = scans.stream().allMatch(scan -> TERMINAL_STAGES.contains(scan.getStatus()));
+
+        return new ScanGroupView(groupId, scans.getFirst().getAddress(), completed, chains);
     }
 
     public ScanView toView(Scan scan) {

@@ -12,8 +12,11 @@ export default function App() {
       <Routes>
         <Route element={<AppShell />}>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/scan/:scanId" element={<ScanConsolePage />} />
-          <Route path="/scan/:scanId/report" element={<ReportPage />} />
+          <Route path="/scan/:groupId" element={<ScanConsolePage />} />
+          <Route path="/scan/:groupId/report" element={<ReportPage />} />
+          <Route path="/pricing" element={<ComingSoonPage titleKey="nav.pricing" />} />
+          <Route path="/docs" element={<ComingSoonPage titleKey="nav.docs" />} />
+          <Route path="/contact" element={<ComingSoonPage titleKey="nav.contact" />} />
           <Route path="/dashboard" element={<ComingSoonPage titleKey="nav.dashboard" />} />
           <Route path="/watchlist" element={<ComingSoonPage titleKey="nav.watchlist" />} />
           <Route path="/alerts" element={<ComingSoonPage titleKey="nav.alerts" />} />

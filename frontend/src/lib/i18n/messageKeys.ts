@@ -3,7 +3,10 @@ export type Locale = "en" | "ru";
 export const LOCALES: Locale[] = ["en", "ru"];
 
 export type MessageKey =
-  | "nav.newScan"
+  | "nav.home"
+  | "nav.pricing"
+  | "nav.docs"
+  | "nav.contact"
   | "nav.dashboard"
   | "nav.watchlist"
   | "nav.alerts"
@@ -13,7 +16,6 @@ export type MessageKey =
   | "landing.title"
   | "landing.subtitle"
   | "landing.addressPlaceholder"
-  | "landing.networkLabel"
   | "landing.scanButton"
   | "landing.errorInvalidAddress"
   | "landing.errorCreateFailed"

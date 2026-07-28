@@ -4,22 +4,25 @@ export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface ScanCreateRequest {
   address: string;
-  chainId: number;
 }
 
-export interface ScanAcceptedResponse {
-  scanId: string;
-  status: ScanStage;
-}
-
-export interface ScanView {
-  scanId: string;
+export interface ScanGroupAcceptedResponse {
+  groupId: string;
   address: string;
+  chainIds: number[];
+}
+
+export interface ScanGroupChainStatus {
   chainId: number;
+  scanId: string;
   status: ScanStage;
-  source: ScanSource;
-  requestedAt: string;
-  completedAt: string | null;
+}
+
+export interface ScanGroupView {
+  groupId: string;
+  address: string;
+  completed: boolean;
+  chains: ScanGroupChainStatus[];
 }
 
 export interface ScanReportView {
@@ -33,6 +36,12 @@ export interface ScanReportView {
   manualChecks: string[];
   model: string;
   createdAt: string;
+}
+
+export interface ScanGroupReportView {
+  groupId: string;
+  address: string;
+  reports: ScanReportView[];
 }
 
 export interface ScanProgressMessage {

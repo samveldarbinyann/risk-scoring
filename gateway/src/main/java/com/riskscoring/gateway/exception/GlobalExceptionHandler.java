@@ -1,6 +1,5 @@
 package com.riskscoring.gateway.exception;
 
-import com.riskscoring.common.model.EvmChain;
 import com.riskscoring.gateway.dto.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,12 +30,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", details);
     }
 
-    @ExceptionHandler(UnsupportedChainException.class)
-    public ResponseEntity<ErrorResponse> handleUnsupportedChain(UnsupportedChainException exception) {
-        String message = message("error.unsupportedChain", exception.getChainId(), EvmChain.supportedIds());
-        return build(HttpStatus.BAD_REQUEST, "UNSUPPORTED_CHAIN", message);
-    }
-
     @ExceptionHandler(ScanNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleScanNotFound(ScanNotFoundException exception) {
         String message = message("error.scanNotFound", exception.getScanId());
@@ -47,6 +40,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleScanReportNotReady(ScanReportNotReadyException exception) {
         String message = message("error.scanReportNotReady", exception.getScanId(), exception.getStatus());
         return build(HttpStatus.CONFLICT, "REPORT_NOT_READY", message);
+    }
+
+    @ExceptionHandler(ScanGroupNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleScanGroupNotFound(ScanGroupNotFoundException exception) {
+        String message = message("error.scanGroupNotFound", exception.getGroupId());
+        return build(HttpStatus.NOT_FOUND, "SCAN_GROUP_NOT_FOUND", message);
+    }
+
+    @ExceptionHandler(ScanGroupReportNotReadyException.class)
+    public ResponseEntity<ErrorResponse> handleScanGroupReportNotReady(ScanGroupReportNotReadyException exception) {
+        String message = message("error.scanGroupReportNotReady", exception.getGroupId());
+        return build(HttpStatus.CONFLICT, "SCAN_GROUP_REPORT_NOT_READY", message);
     }
 
     @ExceptionHandler(Exception.class)

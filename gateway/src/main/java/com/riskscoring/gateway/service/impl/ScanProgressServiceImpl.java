@@ -2,6 +2,7 @@ package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
+import com.riskscoring.gateway.dto.ScanProgressMessage;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.gateway.mapper.ScanMapper;
 import com.riskscoring.gateway.repository.ScanRepository;
@@ -41,7 +42,9 @@ public class ScanProgressServiceImpl implements ScanProgressService {
             scan.setCompletedAt(event.at());
         }
 
-        scanNotifier.notifyProgress(scanMapper.toProgressMessage(event));
-        log.info("Scan {} moved to {}", scan.getId(), event.stage());
+        ScanProgressMessage message = scanMapper.toProgressMessage(event);
+        scanNotifier.notifyProgress(message);
+        scanNotifier.notifyGroupProgress(scan.getGroupId(), message);
+        log.info("Scan {} (group {}) moved to {}", scan.getId(), scan.getGroupId(), event.stage());
     }
 }
