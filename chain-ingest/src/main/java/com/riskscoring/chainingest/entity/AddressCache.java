@@ -12,6 +12,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -44,8 +46,15 @@ public class AddressCache {
     @Column(name = "tx_count", nullable = false)
     private long txCount;
 
+    @Column(name = "tx_count_24h", nullable = false)
+    private long txCount24h;
+
     @Column(name = "balance_wei", nullable = false, precision = 78)
     private BigInteger balanceWei;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "token_balances", nullable = false, columnDefinition = "jsonb")
+    private String tokenBalances;
 
     @Column(name = "first_seen_at")
     private Instant firstSeenAt;

@@ -25,6 +25,12 @@ export interface ScanGroupView {
   chains: ScanGroupChainStatus[];
 }
 
+export interface TokenBalance {
+  symbol: string;
+  balanceFormatted: string;
+  usdValue: number | null;
+}
+
 export interface ScanReportView {
   scanId: string;
   address: string;
@@ -34,6 +40,10 @@ export interface ScanReportView {
   explanation: string;
   decisiveSignals: string[];
   manualChecks: string[];
+  balanceWei: string;
+  txCount: number;
+  txCount24h: number;
+  tokenBalances: TokenBalance[];
   model: string;
   createdAt: string;
 }

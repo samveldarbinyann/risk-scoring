@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-token-balances-to-address-cache
+      author: sam
+      changes:
+        - delete:
+            tableName: counterparty_cache
+        - delete:
+            tableName: address_cache
+        - addColumn:
+            tableName: address_cache
+            columns:
+              - column:
+                  name: tx_count_24h
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token_balances
+                  type: jsonb
+                  defaultValue: "[]"
+                  constraints:
+                    nullable: false

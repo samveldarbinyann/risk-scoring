@@ -18,7 +18,7 @@ export function VerdictReveal({ level, score }: VerdictRevealProps) {
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex items-center justify-between gap-6 rounded-base border border-border bg-surface p-8"
+      className="flex items-center justify-between gap-6 rounded-panel border border-border bg-surface p-8"
     >
       <div>
         <p className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("report.verdict")}</p>

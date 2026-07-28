@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-add-evidence-fields-to-scan-report
+      author: sam
+      changes:
+        - addColumn:
+            tableName: scan_report
+            columns:
+              - column:
+                  name: balance_wei
+                  type: text
+                  defaultValue: "0"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tx_count
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tx_count_24h
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: token_balances
+                  type: jsonb
+                  defaultValue: "[]"
+                  constraints:
+                    nullable: false

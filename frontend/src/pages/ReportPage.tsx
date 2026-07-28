@@ -3,9 +3,11 @@ import { useParams } from "react-router";
 import { getScanGroupReport } from "@/lib/api";
 import type { ScanGroupReportView } from "@/lib/types";
 import { VerdictReveal } from "@/components/report/VerdictReveal";
+import { WalletStats } from "@/components/report/WalletStats";
 import { EvidenceList } from "@/components/report/EvidenceList";
 import { GraphPlaceholder } from "@/components/report/GraphPlaceholder";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { formatAddress, formatDateTime } from "@/lib/format";
 import { chainLabel } from "@/lib/chains";
 import { useI18n } from "@/lib/i18n/context";
@@ -30,7 +32,7 @@ export function ReportPage() {
   if (!group && error) {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-3 px-6 py-10">
-        <p className="font-mono text-sm text-risk-critical">{error}</p>
+        <ErrorMessage message={error} size="sm" />
       </div>
     );
   }
@@ -58,6 +60,13 @@ export function ReportPage() {
             </p>
           </div>
           <VerdictReveal level={report.riskLevel} score={report.score} />
+          <WalletStats
+            chainId={report.chainId}
+            balanceWei={report.balanceWei}
+            tokenBalances={report.tokenBalances}
+            txCount={report.txCount}
+            txCount24h={report.txCount24h}
+          />
           <EvidenceList
             explanation={report.explanation}
             decisiveSignals={report.decisiveSignals}

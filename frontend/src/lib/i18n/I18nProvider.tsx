@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getMessages, setApiLocale } from "@/lib/api";
-import type { Locale } from "@/lib/i18n/messageKeys";
+import { LOCALES, type Locale } from "@/lib/i18n/messageKeys";
 import { I18nContext, type I18nContextValue } from "@/lib/i18n/context";
 
 const STORAGE_KEY = "risk-scoring:locale";
+
+type MessageBundles = Record<Locale, Record<string, string>>;
 
 function detectLocale(): Locale {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -13,37 +15,52 @@ function detectLocale(): Locale {
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(detectLocale);
-  const [messages, setMessages] = useState<Record<string, string> | null>(null);
+  const [bundles, setBundles] = useState<MessageBundles | null>(null);
 
+  // Обе локали грузятся разом при старте: переключение языка не ждёт сеть
+  // и не даёт хедеру мигать/схлопываться.
   useEffect(() => {
     let cancelled = false;
-    setApiLocale(locale);
-    localStorage.setItem(STORAGE_KEY, locale);
-    document.documentElement.lang = locale;
 
-    getMessages()
+    Promise.all(LOCALES.map((loc) => getMessages(loc)))
       .then((loaded) => {
-        if (!cancelled) setMessages(loaded);
+        if (cancelled) return;
+        const next = {} as MessageBundles;
+        LOCALES.forEach((loc, i) => {
+          next[loc] = loaded[i];
+        });
+        setBundles(next);
       })
       .catch(() => {
-        if (!cancelled) setMessages({});
+        if (cancelled) return;
+        const empty = {} as MessageBundles;
+        LOCALES.forEach((loc) => {
+          empty[loc] = {};
+        });
+        setBundles(empty);
       });
 
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    setApiLocale(locale);
+    localStorage.setItem(STORAGE_KEY, locale);
+    document.documentElement.lang = locale;
   }, [locale]);
 
   const value = useMemo<I18nContextValue>(
     () => ({
       locale,
       setLocale: setLocaleState,
-      t: (key) => messages?.[key] ?? key,
+      t: (key) => bundles?.[locale]?.[key] ?? key,
     }),
-    [locale, messages],
+    [locale, bundles],
   );
 
-  if (!messages) return null;
+  if (!bundles) return null;
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

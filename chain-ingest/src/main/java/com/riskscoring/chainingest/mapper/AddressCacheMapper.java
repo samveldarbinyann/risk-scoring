@@ -5,7 +5,11 @@ import com.riskscoring.chainingest.entity.AddressCache;
 import com.riskscoring.chainingest.entity.CounterpartyCache;
 import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
+import com.riskscoring.common.model.TokenBalance;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -13,13 +17,21 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class AddressCacheMapper {
+
+    private static final TypeReference<List<TokenBalance>> TOKEN_BALANCE_LIST = new TypeReference<>() {
+    };
+
+    private final ObjectMapper objectMapper;
 
     public ChainData toChainData(AddressCache cache) {
         AddressSnapshot snapshot = new AddressSnapshot(
                 cache.getAgeDays(),
                 cache.getTxCount(),
+                cache.getTxCount24h(),
                 cache.getBalanceWei().toString(),
+                objectMapper.readValue(cache.getTokenBalances(), TOKEN_BALANCE_LIST),
                 cache.getFirstSeenAt(),
                 cache.getLastSeenAt(),
                 cache.isSampleTruncated()
@@ -49,7 +61,9 @@ public class AddressCacheMapper {
     public void updateSnapshot(AddressCache cache, AddressSnapshot snapshot, Instant fetchedAt) {
         cache.setAgeDays(snapshot.ageDays());
         cache.setTxCount(snapshot.txCount());
+        cache.setTxCount24h(snapshot.txCount24h());
         cache.setBalanceWei(new BigInteger(snapshot.balanceWei()));
+        cache.setTokenBalances(objectMapper.writeValueAsString(snapshot.tokenBalances()));
         cache.setFirstSeenAt(snapshot.firstSeenAt());
         cache.setLastSeenAt(snapshot.lastSeenAt());
         cache.setSampleTruncated(snapshot.sampleTruncated());

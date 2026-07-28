@@ -31,7 +31,7 @@ export function ScanConsolePage() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-base border border-border bg-surface p-6">
+      <div className="min-h-0 flex-1 overflow-y-auto rounded-panel border border-border bg-surface p-6">
         {lines.length === 0 ? (
           <p className="font-mono text-sm text-text-faint">{t("console.connecting")}</p>
         ) : (

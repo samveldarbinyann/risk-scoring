@@ -11,10 +11,11 @@ public record ChainIngestProperties(
         int maxHops,
         int hop2ExpandTop,
         int hop2Reserve,
-        Etherscan etherscan
+        int maxTokenBalances,
+        Moralis moralis
 ) {
 
-    public record Etherscan(
+    public record Moralis(
             String baseUrl,
             String apiKey,
             int pageSize,

@@ -34,14 +34,19 @@ src/
   --color-text: #e6e8ee; --color-text-dim: #8a90a2; --color-text-faint: #4c5163;
   --color-accent: #00e5c7; --color-accent-press: #00b9a1;
   --color-risk-low: #35d07f; --color-risk-mid: #f5c451; --color-risk-high: #ff8c42; --color-risk-critical: #ff4d4d;
-  --radius-base: 6px;
+  --radius-base: 9999px;
+  --radius-panel: 16px;
   --font-sans: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 ```
 
-Цвета/радиусы/шрифты нигде больше не хардкодятся. Единственный радиус —
-`rounded-base`, без `rounded-lg/xl/full` вразнобой. Риск-цвета — единый источник
+Цвета/радиусы/шрифты нигде больше не хардкодятся. Два радиуса, оба осмысленные:
+`rounded-base` (полное скругление, пилюля) — для интерактивных элементов с фиксированной высотой:
+кнопки, инпуты, селекты, беджи, чипы. `rounded-panel` (16px) — для крупных контейнеров-панелей
+(карточки, лог консоли, ревил вердикта), где `rounded-base` при высоте, сопоставимой с шириной,
+превращает панель в круг/капсулу — визуальный баг, не стиль. Больше никаких `rounded-lg/xl/full`
+вразнобой. Риск-цвета — единый источник
 `lib/risk.ts` (`RISK` маппинг + `riskAccentClass()`), потребляется `RiskBadge` и
 `VerdictReveal`, нигде не дублируются.
 

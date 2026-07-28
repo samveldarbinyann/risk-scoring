@@ -1,6 +1,7 @@
 package com.riskscoring.gateway.dto;
 
 import com.riskscoring.common.model.RiskLevel;
+import com.riskscoring.common.model.TokenBalance;
 
 import java.time.Instant;
 import java.util.List;
@@ -15,6 +16,10 @@ public record ScanReportView(
         String explanation,
         List<String> decisiveSignals,
         List<String> manualChecks,
+        String balanceWei,
+        long txCount,
+        long txCount24h,
+        List<TokenBalance> tokenBalances,
         String model,
         Instant createdAt
 ) {

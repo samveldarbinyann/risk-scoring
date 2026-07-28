@@ -18,7 +18,7 @@ public class SlidingWindowRateLimiter implements RateLimiter {
     private final Deque<Long> issuedAt = new ArrayDeque<>();
 
     public SlidingWindowRateLimiter(ChainIngestProperties properties) {
-        this.permits = properties.etherscan().callsPerSecond();
+        this.permits = properties.moralis().callsPerSecond();
     }
 
     @Override

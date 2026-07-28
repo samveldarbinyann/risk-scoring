@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-address-cache.yaml
   - include:
       file: db/changelog/changes/002-purge-stub-cache.yaml
+  - include:
+      file: db/changelog/changes/003-add-token-balances-to-address-cache.yaml
