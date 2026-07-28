@@ -42,6 +42,6 @@ export function getScanReport(scanId: string): Promise<ScanReportView> {
   return apiRequest<ScanReportView>(`/api/scans/${scanId}/report`);
 }
 
-export function getMessages(locale: Locale): Promise<Record<string, string>> {
-  return apiRequest<Record<string, string>>(`/api/i18n?lang=${locale}`);
+export function getMessages(): Promise<Record<string, string>> {
+  return apiRequest<Record<string, string>>("/api/i18n");
 }

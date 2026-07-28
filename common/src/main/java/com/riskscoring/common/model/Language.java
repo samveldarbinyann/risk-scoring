@@ -9,4 +9,8 @@ public enum Language {
     public static Language fromLocale(Locale locale) {
         return "ru".equalsIgnoreCase(locale.getLanguage()) ? RU : EN;
     }
+
+    public Locale toLocale() {
+        return Locale.of(name().toLowerCase(Locale.ROOT));
+    }
 }

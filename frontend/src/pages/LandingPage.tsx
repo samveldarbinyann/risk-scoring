@@ -6,10 +6,9 @@ import { ChainSelect } from "@/components/hero/ChainSelect";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { createScan } from "@/lib/api";
+import { isEvmAddress } from "@/lib/address";
 import { EVM_CHAINS } from "@/lib/chains";
 import { useI18n } from "@/lib/i18n/context";
-
-const EVM_ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -25,7 +24,7 @@ export function LandingPage() {
     if (isSubmitting) return;
 
     const trimmedAddress = address.trim();
-    if (!EVM_ADDRESS_PATTERN.test(trimmedAddress)) {
+    if (!isEvmAddress(trimmedAddress)) {
       setError(t("landing.errorInvalidAddress"));
       return;
     }

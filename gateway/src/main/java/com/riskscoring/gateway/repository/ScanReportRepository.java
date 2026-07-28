@@ -1,11 +1,11 @@
 package com.riskscoring.gateway.repository;
 
-import com.riskscoring.gateway.entity.ScanReportRecord;
+import com.riskscoring.gateway.dto.ScanReportView;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public interface ScanReportRepository {
 
-    Optional<ScanReportRecord> findByScanId(UUID scanId);
+    Optional<ScanReportView> findByScanId(UUID scanId);
 }

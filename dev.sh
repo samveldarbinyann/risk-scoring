@@ -80,31 +80,27 @@ open_terminal() {
   fi
 }
 
-start_java_service() {
-  local module="$1"
+start_process() {
+  local name="$1" cwd="$2" cmd="$3"
   local script
   script=$(cat <<EOF
-cd "$ROOT_DIR"
-./mvnw -pl $module spring-boot:run > >(tee "$LOG_DIR/$module.log") 2>&1 &
-echo \$! > "$LOG_DIR/$module.pid"
+cd "$cwd"
+$cmd > >(tee "$LOG_DIR/$name.log") 2>&1 &
+echo \$! > "$LOG_DIR/$name.pid"
 wait
 exec bash
 EOF
 )
-  open_terminal "$module" "$script"
+  open_terminal "$name" "$script"
+}
+
+start_java_service() {
+  local module="$1"
+  start_process "$module" "$ROOT_DIR" "./mvnw -pl $module spring-boot:run"
 }
 
 start_frontend() {
-  local script
-  script=$(cat <<EOF
-cd "$ROOT_DIR/frontend"
-npm run dev > >(tee "$LOG_DIR/frontend.log") 2>&1 &
-echo \$! > "$LOG_DIR/frontend.pid"
-wait
-exec bash
-EOF
-)
-  open_terminal "frontend" "$script"
+  start_process "frontend" "$ROOT_DIR/frontend" "npm run dev"
 }
 
 cmd_start() {

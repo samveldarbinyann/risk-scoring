@@ -5,10 +5,8 @@ import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.gateway.dto.ScanAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanProgressMessage;
-import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
-import com.riskscoring.gateway.entity.ScanReportRecord;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -42,21 +40,6 @@ public class ScanMapper {
                 scan.getSource(),
                 scan.getRequestedAt(),
                 scan.getCompletedAt()
-        );
-    }
-
-    public ScanReportView toReportView(ScanReportRecord report) {
-        return new ScanReportView(
-                report.scanId(),
-                report.address(),
-                report.chainId(),
-                report.riskLevel(),
-                report.score(),
-                report.explanation(),
-                report.decisiveSignals(),
-                report.manualChecks(),
-                report.model(),
-                report.createdAt()
         );
     }
 }

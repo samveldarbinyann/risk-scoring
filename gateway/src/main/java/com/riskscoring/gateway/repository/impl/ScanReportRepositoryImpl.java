@@ -1,7 +1,7 @@
 package com.riskscoring.gateway.repository.impl;
 
 import com.riskscoring.common.model.RiskLevel;
-import com.riskscoring.gateway.entity.ScanReportRecord;
+import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,8 +31,8 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
     private final ObjectMapper objectMapper;
 
     @Override
-    public Optional<ScanReportRecord> findByScanId(UUID scanId) {
-        return jdbcTemplate.query(FIND_BY_SCAN_ID, (rs, rowNum) -> new ScanReportRecord(
+    public Optional<ScanReportView> findByScanId(UUID scanId) {
+        return jdbcTemplate.query(FIND_BY_SCAN_ID, (rs, rowNum) -> new ScanReportView(
                 UUID.fromString(rs.getString("scan_id")),
                 rs.getString("address"),
                 rs.getInt("chain_id"),

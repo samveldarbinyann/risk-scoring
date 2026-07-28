@@ -21,7 +21,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, locale);
     document.documentElement.lang = locale;
 
-    getMessages(locale).then((loaded) => {
+    getMessages().then((loaded) => {
       if (!cancelled) setMessages(loaded);
     });
 
