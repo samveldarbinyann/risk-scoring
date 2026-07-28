@@ -1,10 +1,13 @@
 package com.riskscoring.riskai.service.impl;
 
 import com.riskscoring.common.model.EvidenceBundle;
+import com.riskscoring.common.model.Language;
 import com.riskscoring.riskai.service.PromptBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +50,17 @@ public class PromptBuilderImpl implements PromptBuilder {
             }
             """;
 
+    private static final String LANGUAGE_INSTRUCTION_TEMPLATE = """
+
+            Write the values of "explanation", "decisiveSignals" and "manualChecks" in %s.
+            Keep "riskLevel" exactly as one of LOW, MEDIUM, HIGH, CRITICAL — never translate it.
+            """;
+
+    private static final Map<Language, String> LANGUAGE_NAMES = Map.of(
+            Language.EN, "English",
+            Language.RU, "Russian"
+    );
+
     private static final String USER_PROMPT_TEMPLATE = """
             Assess this address. Evidence bundle:
 
@@ -67,8 +81,8 @@ public class PromptBuilderImpl implements PromptBuilder {
     private final ObjectMapper objectMapper;
 
     @Override
-    public String systemPrompt() {
-        return SYSTEM_PROMPT;
+    public String systemPrompt(Language language) {
+        return SYSTEM_PROMPT + LANGUAGE_INSTRUCTION_TEMPLATE.formatted(LANGUAGE_NAMES.get(language));
     }
 
     @Override

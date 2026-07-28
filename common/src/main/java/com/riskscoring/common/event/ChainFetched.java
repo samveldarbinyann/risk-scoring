@@ -2,6 +2,7 @@ package com.riskscoring.common.event;
 
 import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
+import com.riskscoring.common.model.Language;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,6 +14,7 @@ public record ChainFetched(
         int chainId,
         AddressSnapshot snapshot,
         List<Counterparty> counterparties,
+        Language language,
         Instant fetchedAt
 ) {
 }

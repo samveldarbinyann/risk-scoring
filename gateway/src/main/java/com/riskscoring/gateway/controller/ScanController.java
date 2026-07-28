@@ -2,6 +2,7 @@ package com.riskscoring.gateway.controller;
 
 import com.riskscoring.gateway.dto.ScanAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
+import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.service.ScanService;
 import jakarta.validation.Valid;
@@ -33,5 +34,10 @@ public class ScanController {
     @GetMapping("/{scanId}")
     public ScanView getScan(@PathVariable UUID scanId) {
         return scanService.getScan(scanId);
+    }
+
+    @GetMapping("/{scanId}/report")
+    public ScanReportView getScanReport(@PathVariable UUID scanId) {
+        return scanService.getScanReport(scanId);
     }
 }

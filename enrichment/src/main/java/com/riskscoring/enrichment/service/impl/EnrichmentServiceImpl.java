@@ -59,6 +59,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
                 event.address(),
                 event.chainId(),
                 evidence,
+                event.language(),
                 Instant.now()
         ));
     }

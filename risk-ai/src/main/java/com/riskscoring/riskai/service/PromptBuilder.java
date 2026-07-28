@@ -1,10 +1,11 @@
 package com.riskscoring.riskai.service;
 
 import com.riskscoring.common.model.EvidenceBundle;
+import com.riskscoring.common.model.Language;
 
 public interface PromptBuilder {
 
-    String systemPrompt();
+    String systemPrompt(Language language);
 
     String userPrompt(EvidenceBundle evidence);
 

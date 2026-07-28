@@ -39,6 +39,15 @@ spring:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
         spring.json.trusted.packages: com.riskscoring.common.event,com.riskscoring.common.model
 
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+gateway:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
 logging:
   level:
     com.riskscoring: DEBUG

@@ -2,18 +2,23 @@ package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.Language;
 import com.riskscoring.gateway.dto.ScanAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
+import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.gateway.exception.ScanNotFoundException;
+import com.riskscoring.gateway.exception.ScanReportNotReadyException;
 import com.riskscoring.gateway.exception.UnsupportedChainException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
+import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
 import com.riskscoring.gateway.service.ScanService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +31,7 @@ import java.util.UUID;
 public class ScanServiceImpl implements ScanService {
 
     private final ScanRepository scanRepository;
+    private final ScanReportRepository scanReportRepository;
     private final ScanMapper scanMapper;
     private final ScanEventPublisher scanEventPublisher;
 
@@ -45,7 +51,9 @@ public class ScanServiceImpl implements ScanService {
                 .build();
 
         scanRepository.save(scan);
-        scanEventPublisher.publishScanRequested(scanMapper.toEvent(scan));
+
+        Language language = Language.fromLocale(LocaleContextHolder.getLocale());
+        scanEventPublisher.publishScanRequested(scanMapper.toEvent(scan, language));
 
         return scanMapper.toAcceptedResponse(scan);
     }
@@ -56,5 +64,20 @@ public class ScanServiceImpl implements ScanService {
         return scanRepository.findById(scanId)
                 .map(scanMapper::toView)
                 .orElseThrow(() -> new ScanNotFoundException(scanId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ScanReportView getScanReport(UUID scanId) {
+        Scan scan = scanRepository.findById(scanId)
+                .orElseThrow(() -> new ScanNotFoundException(scanId));
+
+        if (scan.getStatus() != ScanStage.COMPLETED) {
+            throw new ScanReportNotReadyException(scanId, scan.getStatus());
+        }
+
+        return scanReportRepository.findByScanId(scanId)
+                .map(scanMapper::toReportView)
+                .orElseThrow(() -> new ScanReportNotReadyException(scanId, scan.getStatus()));
     }
 }

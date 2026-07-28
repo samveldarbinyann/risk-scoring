@@ -1,5 +1,7 @@
 package com.riskscoring.common.event;
 
+import com.riskscoring.common.model.Language;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -8,6 +10,7 @@ public record ScanRequested(
         String address,
         int chainId,
         Instant requestedAt,
-        ScanSource source
+        ScanSource source,
+        Language language
 ) {
 }

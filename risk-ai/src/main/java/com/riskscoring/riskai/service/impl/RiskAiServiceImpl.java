@@ -5,6 +5,7 @@ import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.event.SignalsComputed;
 import com.riskscoring.common.model.EvidenceBundle;
+import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.Verdict;
 import com.riskscoring.riskai.client.LlmClient;
 import com.riskscoring.riskai.config.RiskAiProperties;
@@ -51,7 +52,7 @@ public class RiskAiServiceImpl implements RiskAiService {
         eventPublisher.publishScanProgress(
                 new ScanProgress(event.scanId(), ScanStage.ANALYZING, PROGRESS_MESSAGE, Instant.now()));
 
-        Verdict verdict = askForVerdict(event.evidence());
+        Verdict verdict = askForVerdict(event.evidence(), event.language());
         Instant completedAt = Instant.now();
 
         scanReportRepository.save(scanReportMapper.toEntity(
@@ -75,12 +76,13 @@ public class RiskAiServiceImpl implements RiskAiService {
                 new ScanProgress(event.scanId(), ScanStage.COMPLETED, verdict.riskLevel().name(), Instant.now()));
     }
 
-    private Verdict askForVerdict(EvidenceBundle evidence) {
+    private Verdict askForVerdict(EvidenceBundle evidence, Language language) {
+        String systemPrompt = promptBuilder.systemPrompt(language);
         String prompt = promptBuilder.userPrompt(evidence);
         InvalidVerdictException lastFailure = null;
 
         for (int attempt = 1; attempt <= properties.maxVerdictAttempts(); attempt++) {
-            String response = llmClient.complete(promptBuilder.systemPrompt(), prompt);
+            String response = llmClient.complete(systemPrompt, prompt);
             try {
                 return verdictParser.parse(response);
             } catch (InvalidVerdictException exception) {

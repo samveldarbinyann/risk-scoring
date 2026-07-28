@@ -13,6 +13,14 @@ public class KafkaTopicConfig {
     private static final short REPLICAS = 1;
 
     @Bean
+    public NewTopic scanRequestedTopic() {
+        return TopicBuilder.name(Topics.SCAN_REQUESTED)
+                .partitions(PARTITIONS)
+                .replicas(REPLICAS)
+                .build();
+    }
+
+    @Bean
     public NewTopic chainFetchedTopic() {
         return TopicBuilder.name(Topics.CHAIN_FETCHED)
                 .partitions(PARTITIONS)

@@ -43,6 +43,7 @@ public class ChainIngestServiceImpl implements ChainIngestService {
                 event.chainId(),
                 chainData.snapshot(),
                 chainData.counterparties(),
+                event.language(),
                 Instant.now()
         ));
     }
