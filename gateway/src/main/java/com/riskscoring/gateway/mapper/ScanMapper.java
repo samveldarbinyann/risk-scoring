@@ -8,7 +8,7 @@ import com.riskscoring.gateway.dto.ScanProgressMessage;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
-import com.riskscoring.gateway.entity.ScanReportRecord;
+import com.riskscoring.gateway.repository.ScanReportRow;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -45,18 +45,18 @@ public class ScanMapper {
         );
     }
 
-    public ScanReportView toReportView(ScanReportRecord report) {
+    public ScanReportView toReportView(ScanReportRow row) {
         return new ScanReportView(
-                report.scanId(),
-                report.address(),
-                report.chainId(),
-                report.riskLevel(),
-                report.score(),
-                report.explanation(),
-                report.decisiveSignals(),
-                report.manualChecks(),
-                report.model(),
-                report.createdAt()
+                row.scanId(),
+                row.address(),
+                row.chainId(),
+                row.riskLevel(),
+                row.score(),
+                row.explanation(),
+                row.decisiveSignals(),
+                row.manualChecks(),
+                row.model(),
+                row.createdAt()
         );
     }
 }

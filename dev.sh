@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
+LOG_DIR="$ROOT_DIR/logs"
+mkdir -p "$LOG_DIR"
+
+JAVA_CANDIDATE="/home/sam/.jdks/ms-25.0.4"
+JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai)
+
+ensure_java() {
+  if ! java -version 2>&1 | grep -q '"25'; then
+    if [ -x "$JAVA_CANDIDATE/bin/java" ]; then
+      export JAVA_HOME="$JAVA_CANDIDATE"
+      export PATH="$JAVA_HOME/bin:$PATH"
+    fi
+  fi
+  if ! java -version 2>&1 | grep -q '"25'; then
+    echo "Нужен JDK 25 в PATH/JAVA_HOME (проект требует Java 25 LTS). Сейчас:" >&2
+    java -version 2>&1 >&2 || true
+    exit 1
+  fi
+}
+
+load_env() {
+  if [ -f "$ROOT_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$ROOT_DIR/.env"
+    set +a
+  else
+    echo ".env не найден в корне проекта — сервисы упадут без ключей" >&2
+  fi
+}
+
+wait_for_postgres() {
+  echo "Жду Postgres..."
+  for _ in $(seq 1 30); do
+    if docker exec risk-postgres pg_isready -U risk -d risk >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo "Postgres не поднялся вовремя" >&2
+  exit 1
+}
+
+wait_for_service() {
+  local name="$1" marker="$2"
+  local logfile="$LOG_DIR/$name.log"
+  echo "Жду $name..."
+  for _ in $(seq 1 60); do
+    if grep -q "$marker" "$logfile" 2>/dev/null; then
+      echo "$name готов"
+      return 0
+    fi
+    if [ -f "$LOG_DIR/$name.pid" ] && ! kill -0 "$(cat "$LOG_DIR/$name.pid")" 2>/dev/null; then
+      echo "$name упал при старте, смотри $logfile" >&2
+      exit 1
+    fi
+    sleep 2
+  done
+  echo "$name не поднялся за отведённое время, смотри $logfile" >&2
+  exit 1
+}
+
+open_terminal() {
+  local title="$1" script="$2"
+  if command -v gnome-terminal >/dev/null 2>&1; then
+    gnome-terminal --title="$title" -- bash -c "$script" &
+  elif command -v x-terminal-emulator >/dev/null 2>&1; then
+    x-terminal-emulator -T "$title" -e bash -c "$script" &
+  elif command -v xterm >/dev/null 2>&1; then
+    xterm -T "$title" -e bash -c "$script" &
+  else
+    echo "Терминальный эмулятор не найден — $title поднимется в фоне без окна" >&2
+    nohup bash -c "$script" >/dev/null 2>&1 &
+  fi
+}
+
+start_process() {
+  local name="$1" cwd="$2" cmd="$3"
+  local script
+  script=$(cat <<EOF
+cd "$cwd"
+$cmd > >(tee "$LOG_DIR/$name.log") 2>&1 &
+echo \$! > "$LOG_DIR/$name.pid"
+wait
+exec bash
+EOF
+)
+  open_terminal "$name" "$script"
+}
+
+start_java_service() {
+  local module="$1"
+  start_process "$module" "$ROOT_DIR" "./mvnw -pl $module spring-boot:run"
+}
+
+start_frontend() {
+  start_process "frontend" "$ROOT_DIR/frontend" "npm run dev"
+}
+
+cmd_start() {
+  ensure_java
+  load_env
+
+  echo "Поднимаю Kafka + Postgres..."
+  docker compose up -d kafka kafka-ui postgres
+  wait_for_postgres
+
+  echo "Собираю проект (common + все модули)..."
+  ./mvnw -q -DskipTests install
+
+  for module in "${JAVA_SERVICES[@]}"; do
+    echo "Запускаю $module..."
+    start_java_service "$module"
+  done
+
+  wait_for_service gateway "Started GatewayApplication"
+  wait_for_service chain-ingest "Started ChainIngestApplication"
+  wait_for_service enrichment "Started EnrichmentApplication"
+  wait_for_service risk-ai "Started RiskAiApplication"
+
+  echo "Запускаю frontend..."
+  start_frontend
+
+  echo
+  echo "Всё поднято:"
+  echo "  gateway      http://localhost:8081"
+  echo "  kafka-ui     http://localhost:8090"
+  echo "  frontend     http://localhost:5173"
+  echo "Логи — в ./logs/*.log, статус — ./dev.sh status, остановить — ./dev.sh stop"
+}
+
+cmd_stop() {
+  for name in "${JAVA_SERVICES[@]}" frontend; do
+    pidfile="$LOG_DIR/$name.pid"
+    if [ -f "$pidfile" ]; then
+      pid="$(cat "$pidfile")"
+      if kill -0 "$pid" 2>/dev/null; then
+        echo "Останавливаю $name (pid $pid)..."
+        pkill -P "$pid" 2>/dev/null || true
+        kill "$pid" 2>/dev/null || true
+      fi
+      rm -f "$pidfile"
+    fi
+  done
+  echo "Гашу docker (kafka, kafka-ui, postgres)..."
+  docker compose down
+}
+
+cmd_status() {
+  for name in "${JAVA_SERVICES[@]}" frontend; do
+    pidfile="$LOG_DIR/$name.pid"
+    if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+      echo "$name: запущен (pid $(cat "$pidfile"))"
+    else
+      echo "$name: остановлен"
+    fi
+  done
+  docker compose ps
+}
+
+case "${1:-}" in
+  start) cmd_start ;;
+  stop) cmd_stop ;;
+  status) cmd_status ;;
+  *)
+    echo "Использование: $0 {start|stop|status}"
+    exit 1
+    ;;
+esac
