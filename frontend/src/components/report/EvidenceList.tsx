@@ -30,8 +30,8 @@ export function EvidenceList({ explanation, decisiveSignals, manualChecks }: Evi
       {decisiveSignals.length > 0 && (
         <Card title={t("report.decisiveSignals")}>
           <ul className="flex flex-col gap-2">
-            {decisiveSignals.map((signal) => (
-              <motion.li key={signal} variants={itemVariants} className="font-mono text-sm text-text">
+            {decisiveSignals.map((signal, index) => (
+              <motion.li key={index} variants={itemVariants} className="font-mono text-sm text-text">
                 {signal}
               </motion.li>
             ))}
@@ -42,8 +42,8 @@ export function EvidenceList({ explanation, decisiveSignals, manualChecks }: Evi
       {manualChecks.length > 0 && (
         <Card title={t("report.manualChecks")}>
           <ul className="flex flex-col gap-2">
-            {manualChecks.map((check) => (
-              <motion.li key={check} variants={itemVariants} className="text-sm text-text-dim">
+            {manualChecks.map((check, index) => (
+              <motion.li key={index} variants={itemVariants} className="text-sm text-text-dim">
                 {check}
               </motion.li>
             ))}

@@ -17,8 +17,8 @@ export function LandingPage() {
   const [chainId, setChainId] = useState(EVM_CHAINS[0].chainId);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
   const [pendingScanId, setPendingScanId] = useState<string | null>(null);
+  const isLeaving = pendingScanId !== null;
 
   async function handleSubmit() {
     if (isSubmitting) return;
@@ -34,7 +34,6 @@ export function LandingPage() {
     try {
       const { scanId } = await createScan({ address: trimmedAddress, chainId });
       setPendingScanId(scanId);
-      setIsLeaving(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("landing.errorCreateFailed"));
       setIsSubmitting(false);
@@ -69,7 +68,12 @@ export function LandingPage() {
           />
           <div className="flex items-center gap-3">
             <ChainSelect value={chainId} onChange={setChainId} disabled={isSubmitting} />
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              aria-label={t("landing.scanButton")}
+              aria-busy={isSubmitting}
+            >
               {isSubmitting ? <Spinner /> : t("landing.scanButton")}
             </Button>
           </div>

@@ -18,12 +18,16 @@ export function ReportPage() {
 
   useEffect(() => {
     if (!scanId) return;
+    setError(null);
     getScanReport(scanId)
-      .then(setReport)
+      .then((data) => {
+        setReport(data);
+        setError(null);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : t("report.loadError")));
   }, [scanId, t]);
 
-  if (error) {
+  if (!report && error) {
     return (
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-3 px-6 py-10">
         <p className="font-mono text-sm text-risk-critical">{error}</p>

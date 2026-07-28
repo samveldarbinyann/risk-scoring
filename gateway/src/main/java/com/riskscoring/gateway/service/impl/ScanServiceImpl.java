@@ -77,6 +77,7 @@ public class ScanServiceImpl implements ScanService {
         }
 
         return scanReportRepository.findByScanId(scanId)
+                .map(scanMapper::toReportView)
                 .orElseThrow(() -> new ScanReportNotReadyException(scanId, scan.getStatus()));
     }
 }
