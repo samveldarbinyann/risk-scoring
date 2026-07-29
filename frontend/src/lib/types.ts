@@ -13,6 +13,19 @@ export interface ScanGroupAcceptedResponse {
   chainIds: number[];
 }
 
+export type AddressFamily = "EVM";
+
+export interface ChainCandidate {
+  chainId: number;
+  displayName: string;
+}
+
+export interface ChainCandidatesResponse {
+  address: string;
+  family: AddressFamily;
+  chains: ChainCandidate[];
+}
+
 export interface ScanGroupChainStatus {
   chainId: number;
   scanId: string;

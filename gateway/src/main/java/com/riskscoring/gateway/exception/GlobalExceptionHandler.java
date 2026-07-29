@@ -61,6 +61,76 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "UNSUPPORTED_CHAIN", message);
     }
 
+    @ExceptionHandler(UnrecognizedAddressException.class)
+    public ResponseEntity<ErrorResponse> handleUnrecognizedAddress(UnrecognizedAddressException exception) {
+        String message = message("error.unrecognizedAddress", exception.getAddress());
+        return build(HttpStatus.BAD_REQUEST, "UNRECOGNIZED_ADDRESS", message);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return build(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", message("error.invalidCredentials"));
+    }
+
+    @ExceptionHandler(AccountLockedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountLocked(AccountLockedException exception) {
+        String message = message("error.accountLocked", exception.getLockedUntil());
+        return build(HttpStatus.LOCKED, "ACCOUNT_LOCKED", message);
+    }
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotActive(AccountNotActiveException exception) {
+        String message = message("error.accountNotActive", exception.getStatus());
+        return build(HttpStatus.FORBIDDEN, "ACCOUNT_NOT_ACTIVE", message);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRefreshToken(InvalidRefreshTokenException exception) {
+        return build(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", message("error.invalidRefreshToken"));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
+        return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", message("error.unauthorized"));
+    }
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyRegistered(EmailAlreadyRegisteredException exception) {
+        return build(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", message("error.emailAlreadyRegistered"));
+    }
+
+    @ExceptionHandler(UsernameAlreadyTakenException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameAlreadyTaken(UsernameAlreadyTakenException exception) {
+        return build(HttpStatus.CONFLICT, "USERNAME_ALREADY_TAKEN", message("error.usernameAlreadyTaken"));
+    }
+
+    @ExceptionHandler(InvalidVerificationCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidVerificationCode(InvalidVerificationCodeException exception) {
+        return build(HttpStatus.BAD_REQUEST, "INVALID_VERIFICATION_CODE", message("error.invalidVerificationCode"));
+    }
+
+    @ExceptionHandler(VerificationCodeExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleVerificationCodeExpired(VerificationCodeExpiredException exception) {
+        return build(HttpStatus.GONE, "VERIFICATION_CODE_EXPIRED", message("error.verificationCodeExpired"));
+    }
+
+    @ExceptionHandler(TooManyVerificationAttemptsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyAttempts(TooManyVerificationAttemptsException exception) {
+        return build(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS", message("error.tooManyVerificationAttempts"));
+    }
+
+    @ExceptionHandler(ResendCooldownException.class)
+    public ResponseEntity<ErrorResponse> handleResendCooldown(ResendCooldownException exception) {
+        String message = message("error.resendCooldown", exception.getRetryAfterSeconds());
+        return build(HttpStatus.TOO_MANY_REQUESTS, "RESEND_COOLDOWN", message);
+    }
+
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<ErrorResponse> handleEmailDelivery(EmailDeliveryException exception) {
+        log.error("Email delivery failed", exception);
+        return build(HttpStatus.BAD_GATEWAY, "EMAIL_DELIVERY_FAILED", message("error.emailDeliveryFailed"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception) {
         log.error("Unhandled exception", exception);

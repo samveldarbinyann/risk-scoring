@@ -3,3 +3,9 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-scan-table.yaml
   - include:
       file: db/changelog/changes/002-create-scan-group.yaml
+  - include:
+      file: db/changelog/changes/003-create-app-user.yaml
+  - include:
+      file: db/changelog/changes/004-create-email-verification-code.yaml
+  - include:
+      file: db/changelog/changes/005-create-refresh-token.yaml
