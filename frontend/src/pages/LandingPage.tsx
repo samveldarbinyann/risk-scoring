@@ -41,19 +41,19 @@ export function LandingPage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
       <motion.div
-        className="relative flex w-full max-w-2xl flex-col items-center gap-8 text-center"
+        className="relative flex w-full max-w-4xl flex-col items-center gap-3 text-center"
         animate={isLeaving ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }}
         transition={{ duration: 0.35, ease: "easeInOut" }}
         onAnimationComplete={() => {
           if (isLeaving && pendingGroupId) navigate(`/scan/${pendingGroupId}`);
         }}
       >
-        <div className="space-y-3">
+        <div className="space-y-1">
           <p className="font-mono text-xs uppercase tracking-widest text-accent">Risk Scoring</p>
           <TypewriterText
             as="h1"
             text={t("landing.title")}
-            className="min-h-18 text-balance font-sans text-3xl font-semibold text-text sm:min-h-20 sm:text-4xl"
+            className="min-h-9 text-balance font-sans text-3xl font-semibold text-text sm:min-h-14 sm:text-4xl"
           />
           <TypewriterText
             as="p"

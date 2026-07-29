@@ -66,31 +66,13 @@ wait_for_service() {
   exit 1
 }
 
-open_terminal() {
-  local title="$1" script="$2"
-  if command -v gnome-terminal >/dev/null 2>&1; then
-    gnome-terminal --title="$title" -- bash -c "$script" &
-  elif command -v x-terminal-emulator >/dev/null 2>&1; then
-    x-terminal-emulator -T "$title" -e bash -c "$script" &
-  elif command -v xterm >/dev/null 2>&1; then
-    xterm -T "$title" -e bash -c "$script" &
-  else
-    echo "Терминальный эмулятор не найден — $title поднимется в фоне без окна" >&2
-    nohup bash -c "$script" >/dev/null 2>&1 &
-  fi
-}
-
 start_process() {
   local name="$1" cwd="$2" cmd="$3"
-  local script
-  script=$(cat <<EOF
-cd "$cwd"
-$cmd > >(tee "$LOG_DIR/$name.log") 2>&1 &
-echo \$! > "$LOG_DIR/$name.pid"
-wait
-EOF
-)
-  open_terminal "$name" "$script"
+  (
+    cd "$cwd"
+    setsid nohup bash -c "$cmd" > "$LOG_DIR/$name.log" 2>&1 < /dev/null &
+    echo $! > "$LOG_DIR/$name.pid"
+  )
 }
 
 start_java_service() {
@@ -141,8 +123,7 @@ cmd_stop() {
       pid="$(cat "$pidfile")"
       if kill -0 "$pid" 2>/dev/null; then
         echo "Останавливаю $name (pid $pid)..."
-        pkill -P "$pid" 2>/dev/null || true
-        kill "$pid" 2>/dev/null || true
+        kill -TERM "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null || true
       fi
       rm -f "$pidfile"
     fi
