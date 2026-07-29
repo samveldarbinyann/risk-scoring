@@ -4,6 +4,7 @@
 @import "@fontsource/space-grotesk/600.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
 
 @theme {
   --color-bg: #0a0b0f;
@@ -23,7 +24,8 @@
   --color-risk-high: #ff8c42;
   --color-risk-critical: #ff4d4d;
 
-  --radius-base: 6px;
+  --radius-base: 9999px;
+  --radius-panel: 16px;
 
   --font-sans: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;

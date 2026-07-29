@@ -1,6 +1,7 @@
 package com.riskscoring.gateway.repository.impl;
 
 import com.riskscoring.common.model.RiskLevel;
+import com.riskscoring.common.model.TokenBalance;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanReportRow;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +20,15 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
 
     private static final String FIND_BY_SCAN_ID = """
             SELECT scan_id, address, chain_id, risk_level, score, explanation,
-                   decisive_signals, manual_checks, model, created_at
+                   decisive_signals, manual_checks, balance_wei, tx_count, tx_count_24h,
+                   sample_truncated, observed_at, token_balances, model, created_at
             FROM riskai.scan_report
             WHERE scan_id = ?
             """;
 
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
+    };
+    private static final TypeReference<List<TokenBalance>> TOKEN_BALANCE_LIST = new TypeReference<>() {
     };
 
     private final JdbcTemplate jdbcTemplate;
@@ -41,6 +45,12 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
                 rs.getString("explanation"),
                 objectMapper.readValue(rs.getString("decisive_signals"), STRING_LIST),
                 objectMapper.readValue(rs.getString("manual_checks"), STRING_LIST),
+                rs.getString("balance_wei"),
+                rs.getLong("tx_count"),
+                rs.getLong("tx_count_24h"),
+                rs.getBoolean("sample_truncated"),
+                rs.getTimestamp("observed_at").toInstant(),
+                objectMapper.readValue(rs.getString("token_balances"), TOKEN_BALANCE_LIST),
                 rs.getString("model"),
                 rs.getTimestamp("created_at").toInstant()
         ), scanId).stream().findFirst();

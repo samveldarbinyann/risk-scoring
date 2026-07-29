@@ -2,9 +2,10 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.ChainData;
 import com.riskscoring.chainingest.client.ChainDataClient;
-import com.riskscoring.chainingest.client.EtherscanApi;
-import com.riskscoring.chainingest.client.dto.EtherscanTokenTx;
-import com.riskscoring.chainingest.client.dto.EtherscanTx;
+import com.riskscoring.chainingest.client.MoralisApi;
+import com.riskscoring.chainingest.client.dto.MoralisActiveChain;
+import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
+import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.exception.UnsupportedChainException;
@@ -13,6 +14,7 @@ import com.riskscoring.chainingest.mapper.TransferMapper;
 import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.TokenBalance;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,12 +33,13 @@ import java.util.stream.Stream;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class EtherscanChainDataClient implements ChainDataClient {
+public class MoralisChainDataClient implements ChainDataClient {
 
     private static final int FIRST_HOP = 1;
     private static final int SECOND_HOP = 2;
+    private static final Duration WINDOW_24H = Duration.ofHours(24);
 
-    private final EtherscanApi etherscanApi;
+    private final MoralisApi moralisApi;
     private final TransferMapper transferMapper;
     private final CounterpartyAggregator counterpartyAggregator;
     private final ChainIngestProperties properties;
@@ -60,21 +63,9 @@ public class EtherscanChainDataClient implements ChainDataClient {
     }
 
     private TransferSample fetchTransfers(String address, int chainId) {
-        List<EtherscanTx> transactions = etherscanApi.latestTransactions(address, chainId);
-        List<EtherscanTx> internal = etherscanApi.latestInternalTransactions(address, chainId);
-        List<EtherscanTokenTx> tokenTransfers = etherscanApi.latestTokenTransfers(address, chainId);
-
-        List<Transfer> transfers = Stream.of(
-                        transferMapper.fromTransactions(transactions, address),
-                        transferMapper.fromTransactions(internal, address),
-                        transferMapper.fromTokenTransfers(tokenTransfers, address))
-                .flatMap(List::stream)
-                .toList();
-
-        boolean truncated = Stream.of(transactions.size(), internal.size(), tokenTransfers.size())
-                .anyMatch(size -> size >= properties.etherscan().pageSize());
-
-        return new TransferSample(transfers, truncated);
+        MoralisHistoryEnvelope envelope = moralisApi.walletHistory(address, chainId);
+        List<Transfer> transfers = transferMapper.fromTransactions(envelope.result(), address);
+        return new TransferSample(transfers, envelope.cursor() != null);
     }
 
     private List<Counterparty> expandSecondHop(List<Counterparty> firstHop, String target, int chainId) {
@@ -95,36 +86,47 @@ public class EtherscanChainDataClient implements ChainDataClient {
     }
 
     private AddressSnapshot snapshot(String address, int chainId, TransferSample sample) {
-        Instant firstSeenAt = firstSeenAt(address, chainId, sample);
-        Instant lastSeenAt = boundary(sample.transfers(), Comparator.reverseOrder());
+        Instant observedAt = Instant.now();
+        Optional<MoralisActiveChain> activity = moralisApi.walletActivity(address, chainId);
+
+        Instant firstSeenAt = activity.map(MoralisActiveChain::firstTransaction)
+                .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
+                .orElseGet(() -> transferTimes(sample).min(Comparator.naturalOrder()).orElse(null));
+        Instant lastSeenAt = activity.map(MoralisActiveChain::lastTransaction)
+                .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
+                .orElseGet(() -> transferTimes(sample).max(Comparator.naturalOrder()).orElse(null));
 
         return new AddressSnapshot(
-                ageDays(firstSeenAt),
                 sample.transfers().size(),
-                etherscanApi.balanceWei(address, chainId),
+                txCount24h(sample, observedAt),
+                moralisApi.balanceWei(address, chainId),
+                tokenBalances(address, chainId),
                 firstSeenAt,
                 lastSeenAt,
-                sample.truncated());
+                sample.truncated(),
+                observedAt);
     }
 
-    private Instant firstSeenAt(String address, int chainId, TransferSample sample) {
-        return etherscanApi.firstTransaction(address, chainId)
-                .map(transaction -> transferMapper.timestamp(transaction.timeStamp()))
-                .orElseGet(() -> boundary(sample.transfers(), Comparator.naturalOrder()));
-    }
-
-    private Instant boundary(List<Transfer> transfers, Comparator<Instant> order) {
-        return transfers.stream()
+    private Stream<Instant> transferTimes(TransferSample sample) {
+        return sample.transfers().stream()
                 .map(Transfer::at)
-                .filter(Objects::nonNull)
-                .min(order)
-                .orElse(null);
+                .filter(Objects::nonNull);
     }
 
-    private int ageDays(Instant firstSeenAt) {
-        return Optional.ofNullable(firstSeenAt)
-                .map(seen -> (int) Duration.between(seen, Instant.now()).toDays())
-                .orElse(0);
+    private long txCount24h(TransferSample sample, Instant observedAt) {
+        Instant windowStart = observedAt.minus(WINDOW_24H);
+        return transferTimes(sample)
+                .filter(at -> at.isAfter(windowStart))
+                .count();
+    }
+
+    private List<TokenBalance> tokenBalances(String address, int chainId) {
+        return moralisApi.tokenBalances(address, chainId).stream()
+                .sorted(Comparator.comparing(
+                        (MoralisTokenBalance token) -> Optional.ofNullable(token.usdValue()).orElse(0.0)).reversed())
+                .limit(properties.maxTokenBalances())
+                .map(token -> new TokenBalance(token.symbol(), token.balanceFormatted(), token.usdValue()))
+                .toList();
     }
 
     private record TransferSample(List<Transfer> transfers, boolean truncated) {

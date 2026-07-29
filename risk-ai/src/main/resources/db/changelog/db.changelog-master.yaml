@@ -1,3 +1,7 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/001-create-scan-report.yaml
+  - include:
+      file: db/changelog/changes/002-add-evidence-fields-to-scan-report.yaml
+  - include:
+      file: db/changelog/changes/003-add-observation-fields-to-scan-report.yaml

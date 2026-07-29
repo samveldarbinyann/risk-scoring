@@ -40,7 +40,7 @@ public class AddressCacheServiceImpl implements AddressCacheService {
         AddressCache cache = addressCacheRepository.findByChainIdAndAddress(chainId, address)
                 .orElseGet(() -> addressCacheMapper.newEntity(address, chainId));
 
-        addressCacheMapper.updateSnapshot(cache, chainData.snapshot(), Instant.now());
+        addressCacheMapper.updateSnapshot(cache, chainData.snapshot());
         cache.replaceCounterparties(addressCacheMapper.toEntities(chainData.counterparties()));
 
         addressCacheRepository.save(cache);

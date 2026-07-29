@@ -42,9 +42,10 @@ chain-ingest:
   max-hops: 2
   hop2-expand-top: 3
   hop2-reserve: 5
-  etherscan:
-    base-url: ${ETHERSCAN_BASE_URL:https://api.etherscan.io/v2/api}
-    api-key: ${ETHERSCAN_API_KEY}
+  max-token-balances: 10
+  moralis:
+    base-url: ${MORALIS_BASE_URL:https://deep-index.moralis.io/api/v2.2}
+    api-key: ${MORALIS_API_KEY}
     page-size: 100
     calls-per-second: 3
     rate-limit-retries: 4

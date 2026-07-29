@@ -10,19 +10,22 @@ import org.springframework.web.client.RestClient;
 
 @Configuration
 @RequiredArgsConstructor
-public class EtherscanRestClientConfig {
+public class MoralisRestClientConfig {
+
+    private static final String API_KEY_HEADER = "X-API-Key";
 
     private final ChainIngestProperties properties;
 
     @Bean
-    public RestClient etherscanRestClient() {
+    public RestClient moralisRestClient() {
         ClientHttpRequestFactory requestFactory = ClientHttpRequestFactoryBuilder.jdk()
                 .build(HttpClientSettings.defaults()
-                        .withTimeouts(properties.etherscan().connectTimeout(),
-                                properties.etherscan().readTimeout()));
+                        .withTimeouts(properties.moralis().connectTimeout(),
+                                properties.moralis().readTimeout()));
 
         return RestClient.builder()
-                .baseUrl(properties.etherscan().baseUrl())
+                .baseUrl(properties.moralis().baseUrl())
+                .defaultHeader(API_KEY_HEADER, properties.moralis().apiKey())
                 .requestFactory(requestFactory)
                 .build();
     }

@@ -79,6 +79,12 @@ public class ScanMapper {
                 row.explanation(),
                 row.decisiveSignals(),
                 row.manualChecks(),
+                row.balanceWei(),
+                row.txCount(),
+                row.txCount24h(),
+                row.sampleTruncated(),
+                row.observedAt(),
+                row.tokenBalances(),
                 row.model(),
                 row.createdAt()
         );

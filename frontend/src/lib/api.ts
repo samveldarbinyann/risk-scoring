@@ -48,6 +48,8 @@ export function getScanGroupReport(groupId: string): Promise<ScanGroupReportView
   return apiRequest<ScanGroupReportView>(`/api/scans/groups/${groupId}/report`);
 }
 
-export function getMessages(): Promise<Record<string, string>> {
-  return apiRequest<Record<string, string>>("/api/i18n");
+export function getMessages(locale: Locale): Promise<Record<string, string>> {
+  return apiRequest<Record<string, string>>("/api/i18n", {
+    headers: { "Accept-Language": locale },
+  });
 }

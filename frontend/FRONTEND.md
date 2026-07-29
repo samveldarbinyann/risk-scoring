@@ -20,10 +20,10 @@ React + Vite + TypeScript · Tailwind CSS v4 · Framer Motion (`motion`) ·
 ```
 src/
   pages/            страницы, собираются из components/*
-  components/ui/    переиспользуемые примитивы (Button, Card, Input, Select, RiskBadge, Spinner)
+  components/ui/    переиспользуемые примитивы (Card, Input, Select, RiskBadge, Spinner, ErrorMessage)
   components/       составные блоки, сгруппированные по фиче (hero/, console/, report/, layout/)
   lib/               api-клиент, ws-клиент, типы (зеркало DTO gateway), форматирование, справочники
-  hooks/             переиспользуемая логика (useScanStream, useCountUp)
+  hooks/             переиспользуемая логика (useScanGroupStream, useCountUp, useTypewriter)
 ```
 
 ## Дизайн-токены — единственное место: `src/index.css`
@@ -34,14 +34,19 @@ src/
   --color-text: #e6e8ee; --color-text-dim: #8a90a2; --color-text-faint: #4c5163;
   --color-accent: #00e5c7; --color-accent-press: #00b9a1;
   --color-risk-low: #35d07f; --color-risk-mid: #f5c451; --color-risk-high: #ff8c42; --color-risk-critical: #ff4d4d;
-  --radius-base: 6px;
+  --radius-base: 9999px;
+  --radius-panel: 16px;
   --font-sans: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 ```
 
-Цвета/радиусы/шрифты нигде больше не хардкодятся. Единственный радиус —
-`rounded-base`, без `rounded-lg/xl/full` вразнобой. Риск-цвета — единый источник
+Цвета/радиусы/шрифты нигде больше не хардкодятся. Два радиуса, оба осмысленные:
+`rounded-base` (полное скругление, пилюля) — для интерактивных элементов с фиксированной высотой:
+кнопки, инпуты, селекты, беджи, чипы. `rounded-panel` (16px) — для крупных контейнеров-панелей
+(карточки, лог консоли, ревил вердикта), где `rounded-base` при высоте, сопоставимой с шириной,
+превращает панель в круг/капсулу — визуальный баг, не стиль. Больше никаких `rounded-lg/xl/full`
+вразнобой. Риск-цвета — единый источник
 `lib/risk.ts` (`RISK` маппинг + `riskAccentClass()`), потребляется `RiskBadge` и
 `VerdictReveal`, нигде не дублируются.
 
@@ -83,19 +88,29 @@ glassmorphism, случайные blur/glow не по делу; шрифты Orb
 **HeroInput** (`src/components/hero/HeroInput.tsx`):
 
 ```tsx
-export function HeroInput({ value, onChange, onSubmit, disabled }: HeroInputProps) {
+export function HeroInput({ value, onChange, onSubmit, placeholder, disabled, submitLabel, isSubmitting }: HeroInputProps) {
   return (
-    <div className="flex w-full max-w-2xl items-center gap-3 rounded-base border border-border
-                    bg-surface px-6 py-4 font-mono transition-[border-color,box-shadow]
-                    focus-within:border-accent focus-within:shadow-[0_0_0_1px_var(--color-accent),0_0_28px_-6px_var(--color-accent)]">
+    <div className="flex w-full flex-1 items-center gap-3 rounded-base border border-border
+                    bg-surface py-2 pl-6 pr-2 font-mono transition-[border-color,box-shadow]
+                    focus-within:border-accent focus-within:shadow-[0_0_28px_-6px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]">
       <input
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => event.key === "Enter" && onSubmit()}
         disabled={disabled}
-        placeholder="0x… адрес кошелька"
+        placeholder={placeholder}
         className="flex-1 bg-transparent text-lg text-text outline-none placeholder:text-text-faint disabled:text-text-faint"
       />
+      <button
+        type="button"
+        onClick={onSubmit}
+        disabled={disabled}
+        aria-label={submitLabel}
+        aria-busy={isSubmitting}
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-base bg-accent text-bg transition-colors hover:bg-accent-press active:bg-accent-press disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-text-faint"
+      >
+        {isSubmitting ? <Spinner /> : <SearchIcon className="h-5 w-5" />}
+      </button>
     </div>
   );
 }
@@ -106,7 +121,7 @@ export function HeroInput({ value, onChange, onSubmit, disabled }: HeroInputProp
 ```tsx
 export function Card({ title, className, children }: CardProps) {
   return (
-    <section className={cn("rounded-base border border-border bg-surface p-6", className)}>
+    <section className={cn("rounded-panel border border-border bg-surface p-6", className)}>
       {title && <h3 className="mb-4 font-sans text-xs uppercase tracking-wider text-text-dim">{title}</h3>}
       {children}
     </section>
@@ -147,7 +162,7 @@ export function RiskBadge({ level }: RiskBadgeProps) {
 ## Контракты с бэкендом
 
 `src/lib/types.ts` — зеркало DTO/событий `gateway`
-(`ScanCreateRequest`/`ScanAcceptedResponse`/`ScanView`/`ScanReportView`/
+(`ScanCreateRequest`/`ScanGroupAcceptedResponse`/`ScanGroupView`/`ScanReportView`/
 `ScanProgressMessage`, enums `ScanStage`/`ScanSource`/`RiskLevel`). При изменении
 контракта на бэке — править здесь в первую очередь, до вёрстки. `src/lib/api.ts`
 и `src/lib/ws.ts` — единственные места, где фронт ходит в сеть.
@@ -164,9 +179,10 @@ export function RiskBadge({ level }: RiskBadgeProps) {
   без текста) + `Locale`.
 - `src/lib/i18n/context.ts` — React-контекст и хук `useI18n()` → `{ locale, setLocale, t }`.
 - `src/lib/i18n/I18nProvider.tsx` — провайдер: детектит локаль (localStorage →
-  `navigator.language` → `en`), при смене локали дёргает
-  `GET /api/i18n?lang=en|ru` и кладёт результат в контекст. Оборачивает `<App/>`
-  в `main.tsx`.
+  `navigator.language` → `en`) и при монтировании грузит `GET /api/i18n?lang=…`
+  сразу для обеих локалей, чтобы переключение языка не ждало сеть и не давало
+  хедеру мигать. До загрузки не рендерит ничего. Оборачивает `<App/>` в
+  `main.tsx`.
 - `components/layout/LocaleSwitch.tsx` — переключатель EN/RU, в `NavBar` и
   отдельно в углу `LandingPage` (у лендинга своего header нет).
 

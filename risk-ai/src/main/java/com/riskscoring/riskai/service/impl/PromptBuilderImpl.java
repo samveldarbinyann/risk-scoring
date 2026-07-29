@@ -35,6 +35,13 @@ public class PromptBuilderImpl implements PromptBuilder {
               txCount as a lower bound and never conclude the address is low-activity or dormant.
             - totalValueWei covers native-currency transfers only. A counterparty with value "0" may
               still have moved tokens, so a zero amount is not evidence that nothing was transferred.
+            - observedAt is when the on-chain data was read. Every counter and balance below describes
+              the chain as of that moment, not as of now.
+            - balanceWei and tokenBalances are the wallet's holdings at observedAt, not a transfer
+              amount — a large balance is not proof of clean or dirty funds by itself.
+            - txCount24h is how many observed transfers happened in the 24 hours before observedAt.
+              A sudden burst right before or after suspicious exposure is more telling than the raw
+              count alone.
 
             Scoring scale:
             - LOW 0-25, MEDIUM 26-50, HIGH 51-80, CRITICAL 81-100.

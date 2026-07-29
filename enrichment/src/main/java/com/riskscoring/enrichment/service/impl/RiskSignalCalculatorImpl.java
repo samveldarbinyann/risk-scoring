@@ -1,6 +1,7 @@
 package com.riskscoring.enrichment.service.impl;
 
 import com.riskscoring.common.event.ChainFetched;
+import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.FlaggedExposure;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -37,19 +39,29 @@ public class RiskSignalCalculatorImpl implements RiskSignalCalculator {
     @Override
     public EvidenceBundle calculate(ChainFetched event, Map<String, Label> labelsByAddress) {
         List<Counterparty> counterparties = event.counterparties();
+        int ageDays = ageDays(event.snapshot());
 
         return new EvidenceBundle(
                 event.address(),
                 event.chainId(),
-                event.snapshot().ageDays(),
+                ageDays,
                 event.snapshot().txCount(),
+                event.snapshot().txCount24h(),
                 event.snapshot().sampleTruncated(),
+                event.snapshot().observedAt(),
                 event.snapshot().balanceWei(),
+                event.snapshot().tokenBalances(),
                 counterparties.size(),
                 flaggedExposures(event, labelsByAddress),
                 mixerExposure(counterparties, labelsByAddress),
-                heuristics(event, counterparties)
+                heuristics(event, counterparties, ageDays)
         );
+    }
+
+    private int ageDays(AddressSnapshot snapshot) {
+        return Optional.ofNullable(snapshot.firstSeenAt())
+                .map(firstSeenAt -> (int) Duration.between(firstSeenAt, snapshot.observedAt()).toDays())
+                .orElse(0);
     }
 
     private List<FlaggedExposure> flaggedExposures(ChainFetched event, Map<String, Label> labels) {
@@ -105,8 +117,8 @@ public class RiskSignalCalculatorImpl implements RiskSignalCalculator {
         return new MixerExposure(services, percent, mixerVolume.toString());
     }
 
-    private Heuristics heuristics(ChainFetched event, List<Counterparty> counterparties) {
-        boolean freshWallet = event.snapshot().ageDays() < properties.freshWalletDays();
+    private Heuristics heuristics(ChainFetched event, List<Counterparty> counterparties, int ageDays) {
+        boolean freshWallet = ageDays < properties.freshWalletDays();
         boolean drained = new BigInteger(event.snapshot().balanceWei()).signum() == 0;
 
         int fanIn = countByDirection(counterparties, TransferDirection.IN);

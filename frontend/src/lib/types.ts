@@ -4,6 +4,7 @@ export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface ScanCreateRequest {
   address: string;
+  chainIds?: number[];
 }
 
 export interface ScanGroupAcceptedResponse {
@@ -25,6 +26,12 @@ export interface ScanGroupView {
   chains: ScanGroupChainStatus[];
 }
 
+export interface TokenBalance {
+  symbol: string;
+  balanceFormatted: string;
+  usdValue: number | null;
+}
+
 export interface ScanReportView {
   scanId: string;
   address: string;
@@ -34,6 +41,12 @@ export interface ScanReportView {
   explanation: string;
   decisiveSignals: string[];
   manualChecks: string[];
+  balanceWei: string;
+  txCount: number;
+  txCount24h: number;
+  sampleTruncated: boolean;
+  observedAt: string;
+  tokenBalances: TokenBalance[];
   model: string;
   createdAt: string;
 }

@@ -88,7 +88,6 @@ cd "$cwd"
 $cmd > >(tee "$LOG_DIR/$name.log") 2>&1 &
 echo \$! > "$LOG_DIR/$name.pid"
 wait
-exec bash
 EOF
 )
   open_terminal "$name" "$script"
