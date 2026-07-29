@@ -21,7 +21,7 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
     private static final String FIND_BY_SCAN_ID = """
             SELECT scan_id, address, chain_id, risk_level, score, explanation,
                    decisive_signals, manual_checks, balance_wei, tx_count, tx_count_24h,
-                   token_balances, model, created_at
+                   sample_truncated, observed_at, token_balances, model, created_at
             FROM riskai.scan_report
             WHERE scan_id = ?
             """;
@@ -48,6 +48,8 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
                 rs.getString("balance_wei"),
                 rs.getLong("tx_count"),
                 rs.getLong("tx_count_24h"),
+                rs.getBoolean("sample_truncated"),
+                rs.getTimestamp("observed_at").toInstant(),
                 objectMapper.readValue(rs.getString("token_balances"), TOKEN_BALANCE_LIST),
                 rs.getString("model"),
                 rs.getTimestamp("created_at").toInstant()

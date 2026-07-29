@@ -66,6 +66,8 @@ export function ReportPage() {
             tokenBalances={report.tokenBalances}
             txCount={report.txCount}
             txCount24h={report.txCount24h}
+            sampleTruncated={report.sampleTruncated}
+            observedAt={report.observedAt}
           />
           <EvidenceList
             explanation={report.explanation}

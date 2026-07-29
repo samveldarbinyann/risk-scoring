@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/002-purge-stub-cache.yaml
   - include:
       file: db/changelog/changes/003-add-token-balances-to-address-cache.yaml
+  - include:
+      file: db/changelog/changes/004-drop-age-days-from-address-cache.yaml

@@ -82,6 +82,8 @@ public class ScanMapper {
                 row.balanceWei(),
                 row.txCount(),
                 row.txCount24h(),
+                row.sampleTruncated(),
+                row.observedAt(),
                 row.tokenBalances(),
                 row.model(),
                 row.createdAt()

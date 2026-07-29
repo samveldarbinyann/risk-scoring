@@ -17,28 +17,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(detectLocale);
   const [bundles, setBundles] = useState<MessageBundles | null>(null);
 
-  // Обе локали грузятся разом при старте: переключение языка не ждёт сеть
-  // и не даёт хедеру мигать/схлопываться.
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all(LOCALES.map((loc) => getMessages(loc)))
-      .then((loaded) => {
-        if (cancelled) return;
-        const next = {} as MessageBundles;
-        LOCALES.forEach((loc, i) => {
-          next[loc] = loaded[i];
-        });
-        setBundles(next);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        const empty = {} as MessageBundles;
-        LOCALES.forEach((loc) => {
-          empty[loc] = {};
-        });
-        setBundles(empty);
-      });
+    const loaded = LOCALES.map(
+      async (loc) => [loc, await getMessages(loc).catch((): Record<string, string> => ({}))] as const,
+    );
+
+    Promise.all(loaded).then((entries) => {
+      if (cancelled) return;
+      setBundles(Object.fromEntries(entries) as MessageBundles);
+    });
 
     return () => {
       cancelled = true;

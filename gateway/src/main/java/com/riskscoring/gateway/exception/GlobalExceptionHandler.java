@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.exception;
 
+import com.riskscoring.common.model.EvmChain;
 import com.riskscoring.gateway.dto.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleScanGroupReportNotReady(ScanGroupReportNotReadyException exception) {
         String message = message("error.scanGroupReportNotReady", exception.getGroupId());
         return build(HttpStatus.CONFLICT, "SCAN_GROUP_REPORT_NOT_READY", message);
+    }
+
+    @ExceptionHandler(UnsupportedChainException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedChain(UnsupportedChainException exception) {
+        String message = message("error.unsupportedChain", exception.getChainId(), EvmChain.supportedIds());
+        return build(HttpStatus.BAD_REQUEST, "UNSUPPORTED_CHAIN", message);
     }
 
     @ExceptionHandler(Exception.class)

@@ -19,6 +19,8 @@ public record ScanReportRow(
         String balanceWei,
         long txCount,
         long txCount24h,
+        boolean sampleTruncated,
+        Instant observedAt,
         List<TokenBalance> tokenBalances,
         String model,
         Instant createdAt

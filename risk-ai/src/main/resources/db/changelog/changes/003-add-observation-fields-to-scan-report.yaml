@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-observation-fields-to-scan-report
+      author: sam
+      changes:
+        - addColumn:
+            tableName: scan_report
+            columns:
+              - column:
+                  name: sample_truncated
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: observed_at
+                  type: timestamptz
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false

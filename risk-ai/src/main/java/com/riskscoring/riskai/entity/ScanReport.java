@@ -68,6 +68,12 @@ public class ScanReport {
     @Column(name = "tx_count_24h", nullable = false)
     private long txCount24h;
 
+    @Column(name = "sample_truncated", nullable = false)
+    private boolean sampleTruncated;
+
+    @Column(name = "observed_at", nullable = false)
+    private Instant observedAt;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "token_balances", nullable = false, columnDefinition = "jsonb")
     private String tokenBalances;

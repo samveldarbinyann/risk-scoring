@@ -16,6 +16,7 @@ import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanGroupReportNotReadyException;
 import com.riskscoring.gateway.exception.ScanNotFoundException;
 import com.riskscoring.gateway.exception.ScanReportNotReadyException;
+import com.riskscoring.gateway.exception.UnsupportedChainException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
@@ -28,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -58,7 +58,7 @@ public class ScanServiceImpl implements ScanService {
                 .build();
         scanGroupRepository.save(group);
 
-        List<Scan> scans = Arrays.stream(EvmChain.values())
+        List<Scan> scans = requestedChains(request).stream()
                 .map(chain -> Scan.builder()
                         .id(UUID.randomUUID())
                         .groupId(group.getId())
@@ -75,6 +75,17 @@ public class ScanServiceImpl implements ScanService {
         scans.forEach(scan -> scanEventPublisher.publishScanRequested(scanMapper.toEvent(scan, language)));
 
         return scanMapper.toGroupAcceptedResponse(group, scans);
+    }
+
+    private List<EvmChain> requestedChains(ScanCreateRequest request) {
+        if (request.chainIds() == null || request.chainIds().isEmpty()) {
+            return EvmChain.mainnets();
+        }
+
+        return request.chainIds().stream()
+                .distinct()
+                .map(chainId -> EvmChain.byId(chainId).orElseThrow(() -> new UnsupportedChainException(chainId)))
+                .toList();
     }
 
     @Override

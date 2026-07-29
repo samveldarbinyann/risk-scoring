@@ -2,8 +2,9 @@ package com.riskscoring.chainingest.client;
 
 import com.riskscoring.chainingest.client.dto.MoralisActiveChain;
 import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
-import com.riskscoring.chainingest.client.dto.MoralisTokenBalancesEnvelope;
+import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MoralisApi {
@@ -14,5 +15,5 @@ public interface MoralisApi {
 
     Optional<MoralisActiveChain> walletActivity(String address, int chainId);
 
-    MoralisTokenBalancesEnvelope tokenBalances(String address, int chainId);
+    List<MoralisTokenBalance> tokenBalances(String address, int chainId);
 }

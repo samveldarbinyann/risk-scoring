@@ -15,10 +15,15 @@ interface TypewriterState {
 export function useTypewriter(text: string, delayMs = 0): TypewriterState {
   const [charCount, setCharCount] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
+  const [prevText, setPrevText] = useState(text);
 
-  useEffect(() => {
+  if (prevText !== text) {
+    setPrevText(text);
     setCharCount(0);
     setIsTyping(false);
+  }
+
+  useEffect(() => {
     if (!text) return;
 
     let controls: { stop: () => void } | undefined;

@@ -40,9 +40,6 @@ public class AddressCache {
     @Column(nullable = false, length = 42)
     private String address;
 
-    @Column(name = "age_days", nullable = false)
-    private int ageDays;
-
     @Column(name = "tx_count", nullable = false)
     private long txCount;
 

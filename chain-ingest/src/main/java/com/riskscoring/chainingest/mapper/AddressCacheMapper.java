@@ -12,7 +12,6 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigInteger;
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,14 +26,14 @@ public class AddressCacheMapper {
 
     public ChainData toChainData(AddressCache cache) {
         AddressSnapshot snapshot = new AddressSnapshot(
-                cache.getAgeDays(),
                 cache.getTxCount(),
                 cache.getTxCount24h(),
                 cache.getBalanceWei().toString(),
                 objectMapper.readValue(cache.getTokenBalances(), TOKEN_BALANCE_LIST),
                 cache.getFirstSeenAt(),
                 cache.getLastSeenAt(),
-                cache.isSampleTruncated()
+                cache.isSampleTruncated(),
+                cache.getFetchedAt()
         );
 
         List<Counterparty> counterparties = cache.getCounterparties().stream()
@@ -58,8 +57,7 @@ public class AddressCacheMapper {
                 .build();
     }
 
-    public void updateSnapshot(AddressCache cache, AddressSnapshot snapshot, Instant fetchedAt) {
-        cache.setAgeDays(snapshot.ageDays());
+    public void updateSnapshot(AddressCache cache, AddressSnapshot snapshot) {
         cache.setTxCount(snapshot.txCount());
         cache.setTxCount24h(snapshot.txCount24h());
         cache.setBalanceWei(new BigInteger(snapshot.balanceWei()));
@@ -67,7 +65,7 @@ public class AddressCacheMapper {
         cache.setFirstSeenAt(snapshot.firstSeenAt());
         cache.setLastSeenAt(snapshot.lastSeenAt());
         cache.setSampleTruncated(snapshot.sampleTruncated());
-        cache.setFetchedAt(fetchedAt);
+        cache.setFetchedAt(snapshot.observedAt());
     }
 
     public List<CounterpartyCache> toEntities(List<Counterparty> counterparties) {

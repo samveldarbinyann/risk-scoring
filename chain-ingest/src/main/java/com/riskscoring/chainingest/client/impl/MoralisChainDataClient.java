@@ -25,8 +25,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -84,47 +86,47 @@ public class MoralisChainDataClient implements ChainDataClient {
     }
 
     private AddressSnapshot snapshot(String address, int chainId, TransferSample sample) {
+        Instant observedAt = Instant.now();
         Optional<MoralisActiveChain> activity = moralisApi.walletActivity(address, chainId);
 
         Instant firstSeenAt = activity.map(MoralisActiveChain::firstTransaction)
                 .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
-                .orElse(null);
+                .orElseGet(() -> transferTimes(sample).min(Comparator.naturalOrder()).orElse(null));
         Instant lastSeenAt = activity.map(MoralisActiveChain::lastTransaction)
                 .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
-                .orElse(null);
+                .orElseGet(() -> transferTimes(sample).max(Comparator.naturalOrder()).orElse(null));
 
         return new AddressSnapshot(
-                ageDays(firstSeenAt),
                 sample.transfers().size(),
-                txCount24h(sample),
+                txCount24h(sample, observedAt),
                 moralisApi.balanceWei(address, chainId),
                 tokenBalances(address, chainId),
                 firstSeenAt,
                 lastSeenAt,
-                sample.truncated());
+                sample.truncated(),
+                observedAt);
     }
 
-    private long txCount24h(TransferSample sample) {
-        Instant windowStart = Instant.now().minus(WINDOW_24H);
+    private Stream<Instant> transferTimes(TransferSample sample) {
         return sample.transfers().stream()
-                .filter(transfer -> transfer.at() != null && transfer.at().isAfter(windowStart))
+                .map(Transfer::at)
+                .filter(Objects::nonNull);
+    }
+
+    private long txCount24h(TransferSample sample, Instant observedAt) {
+        Instant windowStart = observedAt.minus(WINDOW_24H);
+        return transferTimes(sample)
+                .filter(at -> at.isAfter(windowStart))
                 .count();
     }
 
     private List<TokenBalance> tokenBalances(String address, int chainId) {
-        return moralisApi.tokenBalances(address, chainId).result().stream()
-                .filter(token -> !token.possibleSpam())
+        return moralisApi.tokenBalances(address, chainId).stream()
                 .sorted(Comparator.comparing(
                         (MoralisTokenBalance token) -> Optional.ofNullable(token.usdValue()).orElse(0.0)).reversed())
                 .limit(properties.maxTokenBalances())
                 .map(token -> new TokenBalance(token.symbol(), token.balanceFormatted(), token.usdValue()))
                 .toList();
-    }
-
-    private int ageDays(Instant firstSeenAt) {
-        return Optional.ofNullable(firstSeenAt)
-                .map(seen -> (int) Duration.between(seen, Instant.now()).toDays())
-                .orElse(0);
     }
 
     private record TransferSample(List<Transfer> transfers, boolean truncated) {

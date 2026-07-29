@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-drop-age-days-from-address-cache
+      author: sam
+      changes:
+        - dropColumn:
+            tableName: address_cache
+            columnName: age_days

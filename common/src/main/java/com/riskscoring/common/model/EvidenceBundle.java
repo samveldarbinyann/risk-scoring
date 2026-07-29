@@ -1,5 +1,6 @@
 package com.riskscoring.common.model;
 
+import java.time.Instant;
 import java.util.List;
 
 public record EvidenceBundle(
@@ -9,6 +10,7 @@ public record EvidenceBundle(
         long txCount,
         long txCount24h,
         boolean sampleTruncated,
+        Instant observedAt,
         String balanceWei,
         List<TokenBalance> tokenBalances,
         int counterpartyCount,

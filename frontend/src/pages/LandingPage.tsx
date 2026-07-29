@@ -53,7 +53,7 @@ export function LandingPage() {
           <TypewriterText
             as="h1"
             text={t("landing.title")}
-            className="whitespace-nowrap font-sans text-3xl font-semibold text-text sm:text-4xl"
+            className="min-h-18 text-balance font-sans text-3xl font-semibold text-text sm:min-h-20 sm:text-4xl"
           />
           <TypewriterText
             as="p"

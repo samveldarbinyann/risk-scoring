@@ -39,6 +39,8 @@ public class ScanReportMapper {
                 .balanceWei(evidence.balanceWei())
                 .txCount(evidence.txCount())
                 .txCount24h(evidence.txCount24h())
+                .sampleTruncated(evidence.sampleTruncated())
+                .observedAt(evidence.observedAt())
                 .tokenBalances(objectMapper.writeValueAsString(evidence.tokenBalances()))
                 .model(model)
                 .promptVersion(promptVersion)

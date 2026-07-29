@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { useI18n } from "@/lib/i18n/context";
 import { nativeSymbol } from "@/lib/chains";
-import { formatWei } from "@/lib/format";
+import { formatDateTime, formatWei } from "@/lib/format";
 import type { TokenBalance } from "@/lib/types";
 
 interface WalletStatsProps {
@@ -10,9 +10,19 @@ interface WalletStatsProps {
   tokenBalances: TokenBalance[];
   txCount: number;
   txCount24h: number;
+  sampleTruncated: boolean;
+  observedAt: string;
 }
 
-export function WalletStats({ chainId, balanceWei, tokenBalances, txCount, txCount24h }: WalletStatsProps) {
+export function WalletStats({
+  chainId,
+  balanceWei,
+  tokenBalances,
+  txCount,
+  txCount24h,
+  sampleTruncated,
+  observedAt,
+}: WalletStatsProps) {
   const { t } = useI18n();
 
   return (
@@ -28,12 +38,16 @@ export function WalletStats({ chainId, balanceWei, tokenBalances, txCount, txCou
             </span>
           ))}
         </div>
-        <div className="flex gap-6 font-mono text-sm text-text-dim">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm text-text-dim">
           <span>
-            {t("report.txCount")}: <span className="text-text">{txCount}</span>
+            {t("report.transfers")}: <span className="text-text">{txCount}</span>
+            {sampleTruncated && <span className="text-risk-mid"> · {t("report.sampleTruncated")}</span>}
           </span>
           <span>
-            {t("report.txCount24h")}: <span className="text-text">{txCount24h}</span>
+            {t("report.transfers24h")}: <span className="text-text">{txCount24h}</span>
+          </span>
+          <span>
+            {t("report.observedAt")}: <span className="text-text">{formatDateTime(observedAt)}</span>
           </span>
         </div>
       </div>
