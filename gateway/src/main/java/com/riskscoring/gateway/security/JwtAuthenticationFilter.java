@@ -24,7 +24,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String ROLE_PREFIX = "ROLE_";
-    private static final int MAX_TOKEN_LENGTH = 4096;
 
     private final TokenService tokenService;
 
@@ -45,12 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return Optional.empty();
         }
 
-        String token = header.substring(BEARER_PREFIX.length());
-        if (token.isBlank() || token.length() > MAX_TOKEN_LENGTH) {
-            return Optional.empty();
-        }
-
-        return Optional.of(token);
+        return Optional.of(header.substring(BEARER_PREFIX.length()))
+                .filter(token -> !token.isBlank());
     }
 
     private static void authenticate(AuthenticatedUser user) {

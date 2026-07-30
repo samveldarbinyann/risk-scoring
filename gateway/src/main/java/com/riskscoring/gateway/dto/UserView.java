@@ -14,7 +14,6 @@ public record UserView(
         String email,
         UserRole role,
         UserStatus status,
-        String avatarPath,
         Language language
 ) {
 }

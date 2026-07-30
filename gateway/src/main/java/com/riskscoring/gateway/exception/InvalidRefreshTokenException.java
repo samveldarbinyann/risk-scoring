@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class InvalidRefreshTokenException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class InvalidRefreshTokenException extends ApiException {
 
     public InvalidRefreshTokenException() {
-        super("Refresh token is missing, expired or already used");
+        super(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", "error.invalidRefreshToken");
     }
 }

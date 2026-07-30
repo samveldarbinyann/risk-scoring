@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class InvalidCredentialsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class InvalidCredentialsException extends ApiException {
 
     public InvalidCredentialsException() {
-        super("Invalid login or password");
+        super(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "error.invalidCredentials");
     }
 }

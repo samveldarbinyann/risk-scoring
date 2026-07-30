@@ -9,7 +9,7 @@ import com.riskscoring.gateway.exception.TooManyVerificationAttemptsException;
 import com.riskscoring.gateway.exception.VerificationCodeExpiredException;
 import com.riskscoring.gateway.model.EmailCodePurpose;
 import com.riskscoring.gateway.repository.EmailVerificationCodeRepository;
-import com.riskscoring.gateway.security.CodeHasher;
+import com.riskscoring.gateway.security.SecretHasher;
 import com.riskscoring.gateway.service.EmailService;
 import com.riskscoring.gateway.service.EmailVerificationService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     private final EmailVerificationCodeRepository codeRepository;
     private final EmailService emailService;
-    private final CodeHasher codeHasher;
+    private final SecretHasher secretHasher;
     private final GatewayProperties gatewayProperties;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -69,7 +69,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             throw new TooManyVerificationAttemptsException();
         }
 
-        if (!codeHasher.matches(code, stored.getCodeHash())) {
+        if (!secretHasher.matches(code, stored.getCodeHash())) {
             if (codeRepository.incrementAttempts(stored.getId(), maxAttempts()) == 0) {
                 throw new TooManyVerificationAttemptsException();
             }
@@ -103,7 +103,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         codeRepository.save(EmailVerificationCode.builder()
                 .id(UUID.randomUUID())
                 .userId(user.getId())
-                .codeHash(codeHasher.hash(code))
+                .codeHash(secretHasher.hash(code))
                 .purpose(EmailCodePurpose.REGISTRATION)
                 .expiresAt(now.plus(gatewayProperties.verification().codeTtl()))
                 .attempts(0)

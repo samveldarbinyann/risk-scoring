@@ -31,7 +31,7 @@ export function ScanConsolePage() {
         </div>
       </header>
 
-      <ConsoleLog lines={lines} chainByScanId={chainByScanId} connectingText={t("console.connecting")} />
+      <ConsoleLog lines={lines} chainByScanId={chainByScanId} />
     </div>
   );
 }

@@ -1,14 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
-@Getter
-public class ResendCooldownException extends RuntimeException {
-
-    private final long retryAfterSeconds;
+public class ResendCooldownException extends ApiException {
 
     public ResendCooldownException(long retryAfterSeconds) {
-        super("Verification code was requested recently, retry after %s seconds".formatted(retryAfterSeconds));
-        this.retryAfterSeconds = retryAfterSeconds;
+        super(HttpStatus.TOO_MANY_REQUESTS, "RESEND_COOLDOWN", "error.resendCooldown", retryAfterSeconds);
     }
 }

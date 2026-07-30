@@ -14,7 +14,7 @@ import com.riskscoring.gateway.exception.AccountNotActiveException;
 import com.riskscoring.gateway.exception.EmailAlreadyRegisteredException;
 import com.riskscoring.gateway.exception.InvalidCredentialsException;
 import com.riskscoring.gateway.exception.InvalidVerificationCodeException;
-import com.riskscoring.gateway.exception.UserNotFoundException;
+import com.riskscoring.gateway.exception.UnauthorizedException;
 import com.riskscoring.gateway.exception.UsernameAlreadyTakenException;
 import com.riskscoring.gateway.mapper.UserMapper;
 import com.riskscoring.gateway.model.UserRole;
@@ -40,8 +40,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private static final String ABSENT_USER_HASH =
-            "{bcrypt}$2y$12$LBfmIlKspHraK85UGm5Mgur8Tw3Ean5BHAuPpC02TvKIDOf166S5y";
+    private static final String ABSENT_USER_HASH = "$2y$12$LBfmIlKspHraK85UGm5Mgur8Tw3Ean5BHAuPpC02TvKIDOf166S5y";
 
     private final AppUserRepository appUserRepository;
     private final TokenService tokenService;
@@ -56,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
         String email = normalizeEmail(request.email());
         String username = request.username().trim();
 
-        if (appUserRepository.existsByEmail(email)) {
+        if (appUserRepository.existsByEmailIgnoreCase(email)) {
             throw new EmailAlreadyRegisteredException();
         }
         if (appUserRepository.existsByUsernameIgnoreCase(username)) {
@@ -89,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(noRollbackFor = InvalidVerificationCodeException.class)
     public IssuedSession verifyEmail(VerifyEmailRequest request, String userAgent, String ipAddress) {
-        AppUser user = appUserRepository.findByEmail(normalizeEmail(request.email()))
+        AppUser user = appUserRepository.findByEmailIgnoreCase(normalizeEmail(request.email()))
                 .orElseThrow(InvalidVerificationCodeException::new);
 
         emailVerificationService.verify(user, request.code());
@@ -105,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resendVerificationCode(String email) {
-        appUserRepository.findByEmail(normalizeEmail(email))
+        appUserRepository.findByEmailIgnoreCase(normalizeEmail(email))
                 .filter(user -> user.getStatus() == UserStatus.PENDING_VERIFICATION)
                 .ifPresent(emailVerificationService::resend);
     }
@@ -160,12 +159,12 @@ public class AuthServiceImpl implements AuthService {
     public UserView currentUser(UUID userId) {
         return appUserRepository.findById(userId)
                 .map(userMapper::toView)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+                .orElseThrow(UnauthorizedException::new);
     }
 
     private Optional<AppUser> findByLogin(String login) {
         String normalized = login.trim();
-        return appUserRepository.findByEmail(normalized.toLowerCase(Locale.ROOT))
+        return appUserRepository.findByEmailIgnoreCase(normalized)
                 .or(() -> appUserRepository.findByUsernameIgnoreCase(normalized));
     }
 
@@ -205,8 +204,6 @@ public class AuthServiceImpl implements AuthService {
         return new IssuedSession(
                 tokenService.issueAccessToken(user),
                 tokenService.issueRefreshToken(user, userAgent, ipAddress),
-                gatewayProperties.auth().accessTokenTtl(),
-                gatewayProperties.auth().refreshTokenTtl(),
                 userMapper.toView(user)
         );
     }

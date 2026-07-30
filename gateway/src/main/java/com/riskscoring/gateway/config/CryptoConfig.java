@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -16,22 +15,19 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
 public class CryptoConfig {
 
     private static final int BCRYPT_STRENGTH = 12;
-    private static final String BCRYPT_ID = "bcrypt";
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
     private final GatewayProperties gatewayProperties;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new DelegatingPasswordEncoder(BCRYPT_ID,
-                Map.of(BCRYPT_ID, new BCryptPasswordEncoder(BCRYPT_STRENGTH)));
+        return new BCryptPasswordEncoder(BCRYPT_STRENGTH);
     }
 
     @Bean

@@ -71,7 +71,7 @@ gateway:
     lockout-duration: 15m
     secure-cookie: ${AUTH_SECURE_COOKIE:false}
   mail:
-    from: ${MAIL_USERNAME:}
+    from: ${MAIL_USERNAME}
   verification:
     code-pepper: ${OTP_PEPPER}
     code-ttl: 10m

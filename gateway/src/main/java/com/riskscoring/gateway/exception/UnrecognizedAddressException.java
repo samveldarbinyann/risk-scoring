@@ -1,14 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
-@Getter
-public class UnrecognizedAddressException extends RuntimeException {
-
-    private final String address;
+public class UnrecognizedAddressException extends ApiException {
 
     public UnrecognizedAddressException(String address) {
-        super("Unrecognized address format: " + address);
-        this.address = address;
+        super(HttpStatus.BAD_REQUEST, "UNRECOGNIZED_ADDRESS", "error.unrecognizedAddress", address);
     }
 }

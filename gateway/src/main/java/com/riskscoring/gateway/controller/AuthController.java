@@ -86,14 +86,15 @@ public class AuthController {
     }
 
     private ResponseEntity<AuthResponse> sessionResponse(IssuedSession session) {
+        GatewayProperties.Auth auth = gatewayProperties.auth();
         AuthResponse body = new AuthResponse(
                 session.accessToken(),
-                session.accessTokenTtl().toSeconds(),
+                auth.accessTokenTtl().toSeconds(),
                 session.user());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE,
-                        refreshCookie(session.refreshToken(), session.refreshTokenTtl()).toString())
+                        refreshCookie(session.refreshToken(), auth.refreshTokenTtl()).toString())
                 .body(body);
     }
 

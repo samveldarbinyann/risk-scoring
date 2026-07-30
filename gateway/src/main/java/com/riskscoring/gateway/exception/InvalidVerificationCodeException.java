@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class InvalidVerificationCodeException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class InvalidVerificationCodeException extends ApiException {
 
     public InvalidVerificationCodeException() {
-        super("Verification code is invalid or already used");
+        super(HttpStatus.BAD_REQUEST, "INVALID_VERIFICATION_CODE", "error.invalidVerificationCode");
     }
 }

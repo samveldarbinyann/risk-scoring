@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class EmailAlreadyRegisteredException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class EmailAlreadyRegisteredException extends ApiException {
 
     public EmailAlreadyRegisteredException() {
-        super("Email is already registered");
+        super(HttpStatus.CONFLICT, "EMAIL_ALREADY_REGISTERED", "error.emailAlreadyRegistered");
     }
 }

@@ -1,19 +1,13 @@
 package com.riskscoring.gateway.exception;
 
 import com.riskscoring.common.event.ScanStage;
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
 
-@Getter
-public class ScanReportNotReadyException extends RuntimeException {
-
-    private final UUID scanId;
-    private final ScanStage status;
+public class ScanReportNotReadyException extends ApiException {
 
     public ScanReportNotReadyException(UUID scanId, ScanStage status) {
-        super("Scan %s is not completed yet, current status: %s".formatted(scanId, status));
-        this.scanId = scanId;
-        this.status = status;
+        super(HttpStatus.CONFLICT, "REPORT_NOT_READY", "error.scanReportNotReady", scanId, status);
     }
 }

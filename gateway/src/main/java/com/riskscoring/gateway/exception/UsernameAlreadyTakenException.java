@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class UsernameAlreadyTakenException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class UsernameAlreadyTakenException extends ApiException {
 
     public UsernameAlreadyTakenException() {
-        super("Username is already taken");
+        super(HttpStatus.CONFLICT, "USERNAME_ALREADY_TAKEN", "error.usernameAlreadyTaken");
     }
 }

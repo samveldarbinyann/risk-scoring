@@ -8,9 +8,11 @@ import com.riskscoring.gateway.model.UserStatus;
 import com.riskscoring.gateway.repository.AppUserRepository;
 import com.riskscoring.gateway.repository.RefreshTokenRepository;
 import com.riskscoring.gateway.security.AuthenticatedUser;
+import com.riskscoring.gateway.security.SecretHasher;
 import com.riskscoring.gateway.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -18,17 +20,12 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,11 +39,14 @@ public class TokenServiceImpl implements TokenService {
     private static final String TOKEN_VERSION_CLAIM = "ver";
     private static final String ROLE_CLAIM = "role";
     private static final int REFRESH_TOKEN_BYTES = 32;
+    private static final int USER_AGENT_MAX_LENGTH = 255;
+    private static final Base64.Encoder TOKEN_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
     private final AppUserRepository appUserRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final SecretHasher secretHasher;
     private final GatewayProperties gatewayProperties;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -96,13 +96,13 @@ public class TokenServiceImpl implements TokenService {
     public String issueRefreshToken(AppUser user, String userAgent, String ipAddress) {
         byte[] raw = new byte[REFRESH_TOKEN_BYTES];
         secureRandom.nextBytes(raw);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(raw);
+        String token = TOKEN_ENCODER.encodeToString(raw);
 
         Instant now = Instant.now();
         refreshTokenRepository.save(RefreshToken.builder()
                 .id(UUID.randomUUID())
                 .userId(user.getId())
-                .tokenHash(hash(token))
+                .tokenHash(secretHasher.hash(token))
                 .issuedAt(now)
                 .expiresAt(now.plus(auth().refreshTokenTtl()))
                 .userAgent(truncate(userAgent))
@@ -134,25 +134,16 @@ public class TokenServiceImpl implements TokenService {
         if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
             return Optional.empty();
         }
-        return refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
+        return refreshTokenRepository.findByTokenHash(secretHasher.hash(rawRefreshToken))
                 .filter(token -> token.getRevokedAt() == null)
                 .filter(token -> token.getExpiresAt().isAfter(Instant.now()));
     }
 
-    private String hash(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(token.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 not available", exception);
-        }
-    }
-
     private String truncate(String userAgent) {
-        if (userAgent == null) {
-            return null;
+        if (userAgent == null || userAgent.length() <= USER_AGENT_MAX_LENGTH) {
+            return userAgent;
         }
-        return userAgent.length() <= 255 ? userAgent : userAgent.substring(0, 255);
+        return userAgent.substring(0, USER_AGENT_MAX_LENGTH);
     }
 
     private GatewayProperties.Auth auth() {

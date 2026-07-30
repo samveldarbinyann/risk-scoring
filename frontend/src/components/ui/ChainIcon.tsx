@@ -9,7 +9,6 @@ import NetworkGnosis from "@web3icons/react/icons/networks/NetworkGnosis";
 import NetworkLinea from "@web3icons/react/icons/networks/NetworkLinea";
 import NetworkOptimism from "@web3icons/react/icons/networks/NetworkOptimism";
 import NetworkPolygon from "@web3icons/react/icons/networks/NetworkPolygon";
-import { nativeSymbol } from "@/lib/chains";
 import { cn } from "@/lib/cn";
 
 const ICON_BY_CHAIN_ID: Record<number, ComponentType<IconComponentProps>> = {
@@ -31,19 +30,7 @@ interface ChainIconProps {
 
 export function ChainIcon({ chainId, className }: ChainIconProps) {
   const Icon = ICON_BY_CHAIN_ID[chainId];
-
-  if (!Icon) {
-    return (
-      <span
-        className={cn(
-          "flex items-center justify-center rounded-base border border-border font-mono text-xs text-text-dim",
-          className,
-        )}
-      >
-        {nativeSymbol(chainId)}
-      </span>
-    );
-  }
+  if (!Icon) return null;
 
   return <Icon variant="mono" className={cn("[&_path]:fill-current", className)} />;
 }

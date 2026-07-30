@@ -16,7 +16,6 @@ public class UserMapper {
                 user.getEmail(),
                 user.getRole(),
                 user.getStatus(),
-                user.getAvatarPath(),
                 user.getLanguage()
         );
     }

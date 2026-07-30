@@ -67,12 +67,6 @@ public class AppUser {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
-    @Column(name = "avatar_path", length = 512)
-    private String avatarPath;
-
-    @Column(name = "avatar_updated_at")
-    private Instant avatarUpdatedAt;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
     private Language language;

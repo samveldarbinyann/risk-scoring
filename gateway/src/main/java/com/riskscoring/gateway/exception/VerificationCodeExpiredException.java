@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class VerificationCodeExpiredException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class VerificationCodeExpiredException extends ApiException {
 
     public VerificationCodeExpiredException() {
-        super("Verification code has expired");
+        super(HttpStatus.GONE, "VERIFICATION_CODE_EXPIRED", "error.verificationCodeExpired");
     }
 }

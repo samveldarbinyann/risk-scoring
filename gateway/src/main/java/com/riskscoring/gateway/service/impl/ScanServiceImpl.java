@@ -19,6 +19,7 @@ import com.riskscoring.gateway.exception.ScanReportNotReadyException;
 import com.riskscoring.gateway.exception.UnsupportedChainException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
+import com.riskscoring.gateway.model.EvmAddresses;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
@@ -31,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -48,7 +48,7 @@ public class ScanServiceImpl implements ScanService {
     @Override
     @Transactional
     public ScanGroupAcceptedResponse requestScan(ScanCreateRequest request) {
-        String address = request.address().toLowerCase(Locale.ROOT);
+        String address = EvmAddresses.normalize(request.address());
         Instant requestedAt = Instant.now();
 
         ScanGroup group = ScanGroup.builder()

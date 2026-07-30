@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class EmailDeliveryException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class EmailDeliveryException extends ApiException {
 
     public EmailDeliveryException(Throwable cause) {
-        super("Failed to deliver email", cause);
+        super(cause, HttpStatus.BAD_GATEWAY, "EMAIL_DELIVERY_FAILED", "error.emailDeliveryFailed");
     }
 }

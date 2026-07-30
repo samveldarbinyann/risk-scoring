@@ -1,4 +1,3 @@
-
 databaseChangeLog:
   - changeSet:
       id: 004-create-email-verification-code

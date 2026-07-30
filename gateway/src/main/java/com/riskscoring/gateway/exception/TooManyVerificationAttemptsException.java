@@ -1,8 +1,10 @@
 package com.riskscoring.gateway.exception;
 
-public class TooManyVerificationAttemptsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class TooManyVerificationAttemptsException extends ApiException {
 
     public TooManyVerificationAttemptsException() {
-        super("Too many verification attempts for the current code");
+        super(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS", "error.tooManyVerificationAttempts");
     }
 }

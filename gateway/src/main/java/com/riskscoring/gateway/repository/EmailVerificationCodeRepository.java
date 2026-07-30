@@ -33,12 +33,4 @@ public interface EmailVerificationCodeRepository extends JpaRepository<EmailVeri
                AND c.usedAt IS NULL
             """)
     int markUsed(@Param("id") UUID id, @Param("usedAt") Instant usedAt);
-
-    @Modifying
-    @Query("""
-            DELETE FROM EmailVerificationCode c
-             WHERE c.expiresAt < :now
-                OR (c.usedAt IS NOT NULL AND c.createdAt < :cutoff)
-            """)
-    int deleteExpiredAndUsed(@Param("now") Instant now, @Param("cutoff") Instant cutoff);
 }
