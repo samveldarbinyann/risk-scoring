@@ -5,6 +5,8 @@ import { ScanConsolePage } from "@/pages/ScanConsolePage";
 import { ReportPage } from "@/pages/ReportPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { WatchlistPage } from "@/pages/WatchlistPage";
+import { AlertsPage } from "@/pages/AlertsPage";
 import { ComingSoonPage } from "@/pages/ComingSoonPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -20,8 +22,8 @@ export default function App() {
           <Route path="/docs" element={<ComingSoonPage titleKey="nav.docs" />} />
           <Route path="/contact" element={<ComingSoonPage titleKey="nav.contact" />} />
           <Route path="/dashboard" element={<ComingSoonPage titleKey="nav.dashboard" />} />
-          <Route path="/watchlist" element={<ComingSoonPage titleKey="nav.watchlist" />} />
-          <Route path="/alerts" element={<ComingSoonPage titleKey="nav.alerts" />} />
+          <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/alerts" element={<AlertsPage />} />
           <Route path="/settings" element={<ComingSoonPage titleKey="nav.settings" />} />
           <Route path="/auth" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

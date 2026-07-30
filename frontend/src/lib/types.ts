@@ -122,3 +122,32 @@ export interface ErrorResponse {
   message: string;
   timestamp: string;
 }
+
+export interface WatchlistCreateRequest {
+  address: string;
+  chainId: number;
+}
+
+export interface WatchlistEntryView {
+  id: string;
+  address: string;
+  chainId: number;
+  lastRiskLevel: RiskLevel | null;
+  lastScore: number | null;
+  lastScanId: string | null;
+  lastCheckedAt: string | null;
+  createdAt: string;
+}
+
+export interface AlertView {
+  id: string;
+  watchlistEntryId: string;
+  address: string;
+  chainId: number;
+  previousRiskLevel: RiskLevel;
+  previousScore: number;
+  newRiskLevel: RiskLevel;
+  newScore: number;
+  scanId: string;
+  triggeredAt: string;
+}

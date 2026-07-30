@@ -1,0 +1,174 @@
+import { useCallback, useEffect, useState } from "react";
+import { Navigate } from "react-router";
+import { WatchlistEntryRow } from "@/components/watchlist/WatchlistEntryRow";
+import { WatchlistForm } from "@/components/watchlist/WatchlistForm";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Spinner } from "@/components/ui/Spinner";
+import { addToWatchlist, listWatchlist, removeFromWatchlist } from "@/lib/api";
+import { isEvmAddress } from "@/lib/address";
+import { useAuth } from "@/lib/auth/context";
+import { EVM_CHAINS } from "@/lib/chains";
+import { useI18n } from "@/lib/i18n/context";
+import { pollUntil } from "@/lib/poll";
+import type { WatchlistEntryView } from "@/lib/types";
+
+const DEFAULT_CHAIN_ID = EVM_CHAINS[0]?.chainId ?? 1;
+
+export function WatchlistPage() {
+  const { t } = useI18n();
+  const { status } = useAuth();
+  const [entries, setEntries] = useState<WatchlistEntryView[]>([]);
+  const [address, setAddress] = useState("");
+  const [chainId, setChainId] = useState(DEFAULT_CHAIN_ID);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const loadEntries = useCallback(async () => {
+    const data = await listWatchlist();
+    setEntries(data);
+    return data;
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setLoadError(null);
+    setIsLoading(true);
+    try {
+      await loadEntries();
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : t("watchlist.loadError"));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [loadEntries, t]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    void refresh();
+  }, [status, refresh]);
+
+  if (status === "loading") {
+    return (
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-10">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return <Navigate to="/auth" replace />;
+  }
+
+  async function handleAdd() {
+    if (isSubmitting) return;
+
+    const trimmed = address.trim();
+    if (!isEvmAddress(trimmed)) {
+      setActionError(t("watchlist.invalidAddress"));
+      setStatusMessage(null);
+      return;
+    }
+
+    setActionError(null);
+    setStatusMessage(null);
+    setIsSubmitting(true);
+
+    const normalized = trimmed.toLowerCase();
+
+    try {
+      await addToWatchlist({ address: trimmed, chainId });
+      const { value, matched } = await pollUntil(
+        loadEntries,
+        (list) => list.some((entry) => entry.address === normalized && entry.chainId === chainId),
+      );
+      setEntries(value);
+      if (matched) {
+        setAddress("");
+      } else {
+        setStatusMessage(t("watchlist.acceptedPending"));
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : t("watchlist.addError"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleRemove(id: string) {
+    if (removingId) return;
+
+    setActionError(null);
+    setStatusMessage(null);
+    setRemovingId(id);
+
+    try {
+      await removeFromWatchlist(id);
+      const { value, matched } = await pollUntil(
+        loadEntries,
+        (list) => list.every((entry) => entry.id !== id),
+      );
+      setEntries(value);
+      if (!matched) {
+        setStatusMessage(t("watchlist.acceptedPending"));
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : t("watchlist.removeError"));
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+      <header className="flex items-center justify-between gap-3">
+        <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("watchlist.title")}</h1>
+        <Button type="button" variant="ghost" onClick={() => void refresh()} className="h-10 px-4 text-sm">
+          {t("watchlist.refresh")}
+        </Button>
+      </header>
+
+      <Card>
+        <WatchlistForm
+          address={address}
+          chainId={chainId}
+          isSubmitting={isSubmitting}
+          onAddressChange={setAddress}
+          onChainIdChange={setChainId}
+          onSubmit={() => void handleAdd()}
+        />
+        <div className="mt-3 flex flex-col gap-2">
+          <ErrorMessage message={actionError} size="sm" />
+          {statusMessage && <p className="font-mono text-sm text-text-dim">{statusMessage}</p>}
+        </div>
+      </Card>
+
+      <Card>
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Spinner />
+          </div>
+        ) : loadError ? (
+          <ErrorMessage message={loadError} size="sm" />
+        ) : entries.length === 0 ? (
+          <p className="font-mono text-sm text-text-faint">{t("watchlist.empty")}</p>
+        ) : (
+          <div>
+            {entries.map((entry) => (
+              <WatchlistEntryRow
+                key={entry.id}
+                entry={entry}
+                isRemoving={removingId === entry.id}
+                onRemove={(id) => void handleRemove(id)}
+              />
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

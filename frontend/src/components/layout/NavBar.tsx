@@ -19,9 +19,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/contact", labelKey: "nav.contact" },
 ];
 
-// Dashboard/Watchlist/Alerts/Settings screens exist only as ComingSoonPage
-// stubs (no backend behind them yet) but are meaningless for an anonymous
-// visitor, so they only show up once the user is signed in.
+// Authenticated product screens. Watchlist/Alerts are live; dashboard and
+// settings remain stubs. Hidden for anonymous visitors.
 const AUTHENTICATED_NAV_ITEMS: NavItem[] = [
   { to: "/dashboard", labelKey: "nav.dashboard" },
   { to: "/watchlist", labelKey: "nav.watchlist" },

@@ -1,4 +1,5 @@
 import type {
+  AlertView,
   AuthResponse,
   ChainCandidatesResponse,
   ErrorResponse,
@@ -12,6 +13,8 @@ import type {
   ScanGroupView,
   UserView,
   VerifyEmailRequest,
+  WatchlistCreateRequest,
+  WatchlistEntryView,
 } from "@/lib/types";
 import type { Locale } from "@/lib/i18n/messageKeys";
 
@@ -115,11 +118,8 @@ async function rawRequest<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(await parseErrorMessage(response), response.status);
   }
 
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  return response.json() as Promise<T>;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
@@ -206,4 +206,23 @@ export function logout(): Promise<void> {
 
 export function getMe(): Promise<UserView> {
   return apiRequest<UserView>(`${AUTH_PATH_PREFIX}/me`);
+}
+
+export function listWatchlist(): Promise<WatchlistEntryView[]> {
+  return apiRequest<WatchlistEntryView[]>("/api/watchlist");
+}
+
+export function addToWatchlist(payload: WatchlistCreateRequest): Promise<void> {
+  return apiRequest<void>("/api/watchlist", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function removeFromWatchlist(id: string): Promise<void> {
+  return apiRequest<void>(`/api/watchlist/${id}`, { method: "DELETE" });
+}
+
+export function listAlerts(): Promise<AlertView[]> {
+  return apiRequest<AlertView[]>("/api/alerts");
 }
