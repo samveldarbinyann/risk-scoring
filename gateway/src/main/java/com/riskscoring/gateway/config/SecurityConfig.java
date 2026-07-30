@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(securityErrorHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers("/api/auth/me", "/api/watchlist/**", "/api/alerts/**").authenticated()
                         .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**", "/ws/**")
                         .permitAll()
                         .anyRequest().denyAll())
