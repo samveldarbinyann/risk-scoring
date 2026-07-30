@@ -22,7 +22,7 @@ export function ScanConsolePage() {
   if (!groupId) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6">
       <header className="flex items-center gap-3">
         {!completed && <Spinner />}
         <div>
@@ -31,13 +31,7 @@ export function ScanConsolePage() {
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-panel border border-border bg-surface p-6">
-        {lines.length === 0 ? (
-          <p className="font-mono text-sm text-text-faint">{t("console.connecting")}</p>
-        ) : (
-          <ConsoleLog lines={lines} chainByScanId={chainByScanId} />
-        )}
-      </div>
+      <ConsoleLog lines={lines} chainByScanId={chainByScanId} />
     </div>
   );
 }

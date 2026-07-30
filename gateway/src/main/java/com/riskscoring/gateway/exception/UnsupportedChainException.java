@@ -1,14 +1,11 @@
 package com.riskscoring.gateway.exception;
 
-import lombok.Getter;
+import com.riskscoring.common.model.EvmChain;
+import org.springframework.http.HttpStatus;
 
-@Getter
-public class UnsupportedChainException extends RuntimeException {
-
-    private final int chainId;
+public class UnsupportedChainException extends ApiException {
 
     public UnsupportedChainException(int chainId) {
-        super("Unsupported chain: " + chainId);
-        this.chainId = chainId;
+        super(HttpStatus.BAD_REQUEST, "UNSUPPORTED_CHAIN", "error.unsupportedChain", chainId, EvmChain.supportedIds());
     }
 }

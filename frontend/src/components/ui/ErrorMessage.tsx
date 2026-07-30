@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "motion/react";
+import { TypewriterCaret } from "@/components/ui/TypewriterCaret";
 import { useTypewriter } from "@/hooks/useTypewriter";
 import { cn } from "@/lib/cn";
 
@@ -29,12 +30,7 @@ export function ErrorMessage({ message, size = "xs" }: ErrorMessageProps) {
           className={cn("font-mono text-risk-critical", SIZE_CLASSES[size])}
         >
           {displayed}
-          <motion.span
-            aria-hidden
-            className="ml-0.5 inline-block h-[0.9em] w-[0.5em] translate-y-[0.1em] bg-risk-critical align-baseline"
-            animate={{ opacity: [1, 1, 0, 0] }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "linear", times: [0, 0.5, 0.5, 1] }}
-          />
+          <TypewriterCaret />
         </motion.p>
       )}
     </AnimatePresence>

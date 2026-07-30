@@ -1,16 +1,12 @@
 package com.riskscoring.gateway.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
 
-@Getter
-public class ScanNotFoundException extends RuntimeException {
-
-    private final UUID scanId;
+public class ScanNotFoundException extends ApiException {
 
     public ScanNotFoundException(UUID scanId) {
-        super("Scan not found: " + scanId);
-        this.scanId = scanId;
+        super(HttpStatus.NOT_FOUND, "SCAN_NOT_FOUND", "error.scanNotFound", scanId);
     }
 }

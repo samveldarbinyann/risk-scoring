@@ -1,4 +1,5 @@
 import type {
+  ChainCandidatesResponse,
   ErrorResponse,
   ScanCreateRequest,
   ScanGroupAcceptedResponse,
@@ -31,6 +32,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+export function getChainCandidates(address: string): Promise<ChainCandidatesResponse> {
+  return apiRequest<ChainCandidatesResponse>(`/api/chains/candidates?address=${encodeURIComponent(address)}`);
 }
 
 export function createScan(payload: ScanCreateRequest): Promise<ScanGroupAcceptedResponse> {

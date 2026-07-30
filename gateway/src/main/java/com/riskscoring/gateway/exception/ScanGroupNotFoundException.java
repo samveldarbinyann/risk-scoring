@@ -1,16 +1,12 @@
 package com.riskscoring.gateway.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
 
-@Getter
-public class ScanGroupNotFoundException extends RuntimeException {
-
-    private final UUID groupId;
+public class ScanGroupNotFoundException extends ApiException {
 
     public ScanGroupNotFoundException(UUID groupId) {
-        super("Scan group not found: " + groupId);
-        this.groupId = groupId;
+        super(HttpStatus.NOT_FOUND, "SCAN_GROUP_NOT_FOUND", "error.scanGroupNotFound", groupId);
     }
 }

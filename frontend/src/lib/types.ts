@@ -13,6 +13,11 @@ export interface ScanGroupAcceptedResponse {
   chainIds: number[];
 }
 
+export interface ChainCandidatesResponse {
+  address: string;
+  chainIds: number[];
+}
+
 export interface ScanGroupChainStatus {
   chainId: number;
   scanId: string;

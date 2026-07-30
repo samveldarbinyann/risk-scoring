@@ -1,16 +1,12 @@
 package com.riskscoring.gateway.exception;
 
-import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.util.UUID;
 
-@Getter
-public class ScanGroupReportNotReadyException extends RuntimeException {
-
-    private final UUID groupId;
+public class ScanGroupReportNotReadyException extends ApiException {
 
     public ScanGroupReportNotReadyException(UUID groupId) {
-        super("Scan group %s is not completed yet".formatted(groupId));
-        this.groupId = groupId;
+        super(HttpStatus.CONFLICT, "SCAN_GROUP_REPORT_NOT_READY", "error.scanGroupReportNotReady", groupId);
     }
 }
