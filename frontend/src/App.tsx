@@ -3,6 +3,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LandingPage } from "@/pages/LandingPage";
 import { ScanConsolePage } from "@/pages/ScanConsolePage";
 import { ReportPage } from "@/pages/ReportPage";
+import { LoginPage } from "@/pages/LoginPage";
+import { RegisterPage } from "@/pages/RegisterPage";
 import { ComingSoonPage } from "@/pages/ComingSoonPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -21,8 +23,8 @@ export default function App() {
           <Route path="/watchlist" element={<ComingSoonPage titleKey="nav.watchlist" />} />
           <Route path="/alerts" element={<ComingSoonPage titleKey="nav.alerts" />} />
           <Route path="/settings" element={<ComingSoonPage titleKey="nav.settings" />} />
-          <Route path="/auth" element={<ComingSoonPage titleKey="nav.login" />} />
-          <Route path="/register" element={<ComingSoonPage titleKey="nav.register" />} />
+          <Route path="/auth" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

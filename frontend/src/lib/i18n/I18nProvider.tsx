@@ -18,19 +18,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [bundles, setBundles] = useState<MessageBundles | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const abort = new AbortController();
 
     const loaded = LOCALES.map(
-      async (loc) => [loc, await getMessages(loc).catch((): Record<string, string> => ({}))] as const,
+      async (loc) =>
+        [loc, await getMessages(loc, { signal: abort.signal }).catch((): Record<string, string> => ({}))] as const,
     );
 
     Promise.all(loaded).then((entries) => {
-      if (cancelled) return;
+      if (abort.signal.aborted) return;
       setBundles(Object.fromEntries(entries) as MessageBundles);
     });
 
     return () => {
-      cancelled = true;
+      abort.abort();
     };
   }, []);
 

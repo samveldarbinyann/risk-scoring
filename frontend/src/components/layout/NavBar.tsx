@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { NavLink } from "react-router";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n/context";
+import { useAuth } from "@/lib/auth/context";
 import type { MessageKey } from "@/lib/i18n/messageKeys";
 
 const LAYOUT_SPRING = { type: "spring", stiffness: 500, damping: 40 } as const;
@@ -11,8 +12,6 @@ interface NavItem {
   labelKey: MessageKey;
 }
 
-// Для незалогиненных пользователей доступен только скан + маркетинговые страницы.
-// Дашборд/watchlist/алерты/настройки появятся в хидере после реализации auth.
 const NAV_ITEMS: NavItem[] = [
   { to: "/", labelKey: "nav.home" },
   { to: "/pricing", labelKey: "nav.pricing" },
@@ -20,10 +19,23 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/contact", labelKey: "nav.contact" },
 ];
 
+// Dashboard/Watchlist/Alerts/Settings screens exist only as ComingSoonPage
+// stubs (no backend behind them yet) but are meaningless for an anonymous
+// visitor, so they only show up once the user is signed in.
+const AUTHENTICATED_NAV_ITEMS: NavItem[] = [
+  { to: "/dashboard", labelKey: "nav.dashboard" },
+  { to: "/watchlist", labelKey: "nav.watchlist" },
+  { to: "/alerts", labelKey: "nav.alerts" },
+  { to: "/settings", labelKey: "nav.settings" },
+];
+
 const AUTH_LINK_CLASSES = "rounded-base px-5 py-2.5 font-sans text-base font-medium transition-colors";
 
 export function NavBar() {
   const { t } = useI18n();
+  const { status, user, logout } = useAuth();
+  const isAuthenticated = status === "authenticated" && user !== null;
+  const navItems = isAuthenticated ? [...NAV_ITEMS, ...AUTHENTICATED_NAV_ITEMS] : NAV_ITEMS;
 
   return (
     <nav className="relative flex items-center gap-8 border-b border-border bg-surface px-6 py-4">
@@ -39,7 +51,7 @@ export function NavBar() {
         </div>
       </div>
       <ul className="flex flex-1 items-center gap-5">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <motion.li key={item.to} layout="position" transition={LAYOUT_SPRING}>
             <NavLink
               to={item.to}
@@ -74,16 +86,35 @@ export function NavBar() {
         ))}
       </ul>
       <div className="flex items-center gap-2">
-        <motion.div layout transition={LAYOUT_SPRING}>
-          <NavLink to="/auth" className={cn(AUTH_LINK_CLASSES, "block text-text-dim hover:text-text")}>
-            {t("nav.login")}
-          </NavLink>
-        </motion.div>
-        <motion.div layout transition={LAYOUT_SPRING}>
-          <NavLink to="/register" className={cn(AUTH_LINK_CLASSES, "block bg-accent text-bg hover:bg-accent-press")}>
-            {t("nav.register")}
-          </NavLink>
-        </motion.div>
+        {isAuthenticated ? (
+          <>
+            <motion.span layout transition={LAYOUT_SPRING} className="px-2 font-mono text-sm text-text-dim">
+              {user.username}
+            </motion.span>
+            <motion.button
+              layout
+              transition={LAYOUT_SPRING}
+              type="button"
+              onClick={() => logout()}
+              className={cn(AUTH_LINK_CLASSES, "border border-border text-text-dim hover:border-accent hover:text-text")}
+            >
+              {t("auth.logout")}
+            </motion.button>
+          </>
+        ) : (
+          <>
+            <motion.div layout transition={LAYOUT_SPRING}>
+              <NavLink to="/auth" className={cn(AUTH_LINK_CLASSES, "block text-text-dim hover:text-text")}>
+                {t("nav.login")}
+              </NavLink>
+            </motion.div>
+            <motion.div layout transition={LAYOUT_SPRING}>
+              <NavLink to="/register" className={cn(AUTH_LINK_CLASSES, "block bg-accent text-bg hover:bg-accent-press")}>
+                {t("nav.register")}
+              </NavLink>
+            </motion.div>
+          </>
+        )}
       </div>
     </nav>
   );

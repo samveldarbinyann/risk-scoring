@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { animate } from "motion/react";
 
 export const TYPEWRITER_MS_PER_CHAR = 12;
@@ -15,16 +15,16 @@ interface TypewriterState {
 export function useTypewriter(text: string, delayMs = 0): TypewriterState {
   const [charCount, setCharCount] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
-  const [prevText, setPrevText] = useState(text);
-
-  if (prevText !== text) {
-    setPrevText(text);
-    setCharCount(0);
-    setIsTyping(false);
-  }
+  const prevTextRef = useRef(text);
 
   useEffect(() => {
     if (!text) return;
+
+    if (prevTextRef.current !== text) {
+      prevTextRef.current = text;
+      setCharCount(0);
+      setIsTyping(false);
+    }
 
     let controls: { stop: () => void } | undefined;
     const timeout = setTimeout(() => {

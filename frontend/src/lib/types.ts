@@ -2,6 +2,54 @@ export type ScanStage = "PENDING" | "FETCHING" | "ENRICHING" | "ANALYZING" | "CO
 export type ScanSource = "USER" | "MONITOR";
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
+export type UserRole = "USER" | "ADMIN";
+export type UserStatus = "PENDING_VERIFICATION" | "ACTIVE" | "BLOCKED";
+export type Language = "EN" | "RU";
+
+export interface UserView {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  language: Language;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  expiresIn: number;
+  user: UserView;
+}
+
+export interface RegisterRequest {
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
+export interface RegistrationResponse {
+  email: string;
+  status: UserStatus;
+}
+
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+export interface ResendCodeRequest {
+  email: string;
+}
+
+export interface LoginRequest {
+  login: string;
+  password: string;
+}
+
 export interface ScanCreateRequest {
   address: string;
   chainIds?: number[];
