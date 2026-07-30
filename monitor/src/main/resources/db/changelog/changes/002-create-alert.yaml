@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-alert
+      author: sam
+      changes:
+        - createTable:
+            tableName: alert
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_alert
+                    nullable: false
+              - column:
+                  name: watchlist_entry_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_alert_watchlist_entry
+                    referencedTableName: watchlist_entry
+                    referencedColumnNames: id
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: previous_risk_level
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: previous_score
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: new_risk_level
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: new_score
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: triggered_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: alert
+            indexName: idx_alert_user_triggered
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: triggered_at

@@ -8,7 +8,7 @@ LOG_DIR="$ROOT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
 JAVA_CANDIDATE="/home/sam/.jdks/ms-25.0.4"
-JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai)
+JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai monitor)
 
 ensure_java() {
   if ! java -version 2>&1 | grep -q '"25'; then
@@ -104,6 +104,7 @@ cmd_start() {
   wait_for_service chain-ingest "Started ChainIngestApplication"
   wait_for_service enrichment "Started EnrichmentApplication"
   wait_for_service risk-ai "Started RiskAiApplication"
+  wait_for_service monitor "Started MonitorApplication"
 
   echo "Запускаю frontend..."
   start_frontend

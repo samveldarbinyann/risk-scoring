@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-watchlist-entry
+      author: sam
+      changes:
+        - createTable:
+            tableName: watchlist_entry
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_watchlist_entry
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: varchar(8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_risk_level
+                  type: varchar(16)
+              - column:
+                  name: last_score
+                  type: int
+              - column:
+                  name: last_scan_id
+                  type: uuid
+              - column:
+                  name: last_checked_at
+                  type: timestamptz
+              - column:
+                  name: pending_scan_id
+                  type: uuid
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: uq_watchlist_entry_pending_scan_id
+              - column:
+                  name: pending_requested_at
+                  type: timestamptz
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: watchlist_entry
+            columnNames: user_id, chain_id, address
+            constraintName: uq_watchlist_entry_user_chain_address
+        - sql:
+            sql: >-
+              CREATE INDEX idx_watchlist_entry_due
+              ON watchlist_entry (last_checked_at ASC NULLS FIRST)
+              WHERE active
+            rollback: DROP INDEX idx_watchlist_entry_due

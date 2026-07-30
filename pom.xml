@@ -29,6 +29,7 @@
         <module>chain-ingest</module>
         <module>enrichment</module>
         <module>risk-ai</module>
+        <module>monitor</module>
     </modules>
 
     <build>

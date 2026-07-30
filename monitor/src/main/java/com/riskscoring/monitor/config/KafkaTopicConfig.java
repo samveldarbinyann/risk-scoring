@@ -1,4 +1,4 @@
-package com.riskscoring.gateway.config;
+package com.riskscoring.monitor.config;
 
 import com.riskscoring.common.Topics;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -21,8 +21,8 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic scanProgressTopic() {
-        return TopicBuilder.name(Topics.SCAN_PROGRESS)
+    public NewTopic scanCompletedTopic() {
+        return TopicBuilder.name(Topics.SCAN_COMPLETED)
                 .partitions(PARTITIONS)
                 .replicas(REPLICAS)
                 .build();
@@ -39,6 +39,14 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic watchlistRemoveRequestedTopic() {
         return TopicBuilder.name(Topics.WATCHLIST_REMOVE_REQUESTED)
+                .partitions(PARTITIONS)
+                .replicas(REPLICAS)
+                .build();
+    }
+
+    @Bean
+    public NewTopic alertTriggeredTopic() {
+        return TopicBuilder.name(Topics.ALERT_TRIGGERED)
                 .partitions(PARTITIONS)
                 .replicas(REPLICAS)
                 .build();

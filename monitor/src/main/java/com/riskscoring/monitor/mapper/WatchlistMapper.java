@@ -1,0 +1,32 @@
+package com.riskscoring.monitor.mapper;
+
+import com.riskscoring.common.event.ScanRequested;
+import com.riskscoring.common.event.ScanSource;
+import com.riskscoring.common.event.WatchlistAddRequested;
+import com.riskscoring.monitor.entity.WatchlistEntry;
+import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Component
+public class WatchlistMapper {
+
+    public WatchlistEntry toEntity(WatchlistAddRequested event, Instant now) {
+        return WatchlistEntry.builder()
+                .id(UUID.randomUUID())
+                .userId(event.userId())
+                .address(event.address())
+                .chainId(event.chainId())
+                .language(event.language())
+                .active(true)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+    }
+
+    public ScanRequested toScanRequested(WatchlistEntry entry, UUID scanId, Instant requestedAt) {
+        return new ScanRequested(
+                scanId, entry.getAddress(), entry.getChainId(), requestedAt, ScanSource.MONITOR, entry.getLanguage());
+    }
+}
