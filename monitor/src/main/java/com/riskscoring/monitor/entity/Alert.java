@@ -62,9 +62,6 @@ public class Alert {
     @Column(name = "triggered_at", nullable = false)
     private Instant triggeredAt;
 
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
-
     @Override
     public boolean equals(Object other) {
         if (this == other) {

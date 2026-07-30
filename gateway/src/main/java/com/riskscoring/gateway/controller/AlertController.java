@@ -2,7 +2,7 @@ package com.riskscoring.gateway.controller;
 
 import com.riskscoring.gateway.dto.AlertView;
 import com.riskscoring.gateway.security.AuthenticatedUser;
-import com.riskscoring.gateway.service.WatchlistService;
+import com.riskscoring.gateway.service.AlertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +16,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AlertController {
 
-    private final WatchlistService watchlistService;
+    private final AlertService alertService;
 
     @GetMapping
     public List<AlertView> listAlerts(@AuthenticationPrincipal AuthenticatedUser user) {
-        return watchlistService.listAlerts(user.id());
+        return alertService.listAlerts(user.id());
     }
 }

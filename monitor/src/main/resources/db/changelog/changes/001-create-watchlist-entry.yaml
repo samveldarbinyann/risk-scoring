@@ -74,11 +74,9 @@ databaseChangeLog:
             tableName: watchlist_entry
             columnNames: user_id, chain_id, address
             constraintName: uq_watchlist_entry_user_chain_address
-        - createIndex:
-            tableName: watchlist_entry
-            indexName: idx_watchlist_entry_due
-            columns:
-              - column:
-                  name: active
-              - column:
-                  name: last_checked_at
+        - sql:
+            sql: >-
+              CREATE INDEX idx_watchlist_entry_due
+              ON watchlist_entry (last_checked_at ASC NULLS FIRST)
+              WHERE active
+            rollback: DROP INDEX idx_watchlist_entry_due

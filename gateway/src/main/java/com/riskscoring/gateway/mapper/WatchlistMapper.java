@@ -3,9 +3,7 @@ package com.riskscoring.gateway.mapper;
 import com.riskscoring.common.event.WatchlistAddRequested;
 import com.riskscoring.common.event.WatchlistRemoveRequested;
 import com.riskscoring.common.model.Language;
-import com.riskscoring.gateway.dto.AlertView;
 import com.riskscoring.gateway.dto.WatchlistEntryView;
-import com.riskscoring.gateway.repository.AlertRow;
 import com.riskscoring.gateway.repository.WatchlistEntryRow;
 import org.springframework.stereotype.Component;
 
@@ -36,18 +34,4 @@ public class WatchlistMapper {
         );
     }
 
-    public AlertView toView(AlertRow row) {
-        return new AlertView(
-                row.id(),
-                row.watchlistEntryId(),
-                row.address(),
-                row.chainId(),
-                row.previousRiskLevel(),
-                row.previousScore(),
-                row.newRiskLevel(),
-                row.newScore(),
-                row.scanId(),
-                row.triggeredAt()
-        );
-    }
 }

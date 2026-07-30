@@ -1,6 +1,5 @@
 package com.riskscoring.gateway.service;
 
-import com.riskscoring.gateway.dto.AlertView;
 import com.riskscoring.gateway.dto.WatchlistCreateRequest;
 import com.riskscoring.gateway.dto.WatchlistEntryView;
 
@@ -14,6 +13,4 @@ public interface WatchlistService {
     void removeFromWatchlist(UUID userId, UUID entryId);
 
     List<WatchlistEntryView> listWatchlist(UUID userId);
-
-    List<AlertView> listAlerts(UUID userId);
 }

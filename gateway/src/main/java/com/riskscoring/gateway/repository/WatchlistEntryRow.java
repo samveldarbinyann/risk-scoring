@@ -9,7 +9,6 @@ public record WatchlistEntryRow(
         UUID id,
         String address,
         int chainId,
-        boolean active,
         RiskLevel lastRiskLevel,
         Integer lastScore,
         UUID lastScanId,

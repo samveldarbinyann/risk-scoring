@@ -7,7 +7,6 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "monitor")
 public record MonitorProperties(
         Duration recheckInterval,
-        Duration schedulerFixedDelay,
         int batchSize,
         Duration stalePendingTimeout
 ) {

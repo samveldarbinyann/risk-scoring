@@ -1,14 +1,13 @@
 package com.riskscoring.monitor.service.impl;
 
-import com.riskscoring.common.event.AlertTriggered;
 import com.riskscoring.common.event.ScanCompleted;
-import com.riskscoring.common.event.ScanRequested;
-import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.monitor.config.MonitorProperties;
 import com.riskscoring.monitor.entity.Alert;
 import com.riskscoring.monitor.entity.WatchlistEntry;
 import com.riskscoring.monitor.kafka.MonitorEventPublisher;
+import com.riskscoring.monitor.mapper.AlertMapper;
+import com.riskscoring.monitor.mapper.WatchlistMapper;
 import com.riskscoring.monitor.repository.AlertRepository;
 import com.riskscoring.monitor.repository.WatchlistEntryRepository;
 import com.riskscoring.monitor.service.RecheckService;
@@ -31,6 +30,8 @@ public class RecheckServiceImpl implements RecheckService {
     private final WatchlistEntryRepository watchlistEntryRepository;
     private final AlertRepository alertRepository;
     private final MonitorEventPublisher eventPublisher;
+    private final WatchlistMapper watchlistMapper;
+    private final AlertMapper alertMapper;
     private final MonitorProperties properties;
 
     @Override
@@ -48,10 +49,8 @@ public class RecheckServiceImpl implements RecheckService {
             UUID scanId = UUID.randomUUID();
             entry.setPendingScanId(scanId);
             entry.setPendingRequestedAt(now);
-            watchlistEntryRepository.save(entry);
 
-            eventPublisher.publishScanRequested(new ScanRequested(
-                    scanId, entry.getAddress(), entry.getChainId(), now, ScanSource.MONITOR, entry.getLanguage()));
+            eventPublisher.publishScanRequested(watchlistMapper.toScanRequested(entry, scanId, now));
         }
 
         if (!due.isEmpty()) {
@@ -76,32 +75,14 @@ public class RecheckServiceImpl implements RecheckService {
             entry.setLastCheckedAt(Instant.now());
             entry.setPendingScanId(null);
             entry.setPendingRequestedAt(null);
-            watchlistEntryRepository.save(entry);
         });
     }
 
     private void raiseAlert(WatchlistEntry entry, RiskLevel newLevel, int newScore, UUID scanId) {
-        Instant now = Instant.now();
-
-        Alert alert = Alert.builder()
-                .id(UUID.randomUUID())
-                .watchlistEntryId(entry.getId())
-                .userId(entry.getUserId())
-                .address(entry.getAddress())
-                .chainId(entry.getChainId())
-                .previousRiskLevel(entry.getLastRiskLevel())
-                .previousScore(entry.getLastScore())
-                .newRiskLevel(newLevel)
-                .newScore(newScore)
-                .scanId(scanId)
-                .triggeredAt(now)
-                .createdAt(now)
-                .build();
+        Alert alert = alertMapper.toEntity(entry, newLevel, newScore, scanId, Instant.now());
         alertRepository.save(alert);
 
-        eventPublisher.publishAlertTriggered(new AlertTriggered(
-                alert.getId(), entry.getId(), entry.getUserId(), entry.getAddress(), entry.getChainId(),
-                entry.getLastRiskLevel(), entry.getLastScore(), newLevel, newScore, scanId, now));
+        eventPublisher.publishAlertTriggered(alertMapper.toEvent(alert));
 
         log.info("Alert triggered watchlistEntryId={} {} -> {}", entry.getId(), entry.getLastRiskLevel(), newLevel);
     }
