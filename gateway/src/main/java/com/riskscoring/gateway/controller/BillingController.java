@@ -45,8 +45,9 @@ public class BillingController {
     }
 
     @PostMapping("/subscription/{id}/confirm")
-    public SubscriptionView confirmPayment(@PathVariable UUID id) {
-        return billingService.confirmPayment(id);
+    public SubscriptionView confirmPayment(@AuthenticationPrincipal AuthenticatedUser user,
+                                           @PathVariable UUID id) {
+        return billingService.confirmPayment(user.id(), id);
     }
 
     @PostMapping("/subscription/cancel")

@@ -10,7 +10,7 @@ interface AlertRowProps {
 }
 
 export function AlertRow({ alert }: AlertRowProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
     <div className="flex flex-col gap-3 border-b border-border py-4 last:border-b-0">
@@ -21,7 +21,7 @@ export function AlertRow({ alert }: AlertRowProps) {
           {formatAddress(alert.address)}
         </span>
         <span className="font-mono text-xs text-text-faint sm:ml-auto">
-          {t("alerts.triggeredAt")}: {formatDateTime(alert.triggeredAt)}
+          {t("alerts.triggeredAt")}: {formatDateTime(alert.triggeredAt, locale)}
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-4 pl-8">

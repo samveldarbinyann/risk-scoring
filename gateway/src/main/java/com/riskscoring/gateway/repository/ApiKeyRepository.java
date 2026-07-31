@@ -32,4 +32,17 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
     void touchLastUsedAt(@Param("id") UUID id,
                          @Param("now") Instant now,
                          @Param("staleBefore") Instant staleBefore);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            UPDATE ApiKey k
+            SET k.status = :revokedStatus,
+                k.revokedAt = :now
+            WHERE k.userId = :userId
+              AND k.status = :activeStatus
+            """)
+    int revokeAllActive(@Param("userId") UUID userId,
+                        @Param("now") Instant now,
+                        @Param("activeStatus") ApiKeyStatus activeStatus,
+                        @Param("revokedStatus") ApiKeyStatus revokedStatus);
 }

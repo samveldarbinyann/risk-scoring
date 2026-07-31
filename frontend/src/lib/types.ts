@@ -1,6 +1,10 @@
 export type ScanStage = "PENDING" | "FETCHING" | "ENRICHING" | "ANALYZING" | "COMPLETED" | "FAILED";
-export type ScanSource = "USER" | "MONITOR";
+export type ScanSource = "USER" | "MONITOR" | "API";
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
+export type PlanCode = "STARTER" | "GROWTH" | "SCALE";
+export type SubscriptionStatus = "PENDING_PAYMENT" | "ACTIVE" | "CANCELED" | "EXPIRED";
+export type ApiKeyStatus = "ACTIVE" | "REVOKED";
 
 export type UserRole = "USER" | "ADMIN";
 export type UserStatus = "PENDING_VERIFICATION" | "ACTIVE" | "BLOCKED";
@@ -150,4 +154,51 @@ export interface AlertView {
   newScore: number;
   scanId: string;
   triggeredAt: string;
+}
+
+export interface PlanView {
+  code: PlanCode;
+  name: string;
+  priceCents: number;
+  currency: string;
+  monthlyRequestLimit: number;
+}
+
+export interface SubscriptionView {
+  id: string;
+  planCode: PlanCode;
+  planName: string;
+  status: SubscriptionStatus;
+  priceCents: number;
+  currency: string;
+  monthlyRequestLimit: number;
+  requestsUsed: number;
+  requestsRemaining: number;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  createdAt: string;
+  canceledAt: string | null;
+}
+
+export interface ApiKeyView {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  status: ApiKeyStatus;
+  lastUsedAt: string | null;
+  createdAt: string;
+  revokedAt: string | null;
+}
+
+export interface ApiKeyCreatedView {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  apiKey: string;
+  status: ApiKeyStatus;
+  createdAt: string;
+}
+
+export interface CreateApiKeyRequest {
+  name: string;
 }

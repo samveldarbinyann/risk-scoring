@@ -14,7 +14,7 @@ import { useI18n } from "@/lib/i18n/context";
 
 export function ReportPage() {
   const { groupId } = useParams<{ groupId: string }>();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [group, setGroup] = useState<ScanGroupReportView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +56,7 @@ export function ReportPage() {
           <div className="flex items-center justify-between gap-3">
             <p className="font-mono text-sm uppercase tracking-widest text-accent">{chainLabel(report.chainId)}</p>
             <p className="font-mono text-xs text-text-faint">
-              {report.model} · {formatDateTime(report.createdAt)}
+              {report.model} · {formatDateTime(report.createdAt, locale)}
             </p>
           </div>
           <VerdictReveal level={report.riskLevel} score={report.score} />

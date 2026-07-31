@@ -13,7 +13,7 @@ interface WatchlistEntryRowProps {
 }
 
 export function WatchlistEntryRow({ entry, isRemoving, onRemove }: WatchlistEntryRowProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
     <div className="flex flex-col gap-3 border-b border-border py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
@@ -36,7 +36,7 @@ export function WatchlistEntryRow({ entry, isRemoving, onRemove }: WatchlistEntr
           </span>
           <span className="font-mono text-xs text-text-faint">
             {t("watchlist.lastChecked")}:{" "}
-            {entry.lastCheckedAt ? formatDateTime(entry.lastCheckedAt) : t("watchlist.neverChecked")}
+            {entry.lastCheckedAt ? formatDateTime(entry.lastCheckedAt, locale) : t("watchlist.neverChecked")}
           </span>
         </div>
       </div>

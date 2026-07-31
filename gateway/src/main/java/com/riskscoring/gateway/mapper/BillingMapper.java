@@ -5,6 +5,7 @@ import com.riskscoring.gateway.dto.PlanView;
 import com.riskscoring.gateway.dto.SubscriptionView;
 import com.riskscoring.gateway.entity.Subscription;
 import com.riskscoring.gateway.model.BillingPeriods;
+import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.SubscriptionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -43,6 +44,7 @@ public class BillingMapper {
         return new SubscriptionView(
                 subscription.getId(),
                 subscription.getPlanCode(),
+                planName(subscription.getPlanCode()),
                 subscription.getStatus(),
                 subscription.getPriceCents(),
                 subscription.getCurrency(),
@@ -54,5 +56,13 @@ public class BillingMapper {
                 subscription.getCreatedAt(),
                 subscription.getCanceledAt()
         );
+    }
+
+    private String planName(PlanCode planCode) {
+        return gatewayProperties.billing().plans().stream()
+                .filter(plan -> plan.code() == planCode)
+                .map(GatewayProperties.Plan::name)
+                .findFirst()
+                .orElse(planCode.name());
     }
 }

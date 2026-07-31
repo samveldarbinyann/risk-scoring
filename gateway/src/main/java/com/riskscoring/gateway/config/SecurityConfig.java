@@ -59,8 +59,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/billing/plans").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/billing/subscription/*/confirm")
-                        .hasRole(UserRole.ADMIN.name())
                         .requestMatchers("/api/v1/**").hasRole(ApiKeyAuthenticationFilter.API_ROLE)
                         .requestMatchers(
                                 "/api/auth/me",
