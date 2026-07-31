@@ -70,9 +70,12 @@ public class BillingServiceImpl implements BillingService {
 
     @Override
     @Transactional
-    public SubscriptionView confirmPayment(UUID subscriptionId) {
+    public SubscriptionView confirmPayment(UUID userId, UUID subscriptionId) {
         Subscription subscription = subscriptionRepository.findById(subscriptionId)
                 .orElseThrow(SubscriptionNotFoundException::new);
+        if (!subscription.getUserId().equals(userId)) {
+            throw new SubscriptionNotFoundException();
+        }
         if (subscription.getStatus() != SubscriptionStatus.PENDING_PAYMENT) {
             throw new SubscriptionNotPendingException(subscriptionId);
         }

@@ -26,3 +26,16 @@ export function formatDateTime(iso: string): string {
 export function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { timeStyle: "medium" });
 }
+
+export function formatMoney(cents: number, currency: string, locale?: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
+export function formatCount(value: number, locale?: string): string {
+  return new Intl.NumberFormat(locale).format(value);
+}

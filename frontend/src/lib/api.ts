@@ -1,9 +1,14 @@
 import type {
   AlertView,
+  ApiKeyCreatedView,
+  ApiKeyView,
   AuthResponse,
   ChainCandidatesResponse,
+  CreateApiKeyRequest,
   ErrorResponse,
   LoginRequest,
+  PlanCode,
+  PlanView,
   RegisterRequest,
   RegistrationResponse,
   ResendCodeRequest,
@@ -11,6 +16,7 @@ import type {
   ScanGroupAcceptedResponse,
   ScanGroupReportView,
   ScanGroupView,
+  SubscriptionView,
   UserView,
   VerifyEmailRequest,
   WatchlistCreateRequest,
@@ -225,4 +231,46 @@ export function removeFromWatchlist(id: string): Promise<void> {
 
 export function listAlerts(): Promise<AlertView[]> {
   return apiRequest<AlertView[]>("/api/alerts");
+}
+
+export function listPlans(): Promise<PlanView[]> {
+  return apiRequest<PlanView[]>("/api/billing/plans");
+}
+
+export function getSubscription(): Promise<SubscriptionView> {
+  return apiRequest<SubscriptionView>("/api/billing/subscription");
+}
+
+export function activateSubscription(planCode: PlanCode): Promise<SubscriptionView> {
+  return apiRequest<SubscriptionView>("/api/billing/subscription", {
+    method: "POST",
+    body: JSON.stringify({ planCode }),
+  });
+}
+
+export function confirmSubscriptionPayment(id: string): Promise<SubscriptionView> {
+  return apiRequest<SubscriptionView>(`/api/billing/subscription/${id}/confirm`, {
+    method: "POST",
+  });
+}
+
+export function cancelSubscription(): Promise<SubscriptionView> {
+  return apiRequest<SubscriptionView>("/api/billing/subscription/cancel", {
+    method: "POST",
+  });
+}
+
+export function listApiKeys(): Promise<ApiKeyView[]> {
+  return apiRequest<ApiKeyView[]>("/api/api-keys");
+}
+
+export function createApiKey(payload: CreateApiKeyRequest): Promise<ApiKeyCreatedView> {
+  return apiRequest<ApiKeyCreatedView>("/api/api-keys", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function revokeApiKey(id: string): Promise<void> {
+  return apiRequest<void>(`/api/api-keys/${id}`, { method: "DELETE" });
 }
