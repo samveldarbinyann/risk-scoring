@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-subscription-pending-payment
+      author: sam
+      changes:
+        - dropNotNullConstraint:
+            tableName: subscription
+            columnName: current_period_start
+            columnDataType: timestamptz
+        - dropNotNullConstraint:
+            tableName: subscription
+            columnName: current_period_end
+            columnDataType: timestamptz
+        - sql:
+            sql: >
+              DROP INDEX IF EXISTS uq_subscription_one_active_per_user;
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uq_subscription_one_live_per_user
+              ON subscription (user_id)
+              WHERE status IN ('ACTIVE', 'PENDING_PAYMENT');
+      rollback:
+        - sql:
+            sql: >
+              DROP INDEX IF EXISTS uq_subscription_one_live_per_user;
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uq_subscription_one_active_per_user
+              ON subscription (user_id)
+              WHERE status = 'ACTIVE';
+        - addNotNullConstraint:
+            tableName: subscription
+            columnName: current_period_end
+            columnDataType: timestamptz
+        - addNotNullConstraint:
+            tableName: subscription
+            columnName: current_period_start
+            columnDataType: timestamptz

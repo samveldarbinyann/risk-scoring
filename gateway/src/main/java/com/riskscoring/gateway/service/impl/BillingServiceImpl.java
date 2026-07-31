@@ -4,10 +4,14 @@ import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.PlanView;
 import com.riskscoring.gateway.dto.SubscriptionView;
 import com.riskscoring.gateway.entity.Subscription;
+import com.riskscoring.gateway.exception.ApiException;
 import com.riskscoring.gateway.exception.NoActiveSubscriptionException;
 import com.riskscoring.gateway.exception.QuotaExceededException;
+import com.riskscoring.gateway.exception.SubscriptionAlreadyActiveException;
 import com.riskscoring.gateway.exception.SubscriptionNotFoundException;
+import com.riskscoring.gateway.exception.SubscriptionNotPendingException;
 import com.riskscoring.gateway.mapper.BillingMapper;
+import com.riskscoring.gateway.model.BillingPeriods;
 import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.SubscriptionStatus;
 import com.riskscoring.gateway.repository.SubscriptionRepository;
@@ -18,12 +22,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class BillingServiceImpl implements BillingService {
+
+    private static final Set<SubscriptionStatus> LIVE_STATUSES =
+            EnumSet.of(SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING_PAYMENT);
 
     private final SubscriptionRepository subscriptionRepository;
     private final BillingMapper billingMapper;
@@ -37,13 +46,12 @@ public class BillingServiceImpl implements BillingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public SubscriptionView getSubscription(UUID userId) {
-        Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
+        Subscription subscription = subscriptionRepository.findByUserIdAndStatusIn(userId, LIVE_STATUSES)
                 .or(() -> subscriptionRepository.findFirstByUserIdOrderByCreatedAtDesc(userId))
                 .orElseThrow(SubscriptionNotFoundException::new);
 
-        rollPeriodIfNeeded(subscription);
         return billingMapper.toView(subscription);
     }
 
@@ -53,17 +61,35 @@ public class BillingServiceImpl implements BillingService {
         GatewayProperties.Plan plan = gatewayProperties.billing().requirePlan(planCode);
         Instant now = Instant.now();
 
-        Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
-                .map(active -> applyPlan(active, plan, now))
-                .orElseGet(() -> subscriptionRepository.save(createSubscription(userId, plan, now)));
+        Subscription subscription = subscriptionRepository.findByUserIdAndStatusIn(userId, LIVE_STATUSES)
+                .map(live -> repriceUnpaid(live, plan, now))
+                .orElseGet(() -> subscriptionRepository.save(newUnpaidSubscription(userId, plan, now)));
 
         return billingMapper.toView(subscription);
     }
 
     @Override
     @Transactional
+    public SubscriptionView confirmPayment(UUID subscriptionId) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(SubscriptionNotFoundException::new);
+        if (subscription.getStatus() != SubscriptionStatus.PENDING_PAYMENT) {
+            throw new SubscriptionNotPendingException(subscriptionId);
+        }
+
+        Instant now = Instant.now();
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setRequestsUsed(0);
+        subscription.setCurrentPeriodStart(now);
+        subscription.setCurrentPeriodEnd(now.plus(gatewayProperties.billing().period()));
+        subscription.setUpdatedAt(now);
+        return billingMapper.toView(subscription);
+    }
+
+    @Override
+    @Transactional
     public SubscriptionView cancel(UUID userId) {
-        Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
+        Subscription subscription = subscriptionRepository.findByUserIdAndStatusIn(userId, LIVE_STATUSES)
                 .orElseThrow(NoActiveSubscriptionException::new);
 
         Instant now = Instant.now();
@@ -74,9 +100,10 @@ public class BillingServiceImpl implements BillingService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public void requireActiveSubscription(UUID userId) {
-        resolveActiveSubscription(userId);
+        subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
+                .orElseThrow(NoActiveSubscriptionException::new);
     }
 
     @Override
@@ -87,69 +114,70 @@ public class BillingServiceImpl implements BillingService {
         }
 
         Subscription subscription = resolveActiveSubscription(userId);
-        int updated = subscriptionRepository.tryCharge(
+        int charged = subscriptionRepository.tryCharge(
                 subscription.getId(), units, Instant.now(), SubscriptionStatus.ACTIVE);
-        if (updated == 0) {
-            throw new QuotaExceededException(
-                    subscription.getMonthlyRequestLimit(), subscription.getRequestsUsed(), units);
+        if (charged == 0) {
+            throw chargeFailure(subscription.getId(), units);
         }
+    }
+
+    private ApiException chargeFailure(UUID subscriptionId, int units) {
+        Subscription current = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(SubscriptionNotFoundException::new);
+
+        return current.getStatus() == SubscriptionStatus.ACTIVE
+                ? new QuotaExceededException(current.getMonthlyRequestLimit(), current.getRequestsUsed(), units)
+                : new NoActiveSubscriptionException();
     }
 
     private Subscription resolveActiveSubscription(UUID userId) {
         Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
                 .orElseThrow(NoActiveSubscriptionException::new);
-        rollPeriodIfNeeded(subscription);
-        return subscription;
+
+        return rollPeriodIfNeeded(subscription);
     }
 
-    private void rollPeriodIfNeeded(Subscription subscription) {
-        if (subscription.getStatus() != SubscriptionStatus.ACTIVE) {
-            return;
-        }
-
+    private Subscription rollPeriodIfNeeded(Subscription subscription) {
         Instant now = Instant.now();
         if (now.isBefore(subscription.getCurrentPeriodEnd())) {
-            return;
+            return subscription;
         }
 
         Duration period = gatewayProperties.billing().period();
-        long elapsedPeriods = Duration.between(subscription.getCurrentPeriodStart(), now).dividedBy(period);
-        Instant periodStart = subscription.getCurrentPeriodStart().plus(period.multipliedBy(elapsedPeriods));
+        Instant periodStart = BillingPeriods.startOfPeriodContaining(
+                subscription.getCurrentPeriodStart(), period, now);
+        subscriptionRepository.rollPeriod(
+                subscription.getId(), periodStart, periodStart.plus(period), now, SubscriptionStatus.ACTIVE);
 
-        subscription.setCurrentPeriodStart(periodStart);
-        subscription.setCurrentPeriodEnd(periodStart.plus(period));
-        subscription.setRequestsUsed(0);
-        subscription.setUpdatedAt(now);
+        return subscriptionRepository.findById(subscription.getId())
+                .orElseThrow(SubscriptionNotFoundException::new);
     }
 
-    private Subscription createSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
-        Instant periodEnd = now.plus(gatewayProperties.billing().period());
+    private Subscription newUnpaidSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
         return Subscription.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .planCode(plan.code())
-                .status(SubscriptionStatus.ACTIVE)
+                .status(SubscriptionStatus.PENDING_PAYMENT)
                 .priceCents(plan.priceCents())
                 .currency(plan.currency())
                 .monthlyRequestLimit(plan.monthlyRequestLimit())
                 .requestsUsed(0)
-                .currentPeriodStart(now)
-                .currentPeriodEnd(periodEnd)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
     }
 
-    private Subscription applyPlan(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
-        rollPeriodIfNeeded(subscription);
+    private Subscription repriceUnpaid(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
+            throw new SubscriptionAlreadyActiveException();
+        }
+
         subscription.setPlanCode(plan.code());
         subscription.setPriceCents(plan.priceCents());
         subscription.setCurrency(plan.currency());
         subscription.setMonthlyRequestLimit(plan.monthlyRequestLimit());
-        subscription.setStatus(SubscriptionStatus.ACTIVE);
-        subscription.setCanceledAt(null);
         subscription.setUpdatedAt(now);
         return subscription;
     }
-
 }

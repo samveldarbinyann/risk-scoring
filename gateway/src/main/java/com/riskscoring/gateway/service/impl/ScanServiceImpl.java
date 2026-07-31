@@ -24,6 +24,7 @@ import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
 import com.riskscoring.gateway.service.BillingService;
+import com.riskscoring.gateway.service.RateLimitService;
 import com.riskscoring.gateway.service.ScanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -46,10 +47,12 @@ public class ScanServiceImpl implements ScanService {
     private final ScanMapper scanMapper;
     private final ScanEventPublisher scanEventPublisher;
     private final BillingService billingService;
+    private final RateLimitService rateLimitService;
 
     @Override
     @Transactional
-    public ScanGroupAcceptedResponse requestScan(ScanCreateRequest request) {
+    public ScanGroupAcceptedResponse requestScan(String clientIp, ScanCreateRequest request) {
+        rateLimitService.checkPublicScan(clientIp);
         return createScanGroup(request, requestedChains(request), ScanSource.USER);
     }
 

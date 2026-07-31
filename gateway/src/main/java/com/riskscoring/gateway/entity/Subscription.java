@@ -54,10 +54,10 @@ public class Subscription {
     @Column(name = "requests_used", nullable = false)
     private int requestsUsed;
 
-    @Column(name = "current_period_start", nullable = false)
+    @Column(name = "current_period_start")
     private Instant currentPeriodStart;
 
-    @Column(name = "current_period_end", nullable = false)
+    @Column(name = "current_period_end")
     private Instant currentPeriodEnd;
 
     @Column(name = "created_at", nullable = false)

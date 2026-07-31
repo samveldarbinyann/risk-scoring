@@ -7,6 +7,7 @@ import com.riskscoring.gateway.dto.ScanGroupView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.service.ScanService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,8 +30,9 @@ public class ScanController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request) {
-        return scanService.requestScan(request);
+    public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request,
+                                                 HttpServletRequest httpRequest) {
+        return scanService.requestScan(httpRequest.getRemoteAddr(), request);
     }
 
     @GetMapping("/groups/{groupId}")

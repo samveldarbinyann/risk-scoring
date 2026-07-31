@@ -15,6 +15,8 @@ public interface BillingService {
 
     SubscriptionView activate(UUID userId, PlanCode planCode);
 
+    SubscriptionView confirmPayment(UUID subscriptionId);
+
     SubscriptionView cancel(UUID userId);
 
     void requireActiveSubscription(UUID userId);

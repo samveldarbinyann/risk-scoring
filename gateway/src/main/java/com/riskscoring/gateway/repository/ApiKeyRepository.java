@@ -27,6 +27,9 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
             UPDATE ApiKey k
             SET k.lastUsedAt = :now
             WHERE k.id = :id
+              AND (k.lastUsedAt IS NULL OR k.lastUsedAt < :staleBefore)
             """)
-    void touchLastUsedAt(@Param("id") UUID id, @Param("now") Instant now);
+    void touchLastUsedAt(@Param("id") UUID id,
+                         @Param("now") Instant now,
+                         @Param("staleBefore") Instant staleBefore);
 }

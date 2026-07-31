@@ -99,6 +99,11 @@ gateway:
     pepper: ${API_KEY_PEPPER}
     prefix: rsk_
     max-per-user: 5
+    last-used-throttle: 5m
+  public-scan:
+    rate-limit:
+      requests: 10
+      window: 1h
 
 logging:
   level:

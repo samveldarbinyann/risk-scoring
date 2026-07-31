@@ -28,7 +28,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApiKeyServiceImpl implements ApiKeyService {
 
-    private static final int PREFIX_LENGTH = 12;
+    private static final int PUBLIC_ID_BYTES = 6;
+    private static final String SEGMENT_SEPARATOR = "_";
 
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyMapper apiKeyMapper;
@@ -48,13 +49,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             throw new ApiKeyLimitExceededException(maxKeys);
         }
 
-        String plaintext = generatePlaintext();
+        String keyPrefix = gatewayProperties.apiKeys().prefix() + secretGenerator.generate(PUBLIC_ID_BYTES);
+        String plaintext = keyPrefix + SEGMENT_SEPARATOR + secretGenerator.generate();
         Instant now = Instant.now();
         ApiKey apiKey = ApiKey.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .name(request.name().trim())
-                .keyPrefix(plaintext.substring(0, PREFIX_LENGTH))
+                .keyPrefix(keyPrefix)
                 .keyHash(apiKeyHasher.hash(plaintext))
                 .status(ApiKeyStatus.ACTIVE)
                 .createdAt(now)
@@ -90,12 +92,11 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public Optional<ApiKeyPrincipal> resolveActiveKey(String rawApiKey) {
         return apiKeyRepository.findByKeyHashAndStatus(apiKeyHasher.hash(rawApiKey), ApiKeyStatus.ACTIVE)
                 .map(key -> {
-                    apiKeyRepository.touchLastUsedAt(key.getId(), Instant.now());
-                    return new ApiKeyPrincipal(key.getUserId(), key.getId());
+                    ApiKeyPrincipal principal = new ApiKeyPrincipal(key.getUserId(), key.getId());
+                    Instant now = Instant.now();
+                    apiKeyRepository.touchLastUsedAt(
+                            principal.apiKeyId(), now, now.minus(gatewayProperties.apiKeys().lastUsedThrottle()));
+                    return principal;
                 });
-    }
-
-    private String generatePlaintext() {
-        return gatewayProperties.apiKeys().prefix() + secretGenerator.generate();
     }
 }

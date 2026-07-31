@@ -22,7 +22,8 @@ public record GatewayProperties(
         @NotNull @Valid Mail mail,
         @NotNull @Valid Verification verification,
         @NotNull @Valid Billing billing,
-        @NotNull @Valid ApiKeys apiKeys
+        @NotNull @Valid ApiKeys apiKeys,
+        @NotNull @Valid PublicScan publicScan
 ) {
 
     public record Cors(@NotEmpty List<String> allowedOrigins) {
@@ -73,7 +74,17 @@ public record GatewayProperties(
     public record ApiKeys(
             @NotBlank @Size(min = 16) String pepper,
             @NotBlank String prefix,
-            @Positive int maxPerUser
+            @Positive int maxPerUser,
+            @NotNull Duration lastUsedThrottle
+    ) {
+    }
+
+    public record PublicScan(@NotNull @Valid RateLimit rateLimit) {
+    }
+
+    public record RateLimit(
+            @Positive int requests,
+            @NotNull Duration window
     ) {
     }
 }

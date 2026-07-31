@@ -8,13 +8,17 @@ import java.util.Base64;
 @Component
 public class SecretGenerator {
 
-    private static final int SECRET_BYTES = 32;
+    private static final int DEFAULT_SECRET_BYTES = 32;
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
 
     private final SecureRandom secureRandom = new SecureRandom();
 
     public String generate() {
-        byte[] bytes = new byte[SECRET_BYTES];
+        return generate(DEFAULT_SECRET_BYTES);
+    }
+
+    public String generate(int byteLength) {
+        byte[] bytes = new byte[byteLength];
         secureRandom.nextBytes(bytes);
         return ENCODER.encodeToString(bytes);
     }
