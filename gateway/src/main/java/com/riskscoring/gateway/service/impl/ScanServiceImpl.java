@@ -23,6 +23,7 @@ import com.riskscoring.gateway.model.EvmAddresses;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
+import com.riskscoring.gateway.service.BillingService;
 import com.riskscoring.gateway.service.ScanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -44,10 +45,29 @@ public class ScanServiceImpl implements ScanService {
     private final ScanReportRepository scanReportRepository;
     private final ScanMapper scanMapper;
     private final ScanEventPublisher scanEventPublisher;
+    private final BillingService billingService;
 
     @Override
     @Transactional
     public ScanGroupAcceptedResponse requestScan(ScanCreateRequest request) {
+        return createScanGroup(request, ScanSource.USER);
+    }
+
+    @Override
+    @Transactional
+    public ScanGroupAcceptedResponse requestApiScan(UUID userId, ScanCreateRequest request) {
+        List<EvmChain> chains = requestedChains(request);
+        billingService.chargeQuota(userId, chains.size());
+        return createScanGroup(request, chains, ScanSource.API);
+    }
+
+    private ScanGroupAcceptedResponse createScanGroup(ScanCreateRequest request, ScanSource source) {
+        return createScanGroup(request, requestedChains(request), source);
+    }
+
+    private ScanGroupAcceptedResponse createScanGroup(ScanCreateRequest request,
+                                                      List<EvmChain> chains,
+                                                      ScanSource source) {
         String address = EvmAddresses.normalize(request.address());
         Instant requestedAt = Instant.now();
 
@@ -58,14 +78,14 @@ public class ScanServiceImpl implements ScanService {
                 .build();
         scanGroupRepository.save(group);
 
-        List<Scan> scans = requestedChains(request).stream()
+        List<Scan> scans = chains.stream()
                 .map(chain -> Scan.builder()
                         .id(UUID.randomUUID())
                         .groupId(group.getId())
                         .address(address)
                         .chainId(chain.chainId())
                         .status(ScanStage.PENDING)
-                        .source(ScanSource.USER)
+                        .source(source)
                         .requestedAt(requestedAt)
                         .build())
                 .toList();

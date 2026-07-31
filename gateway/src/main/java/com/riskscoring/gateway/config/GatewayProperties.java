@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.config;
 
+import com.riskscoring.gateway.model.PlanCode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -19,7 +20,9 @@ public record GatewayProperties(
         @NotNull @Valid Cors cors,
         @NotNull @Valid Auth auth,
         @NotNull @Valid Mail mail,
-        @NotNull @Valid Verification verification
+        @NotNull @Valid Verification verification,
+        @NotNull @Valid Billing billing,
+        @NotNull @Valid ApiKeys apiKeys
 ) {
 
     public record Cors(@NotEmpty List<String> allowedOrigins) {
@@ -43,6 +46,34 @@ public record GatewayProperties(
             @NotNull Duration codeTtl,
             @NotNull Duration resendCooldown,
             @Positive int maxAttempts
+    ) {
+    }
+
+    public record Billing(
+            @NotNull Duration period,
+            @Positive int maxApiKeysPerUser,
+            @NotEmpty @Valid List<Plan> plans
+    ) {
+        public Plan requirePlan(PlanCode code) {
+            return plans.stream()
+                    .filter(plan -> plan.code() == code)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown plan: " + code));
+        }
+    }
+
+    public record Plan(
+            @NotNull PlanCode code,
+            @NotBlank String name,
+            @Positive int priceCents,
+            @NotBlank @Size(min = 3, max = 3) String currency,
+            @Positive int monthlyRequestLimit
+    ) {
+    }
+
+    public record ApiKeys(
+            @NotBlank @Size(min = 16) String pepper,
+            @NotBlank String prefix
     ) {
     }
 }

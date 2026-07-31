@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-subscription
+      author: sam
+      changes:
+        - createTable:
+            tableName: subscription
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_subscription
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: plan_code
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_cents
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: monthly_request_limit
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: requests_used
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_period_start
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: current_period_end
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: canceled_at
+                  type: timestamptz
+        - addForeignKeyConstraint:
+            baseTableName: subscription
+            baseColumnNames: user_id
+            referencedTableName: app_user
+            referencedColumnNames: id
+            constraintName: fk_subscription_user
+            onDelete: CASCADE
+        - createIndex:
+            tableName: subscription
+            indexName: idx_subscription_user_id
+            columns:
+              - column:
+                  name: user_id
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uq_subscription_one_active_per_user
+              ON subscription (user_id)
+              WHERE status = 'ACTIVE';

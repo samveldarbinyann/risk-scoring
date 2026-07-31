@@ -77,6 +77,28 @@ gateway:
     code-ttl: 10m
     resend-cooldown: 60s
     max-attempts: 5
+  billing:
+    period: 30d
+    max-api-keys-per-user: 5
+    plans:
+      - code: STARTER
+        name: Starter
+        price-cents: 2000
+        currency: USD
+        monthly-request-limit: 1000
+      - code: GROWTH
+        name: Growth
+        price-cents: 6000
+        currency: USD
+        monthly-request-limit: 5000
+      - code: SCALE
+        name: Scale
+        price-cents: 10000
+        currency: USD
+        monthly-request-limit: 15000
+  api-keys:
+    pepper: ${API_KEY_PEPPER}
+    prefix: rsk_
 
 logging:
   level:

@@ -13,6 +13,8 @@ public interface ScanService {
 
     ScanGroupAcceptedResponse requestScan(ScanCreateRequest request);
 
+    ScanGroupAcceptedResponse requestApiScan(UUID userId, ScanCreateRequest request);
+
     ScanGroupView getScanGroup(UUID groupId);
 
     ScanGroupReportView getScanGroupReport(UUID groupId);
