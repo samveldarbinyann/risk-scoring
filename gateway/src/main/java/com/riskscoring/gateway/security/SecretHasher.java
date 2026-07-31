@@ -1,23 +1,19 @@
 package com.riskscoring.gateway.security;
 
-import com.riskscoring.gateway.config.GatewayProperties;
-import org.springframework.stereotype.Component;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 
-@Component
 public class SecretHasher {
 
     private static final String ALGORITHM = "HmacSHA256";
 
     private final byte[] pepper;
 
-    public SecretHasher(GatewayProperties gatewayProperties) {
-        this.pepper = gatewayProperties.verification().codePepper().getBytes(StandardCharsets.UTF_8);
+    public SecretHasher(String pepper) {
+        this.pepper = pepper.getBytes(StandardCharsets.UTF_8);
     }
 
     public String hash(String secret) {

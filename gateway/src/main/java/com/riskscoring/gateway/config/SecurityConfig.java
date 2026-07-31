@@ -1,5 +1,7 @@
 package com.riskscoring.gateway.config;
 
+import com.riskscoring.gateway.model.UserRole;
+import com.riskscoring.gateway.security.ApiKeyAuthenticationFilter;
 import com.riskscoring.gateway.security.JwtAuthenticationFilter;
 import com.riskscoring.gateway.security.RestSecurityErrorHandler;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class SecurityConfig {
 
     private final GatewayProperties gatewayProperties;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final RestSecurityErrorHandler securityErrorHandler;
 
     @Bean
@@ -55,11 +58,22 @@ public class SecurityConfig {
                         .accessDeniedHandler(securityErrorHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/me", "/api/watchlist/**", "/api/alerts/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/billing/plans").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/billing/subscription/*/confirm")
+                        .hasRole(UserRole.ADMIN.name())
+                        .requestMatchers("/api/v1/**").hasRole(ApiKeyAuthenticationFilter.API_ROLE)
+                        .requestMatchers(
+                                "/api/auth/me",
+                                "/api/watchlist/**",
+                                "/api/alerts/**",
+                                "/api/billing/**",
+                                "/api/api-keys/**")
+                        .hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
                         .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**", "/ws/**")
                         .permitAll()
                         .anyRequest().denyAll())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, ApiKeyAuthenticationFilter.class)
                 .build();
     }
 
@@ -68,7 +82,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(gatewayProperties.cors().allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept-Language"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept-Language", "X-Api-Key"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(CORS_MAX_AGE_SECONDS);
 

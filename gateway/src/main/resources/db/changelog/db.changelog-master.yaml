@@ -9,3 +9,9 @@ databaseChangeLog:
       file: db/changelog/changes/004-create-email-verification-code.yaml
   - include:
       file: db/changelog/changes/005-create-refresh-token.yaml
+  - include:
+      file: db/changelog/changes/006-create-subscription.yaml
+  - include:
+      file: db/changelog/changes/007-create-api-key.yaml
+  - include:
+      file: db/changelog/changes/008-subscription-pending-payment.yaml

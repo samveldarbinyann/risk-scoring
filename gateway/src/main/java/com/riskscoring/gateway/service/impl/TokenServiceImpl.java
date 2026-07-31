@@ -8,6 +8,7 @@ import com.riskscoring.gateway.model.UserStatus;
 import com.riskscoring.gateway.repository.AppUserRepository;
 import com.riskscoring.gateway.repository.RefreshTokenRepository;
 import com.riskscoring.gateway.security.AuthenticatedUser;
+import com.riskscoring.gateway.security.SecretGenerator;
 import com.riskscoring.gateway.security.SecretHasher;
 import com.riskscoring.gateway.service.TokenService;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,7 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,17 +37,15 @@ public class TokenServiceImpl implements TokenService {
     private static final String ACCESS_TOKEN_TYPE = "access";
     private static final String TOKEN_VERSION_CLAIM = "ver";
     private static final String ROLE_CLAIM = "role";
-    private static final int REFRESH_TOKEN_BYTES = 32;
     private static final int USER_AGENT_MAX_LENGTH = 255;
-    private static final Base64.Encoder TOKEN_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
     private final AppUserRepository appUserRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final SecretHasher secretHasher;
+    private final SecretGenerator secretGenerator;
     private final GatewayProperties gatewayProperties;
-    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public String issueAccessToken(AppUser user) {
@@ -94,9 +91,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     @Transactional
     public String issueRefreshToken(AppUser user, String userAgent, String ipAddress) {
-        byte[] raw = new byte[REFRESH_TOKEN_BYTES];
-        secureRandom.nextBytes(raw);
-        String token = TOKEN_ENCODER.encodeToString(raw);
+        String token = secretGenerator.generate();
 
         Instant now = Instant.now();
         refreshTokenRepository.save(RefreshToken.builder()
