@@ -17,27 +17,49 @@ import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
 import type { ApiKeyCreatedView, ApiKeyView, SubscriptionView } from "@/lib/types";
 
+type ResourceState<T> = {
+  data: T;
+  loadError: string | null;
+  actionError: string | null;
+};
+
+type BusyState = {
+  loading: boolean;
+  confirming: boolean;
+  canceling: boolean;
+  creatingKey: boolean;
+  revokingId: string | null;
+};
+
+const INITIAL_BUSY: BusyState = {
+  loading: true,
+  confirming: false,
+  canceling: false,
+  creatingKey: false,
+  revokingId: null,
+};
+
 export function SettingsPage() {
   const { t } = useI18n();
   const { status } = useAuth();
 
-  const [subscription, setSubscription] = useState<SubscriptionView | null>(null);
-  const [keys, setKeys] = useState<ApiKeyView[]>([]);
-  const [subLoadError, setSubLoadError] = useState<string | null>(null);
-  const [keysLoadError, setKeysLoadError] = useState<string | null>(null);
-  const [subActionError, setSubActionError] = useState<string | null>(null);
-  const [keysActionError, setKeysActionError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isConfirming, setIsConfirming] = useState(false);
-  const [isCanceling, setIsCanceling] = useState(false);
-  const [isCreatingKey, setIsCreatingKey] = useState(false);
-  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<ResourceState<SubscriptionView | null>>({
+    data: null,
+    loadError: null,
+    actionError: null,
+  });
+  const [keys, setKeys] = useState<ResourceState<ApiKeyView[]>>({
+    data: [],
+    loadError: null,
+    actionError: null,
+  });
+  const [busy, setBusy] = useState<BusyState>(INITIAL_BUSY);
   const [createdSecret, setCreatedSecret] = useState<ApiKeyCreatedView | null>(null);
 
   const refresh = useCallback(async () => {
-    setSubLoadError(null);
-    setKeysLoadError(null);
-    setIsLoading(true);
+    setSubscription((prev) => ({ ...prev, loadError: null, actionError: null }));
+    setKeys((prev) => ({ ...prev, loadError: null, actionError: null }));
+    setBusy((prev) => ({ ...prev, loading: true }));
 
     const [subResult, keysResult] = await Promise.allSettled([
       getSubscription().catch((err: unknown) => {
@@ -48,24 +70,32 @@ export function SettingsPage() {
     ]);
 
     if (subResult.status === "fulfilled") {
-      setSubscription(subResult.value);
+      setSubscription((prev) => ({ ...prev, data: subResult.value, loadError: null }));
     } else {
-      setSubscription(null);
-      setSubLoadError(
-        subResult.reason instanceof Error ? subResult.reason.message : t("settings.subscription.loadError"),
-      );
+      setSubscription((prev) => ({
+        ...prev,
+        data: null,
+        loadError:
+          subResult.reason instanceof Error
+            ? subResult.reason.message
+            : t("settings.subscription.loadError"),
+      }));
     }
 
     if (keysResult.status === "fulfilled") {
-      setKeys(keysResult.value);
+      setKeys((prev) => ({ ...prev, data: keysResult.value, loadError: null }));
     } else {
-      setKeys([]);
-      setKeysLoadError(
-        keysResult.reason instanceof Error ? keysResult.reason.message : t("settings.apiKeys.loadError"),
-      );
+      setKeys((prev) => ({
+        ...prev,
+        data: [],
+        loadError:
+          keysResult.reason instanceof Error
+            ? keysResult.reason.message
+            : t("settings.apiKeys.loadError"),
+      }));
     }
 
-    setIsLoading(false);
+    setBusy((prev) => ({ ...prev, loading: false }));
   }, [t]);
 
   useEffect(() => {
@@ -86,58 +116,83 @@ export function SettingsPage() {
   }
 
   async function handleConfirm() {
-    if (!subscription || isConfirming) return;
-    setSubActionError(null);
-    setIsConfirming(true);
+    if (!subscription.data || busy.confirming) return;
+    setSubscription((prev) => ({ ...prev, actionError: null }));
+    setBusy((prev) => ({ ...prev, confirming: true }));
     try {
-      setSubscription(await confirmSubscriptionPayment(subscription.id));
+      const next = await confirmSubscriptionPayment(subscription.data.id);
+      setSubscription((prev) => ({ ...prev, data: next }));
     } catch (err) {
-      setSubActionError(err instanceof Error ? err.message : t("settings.subscription.actionError"));
+      setSubscription((prev) => ({
+        ...prev,
+        actionError: err instanceof Error ? err.message : t("settings.subscription.actionError"),
+      }));
     } finally {
-      setIsConfirming(false);
+      setBusy((prev) => ({ ...prev, confirming: false }));
     }
   }
 
   async function handleCancel() {
-    if (isCanceling) return;
-    setSubActionError(null);
-    setIsCanceling(true);
+    if (busy.canceling) return;
+    if (!window.confirm(t("settings.subscription.cancelConfirm"))) return;
+
+    setSubscription((prev) => ({ ...prev, actionError: null }));
+    setBusy((prev) => ({ ...prev, canceling: true }));
     try {
-      setSubscription(await cancelSubscription());
+      const next = await cancelSubscription();
+      const nextKeys = await listApiKeys();
+      setSubscription((prev) => ({ ...prev, data: next }));
+      setKeys((prev) => ({ ...prev, data: nextKeys }));
+      setCreatedSecret(null);
     } catch (err) {
-      setSubActionError(err instanceof Error ? err.message : t("settings.subscription.actionError"));
+      setSubscription((prev) => ({
+        ...prev,
+        actionError: err instanceof Error ? err.message : t("settings.subscription.actionError"),
+      }));
     } finally {
-      setIsCanceling(false);
+      setBusy((prev) => ({ ...prev, canceling: false }));
     }
   }
 
-  async function handleCreateKey(name: string) {
-    if (isCreatingKey) return;
-    setKeysActionError(null);
-    setIsCreatingKey(true);
+  async function handleCreateKey(name: string): Promise<boolean> {
+    if (busy.creatingKey) return false;
+    setKeys((prev) => ({ ...prev, actionError: null }));
+    setBusy((prev) => ({ ...prev, creatingKey: true }));
     try {
       const created = await createApiKey({ name });
+      const nextKeys = await listApiKeys();
       setCreatedSecret(created);
-      setKeys(await listApiKeys());
+      setKeys((prev) => ({ ...prev, data: nextKeys }));
+      return true;
     } catch (err) {
-      setKeysActionError(err instanceof Error ? err.message : t("settings.apiKeys.actionError"));
+      setKeys((prev) => ({
+        ...prev,
+        actionError: err instanceof Error ? err.message : t("settings.apiKeys.actionError"),
+      }));
+      return false;
     } finally {
-      setIsCreatingKey(false);
+      setBusy((prev) => ({ ...prev, creatingKey: false }));
     }
   }
 
   async function handleRevokeKey(id: string) {
-    if (revokingId) return;
-    setKeysActionError(null);
-    setRevokingId(id);
+    if (busy.revokingId) return;
+    if (!window.confirm(t("settings.apiKeys.revokeConfirm"))) return;
+
+    setKeys((prev) => ({ ...prev, actionError: null }));
+    setBusy((prev) => ({ ...prev, revokingId: id }));
     try {
       await revokeApiKey(id);
-      setKeys(await listApiKeys());
+      const nextKeys = await listApiKeys();
+      setKeys((prev) => ({ ...prev, data: nextKeys }));
       if (createdSecret?.id === id) setCreatedSecret(null);
     } catch (err) {
-      setKeysActionError(err instanceof Error ? err.message : t("settings.apiKeys.actionError"));
+      setKeys((prev) => ({
+        ...prev,
+        actionError: err instanceof Error ? err.message : t("settings.apiKeys.actionError"),
+      }));
     } finally {
-      setRevokingId(null);
+      setBusy((prev) => ({ ...prev, revokingId: null }));
     }
   }
 
@@ -151,24 +206,24 @@ export function SettingsPage() {
       </header>
 
       <SubscriptionPanel
-        subscription={subscription}
-        isLoading={isLoading}
-        error={subLoadError}
-        actionError={subActionError}
-        isConfirming={isConfirming}
-        isCanceling={isCanceling}
+        subscription={subscription.data}
+        isLoading={busy.loading}
+        error={subscription.loadError}
+        actionError={subscription.actionError}
+        isConfirming={busy.confirming}
+        isCanceling={busy.canceling}
         onConfirm={() => void handleConfirm()}
         onCancel={() => void handleCancel()}
       />
 
       <ApiKeysPanel
-        keys={keys}
-        isLoading={isLoading}
-        error={keysLoadError}
-        actionError={keysActionError}
-        canCreate={subscription?.status === "ACTIVE"}
-        isCreating={isCreatingKey}
-        revokingId={revokingId}
+        keys={keys.data}
+        isLoading={busy.loading}
+        error={keys.loadError}
+        actionError={keys.actionError}
+        canCreate={subscription.data?.status === "ACTIVE"}
+        isCreating={busy.creatingKey}
+        revokingId={busy.revokingId}
         createdSecret={createdSecret}
         onCreate={handleCreateKey}
         onRevoke={(id) => void handleRevokeKey(id)}

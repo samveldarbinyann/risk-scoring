@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
@@ -46,6 +46,7 @@ export function SubscriptionPanel({
   onCancel,
 }: SubscriptionPanelProps) {
   const { t, locale } = useI18n();
+  const navigate = useNavigate();
 
   return (
     <Card title={t("settings.subscription.title")}>
@@ -58,17 +59,14 @@ export function SubscriptionPanel({
       ) : !subscription ? (
         <div className="flex flex-col gap-4">
           <p className="font-mono text-sm text-text-faint">{t("settings.subscription.empty")}</p>
-          <Link
-            to="/pricing"
-            className="inline-flex h-12 w-fit items-center justify-center rounded-base bg-accent px-6 font-sans text-base font-medium text-bg transition-colors hover:bg-accent-press"
-          >
+          <Button type="button" onClick={() => navigate("/pricing")} className="w-fit">
             {t("settings.subscription.ctaPricing")}
-          </Link>
+          </Button>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <MetaRow label={t("settings.subscription.plan")} value={subscription.planCode} mono />
+            <MetaRow label={t("settings.subscription.plan")} value={subscription.planName} />
             <div className="space-y-1">
               <p className="font-sans text-xs uppercase tracking-wider text-text-faint">
                 {t("settings.subscription.status")}
@@ -91,7 +89,7 @@ export function SubscriptionPanel({
               label={t("settings.subscription.period")}
               value={
                 subscription.currentPeriodStart && subscription.currentPeriodEnd
-                  ? `${formatDateTime(subscription.currentPeriodStart)} → ${formatDateTime(subscription.currentPeriodEnd)}`
+                  ? `${formatDateTime(subscription.currentPeriodStart, locale)} → ${formatDateTime(subscription.currentPeriodEnd, locale)}`
                   : "—"
               }
               mono
@@ -118,12 +116,9 @@ export function SubscriptionPanel({
               </Button>
             )}
             {(subscription.status === "CANCELED" || subscription.status === "EXPIRED") && (
-              <Link
-                to="/pricing"
-                className="inline-flex h-12 items-center justify-center rounded-base bg-accent px-6 font-sans text-base font-medium text-bg transition-colors hover:bg-accent-press"
-              >
+              <Button type="button" onClick={() => navigate("/pricing")}>
                 {t("settings.subscription.ctaPricing")}
-              </Link>
+              </Button>
             )}
           </div>
 

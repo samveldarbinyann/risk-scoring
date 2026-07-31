@@ -17,5 +17,7 @@ public interface ApiKeyService {
 
     void revoke(UUID userId, UUID keyId);
 
+    void revokeAllActive(UUID userId);
+
     Optional<ApiKeyPrincipal> resolveActiveKey(String rawApiKey);
 }

@@ -9,6 +9,7 @@ import java.util.UUID;
 public record SubscriptionView(
         UUID id,
         PlanCode planCode,
+        String planName,
         SubscriptionStatus status,
         int priceCents,
         String currency,

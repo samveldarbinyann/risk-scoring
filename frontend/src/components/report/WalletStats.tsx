@@ -23,7 +23,7 @@ export function WalletStats({
   sampleTruncated,
   observedAt,
 }: WalletStatsProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
     <Card title={t("report.balance")}>
@@ -47,7 +47,7 @@ export function WalletStats({
             {t("report.transfers24h")}: <span className="text-text">{txCount24h}</span>
           </span>
           <span>
-            {t("report.observedAt")}: <span className="text-text">{formatDateTime(observedAt)}</span>
+            {t("report.observedAt")}: <span className="text-text">{formatDateTime(observedAt, locale)}</span>
           </span>
         </div>
       </div>

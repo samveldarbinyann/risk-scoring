@@ -16,15 +16,15 @@ export function formatAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-export function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
+export function formatDateTime(iso: string, locale?: string): string {
+  return new Date(iso).toLocaleString(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   });
 }
 
-export function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString(undefined, { timeStyle: "medium" });
+export function formatTime(iso: string, locale?: string): string {
+  return new Date(iso).toLocaleTimeString(locale, { timeStyle: "medium" });
 }
 
 export function formatMoney(cents: number, currency: string, locale?: string): string {

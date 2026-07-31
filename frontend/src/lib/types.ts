@@ -167,6 +167,7 @@ export interface PlanView {
 export interface SubscriptionView {
   id: string;
   planCode: PlanCode;
+  planName: string;
   status: SubscriptionStatus;
   priceCents: number;
   currency: string;
@@ -177,10 +178,6 @@ export interface SubscriptionView {
   currentPeriodEnd: string | null;
   createdAt: string;
   canceledAt: string | null;
-}
-
-export interface ActivateSubscriptionRequest {
-  planCode: PlanCode;
 }
 
 export interface ApiKeyView {

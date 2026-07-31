@@ -18,7 +18,7 @@ interface ApiKeysPanelProps {
   isCreating: boolean;
   revokingId: string | null;
   createdSecret: ApiKeyCreatedView | null;
-  onCreate: (name: string) => Promise<void>;
+  onCreate: (name: string) => Promise<boolean>;
   onRevoke: (id: string) => void;
 }
 
@@ -40,8 +40,8 @@ export function ApiKeysPanel({
   async function handleCreate() {
     const trimmed = name.trim();
     if (!trimmed || isCreating || !canCreate) return;
-    await onCreate(trimmed);
-    setName("");
+    const ok = await onCreate(trimmed);
+    if (ok) setName("");
   }
 
   return (

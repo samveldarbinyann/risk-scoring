@@ -22,7 +22,7 @@ interface ApiKeyRowProps {
 }
 
 export function ApiKeyRow({ apiKey, isRevoking, onRevoke }: ApiKeyRowProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   return (
     <div className="flex flex-col gap-3 border-b border-border py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
@@ -43,11 +43,11 @@ export function ApiKeyRow({ apiKey, isRevoking, onRevoke }: ApiKeyRowProps) {
             {t("settings.apiKeys.prefix")}: {apiKey.keyPrefix}…
           </span>
           <span>
-            {t("settings.apiKeys.created")}: {formatDateTime(apiKey.createdAt)}
+            {t("settings.apiKeys.created")}: {formatDateTime(apiKey.createdAt, locale)}
           </span>
           <span>
             {t("settings.apiKeys.lastUsed")}:{" "}
-            {apiKey.lastUsedAt ? formatDateTime(apiKey.lastUsedAt) : t("settings.apiKeys.neverUsed")}
+            {apiKey.lastUsedAt ? formatDateTime(apiKey.lastUsedAt, locale) : t("settings.apiKeys.neverUsed")}
           </span>
         </div>
       </div>

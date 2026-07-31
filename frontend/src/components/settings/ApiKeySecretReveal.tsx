@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -6,18 +6,33 @@ interface ApiKeySecretRevealProps {
   apiKey: string;
 }
 
+type CopyState = "idle" | "copied" | "failed";
+
 export function ApiKeySecretReveal({ apiKey }: ApiKeySecretRevealProps) {
   const { t } = useI18n();
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<CopyState>("idle");
+
+  useEffect(() => {
+    if (copyState === "idle") return;
+    const timer = window.setTimeout(() => setCopyState("idle"), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copyState]);
 
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(apiKey);
-      setCopied(true);
+      setCopyState("copied");
     } catch {
-      setCopied(false);
+      setCopyState("failed");
     }
   }
+
+  const label =
+    copyState === "copied"
+      ? t("settings.apiKeys.copied")
+      : copyState === "failed"
+        ? t("settings.apiKeys.copyFailed")
+        : t("settings.apiKeys.copy");
 
   return (
     <div className="space-y-3 rounded-panel border border-accent bg-surface-2 p-4">
@@ -30,7 +45,7 @@ export function ApiKeySecretReveal({ apiKey }: ApiKeySecretRevealProps) {
           {apiKey}
         </code>
         <Button type="button" variant="ghost" onClick={() => void handleCopy()} className="h-10 shrink-0 px-4 text-sm">
-          {copied ? t("settings.apiKeys.copied") : t("settings.apiKeys.copy")}
+          {label}
         </Button>
       </div>
     </div>

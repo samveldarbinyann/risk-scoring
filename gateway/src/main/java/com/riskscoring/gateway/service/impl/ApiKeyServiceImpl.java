@@ -89,6 +89,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     @Transactional
+    public void revokeAllActive(UUID userId) {
+        apiKeyRepository.revokeAllActive(
+                userId, Instant.now(), ApiKeyStatus.ACTIVE, ApiKeyStatus.REVOKED);
+    }
+
+    @Override
+    @Transactional
     public Optional<ApiKeyPrincipal> resolveActiveKey(String rawApiKey) {
         return apiKeyRepository.findByKeyHashAndStatus(apiKeyHasher.hash(rawApiKey), ApiKeyStatus.ACTIVE)
                 .map(key -> {

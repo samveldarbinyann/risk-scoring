@@ -19,8 +19,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/contact", labelKey: "nav.contact" },
 ];
 
-// Authenticated product screens. Watchlist/Alerts are live; dashboard and
-// settings remain stubs. Hidden for anonymous visitors.
+// Authenticated product screens. Dashboard is still a stub; the rest are live.
+// Hidden for anonymous visitors.
 const AUTHENTICATED_NAV_ITEMS: NavItem[] = [
   { to: "/dashboard", labelKey: "nav.dashboard" },
   { to: "/watchlist", labelKey: "nav.watchlist" },

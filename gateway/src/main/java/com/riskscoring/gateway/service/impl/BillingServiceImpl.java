@@ -15,8 +15,10 @@ import com.riskscoring.gateway.model.BillingPeriods;
 import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.SubscriptionStatus;
 import com.riskscoring.gateway.repository.SubscriptionRepository;
+import com.riskscoring.gateway.service.ApiKeyService;
 import com.riskscoring.gateway.service.BillingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,8 @@ public class BillingServiceImpl implements BillingService {
     private final SubscriptionRepository subscriptionRepository;
     private final BillingMapper billingMapper;
     private final GatewayProperties gatewayProperties;
+    // ObjectProvider breaks the ApiKeyService ↔ BillingService constructor cycle.
+    private final ObjectProvider<ApiKeyService> apiKeyService;
 
     @Override
     public List<PlanView> listPlans() {
@@ -99,6 +103,7 @@ public class BillingServiceImpl implements BillingService {
         subscription.setStatus(SubscriptionStatus.CANCELED);
         subscription.setCanceledAt(now);
         subscription.setUpdatedAt(now);
+        apiKeyService.getObject().revokeAllActive(userId);
         return billingMapper.toView(subscription);
     }
 
