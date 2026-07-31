@@ -8,6 +8,7 @@ import { EVM_CHAINS } from "@/lib/chains";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK_ORDER } from "@/lib/risk";
 import type { MessageKey } from "@/lib/i18n/messageKeys";
+import type { DocsTerm } from "@/components/docs/DocsTermList";
 
 const PIPELINE_STEPS: Array<{ titleKey: MessageKey; bodyKey: MessageKey }> = [
   { titleKey: "docs.pipeline.ingest.title", bodyKey: "docs.pipeline.ingest.body" },
@@ -66,6 +67,10 @@ const AUTH_SAMPLE = `X-Api-Key: rsk_live_9f2c...`;
 export function DocsPage() {
   const { t } = useI18n();
 
+  function toTerms(items: Array<{ titleKey: MessageKey; bodyKey: MessageKey }>): DocsTerm[] {
+    return items.map((item) => ({ term: t(item.titleKey), description: t(item.bodyKey) }));
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-6 py-10">
       <header className="flex flex-col gap-3">
@@ -75,13 +80,7 @@ export function DocsPage() {
       </header>
 
       <DocsSection index={1} title={t("docs.pipeline.title")} body={t("docs.pipeline.body")}>
-        <DocsTermList
-          numbered
-          items={PIPELINE_STEPS.map((step) => ({
-            term: t(step.titleKey),
-            description: t(step.bodyKey),
-          }))}
-        />
+        <DocsTermList numbered items={toTerms(PIPELINE_STEPS)} />
       </DocsSection>
 
       <DocsSection index={2} title={t("docs.risk.title")} body={t("docs.risk.body")}>
@@ -112,12 +111,7 @@ export function DocsPage() {
       </DocsSection>
 
       <DocsSection index={4} title={t("docs.flags.title")} body={t("docs.flags.body")}>
-        <DocsTermList
-          items={FLAG_CATEGORIES.map((category) => ({
-            term: t(category.titleKey),
-            description: t(category.bodyKey),
-          }))}
-        />
+        <DocsTermList items={toTerms(FLAG_CATEGORIES)} />
       </DocsSection>
 
       <DocsSection index={5} title={t("docs.api.title")} body={t("docs.api.body")}>

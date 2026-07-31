@@ -28,16 +28,15 @@ public class ContactServiceImpl implements ContactService {
     public void submit(String clientIp, ContactRequest request) {
         rateLimitService.checkContact(clientIp);
 
-        ContactSubmission submission = contactSubmissionRepository.save(ContactSubmission.builder()
+        ContactSubmission submission = ContactSubmission.builder()
                 .id(UUID.randomUUID())
                 .email(request.email())
                 .subject(request.subject())
                 .message(request.message())
                 .scanId(request.scanId())
-                .status(ContactStatus.RECEIVED)
                 .ip(clientIp)
                 .createdAt(Instant.now())
-                .build());
+                .build();
 
         submission.setStatus(deliver(submission));
         contactSubmissionRepository.save(submission);

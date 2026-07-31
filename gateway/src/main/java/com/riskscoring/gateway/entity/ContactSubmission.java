@@ -21,7 +21,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "contact_submission")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -44,6 +43,7 @@ public class ContactSubmission {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
+    @Setter
     private ContactStatus status;
 
     @Column(length = 64)
