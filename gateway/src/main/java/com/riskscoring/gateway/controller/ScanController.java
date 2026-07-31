@@ -7,6 +7,7 @@ import com.riskscoring.gateway.dto.ScanGroupView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.service.ScanService;
+import com.riskscoring.gateway.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class ScanController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request,
                                                  HttpServletRequest httpRequest) {
-        return scanService.requestScan(httpRequest.getRemoteAddr(), request);
+        return scanService.requestScan(ClientIpResolver.resolve(httpRequest), request);
     }
 
     @GetMapping("/groups/{groupId}")

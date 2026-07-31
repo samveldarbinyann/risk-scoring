@@ -61,8 +61,12 @@ public class EmailServiceImpl implements EmailService {
 
         send(gatewayProperties.mail().contactRecipient(),
                 messageSource.getMessage(
-                        "email.contact.subject", new Object[]{submission.getSubject()}, CONTACT_LOCALE),
+                        "email.contact.subject", new Object[]{sanitizeHeaderValue(submission.getSubject())}, CONTACT_LOCALE),
                 templateEngine.process(CONTACT_TEMPLATE, context));
+    }
+
+    private String sanitizeHeaderValue(String value) {
+        return value.replaceAll("[\\r\\n]", " ").trim();
     }
 
     private void send(String to, String subject, String html) {

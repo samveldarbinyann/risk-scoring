@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { formatAddress } from "@/lib/format";
+import { truncateId } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 
 interface ContactFormProps {
@@ -72,7 +72,7 @@ export function ContactForm({
 
       {scanId && (
         <p className="font-mono text-xs text-text-faint">
-          {t("contact.relatedScan")} <span className="text-text-dim">{formatAddress(scanId)}</span>
+          {t("contact.relatedScan")} <span className="text-text-dim">{truncateId(scanId)}</span>
         </p>
       )}
 

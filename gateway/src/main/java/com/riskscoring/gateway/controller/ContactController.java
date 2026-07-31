@@ -2,6 +2,7 @@ package com.riskscoring.gateway.controller;
 
 import com.riskscoring.gateway.dto.ContactRequest;
 import com.riskscoring.gateway.service.ContactService;
+import com.riskscoring.gateway.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,6 @@ public class ContactController {
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void submit(@Valid @RequestBody ContactRequest request, HttpServletRequest httpRequest) {
-        contactService.submit(httpRequest.getRemoteAddr(), request);
+        contactService.submit(ClientIpResolver.resolve(httpRequest), request);
     }
 }
