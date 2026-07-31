@@ -2,6 +2,7 @@ export interface EvmChain {
   chainId: number;
   label: string;
   nativeSymbol: string;
+  testnet?: boolean;
 }
 
 export const EVM_CHAINS: EvmChain[] = [
@@ -14,7 +15,7 @@ export const EVM_CHAINS: EvmChain[] = [
   { chainId: 42161, label: "Arbitrum One", nativeSymbol: "ETH" },
   { chainId: 43114, label: "Avalanche C-Chain", nativeSymbol: "AVAX" },
   { chainId: 59144, label: "Linea", nativeSymbol: "ETH" },
-  { chainId: 11155111, label: "Sepolia", nativeSymbol: "ETH" },
+  { chainId: 11155111, label: "Sepolia", nativeSymbol: "ETH", testnet: true },
 ];
 
 export function chainLabel(chainId: number): string {

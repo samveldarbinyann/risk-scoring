@@ -11,9 +11,13 @@ export function formatWei(wei: string, maxFractionDigits = 4): string {
   return trimmedFraction ? `${whole}.${trimmedFraction}` : whole.toString();
 }
 
+export function truncateId(value: string): string {
+  if (value.length <= 12) return value;
+  return `${value.slice(0, 6)}…${value.slice(-4)}`;
+}
+
 export function formatAddress(address: string): string {
-  if (address.length <= 12) return address;
-  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+  return truncateId(address);
 }
 
 export function formatDateTime(iso: string, locale?: string): string {

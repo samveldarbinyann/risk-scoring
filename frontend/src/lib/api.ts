@@ -4,6 +4,7 @@ import type {
   ApiKeyView,
   AuthResponse,
   ChainCandidatesResponse,
+  ContactRequest,
   CreateApiKeyRequest,
   ErrorResponse,
   LoginRequest,
@@ -273,4 +274,11 @@ export function createApiKey(payload: CreateApiKeyRequest): Promise<ApiKeyCreate
 
 export function revokeApiKey(id: string): Promise<void> {
   return apiRequest<void>(`/api/api-keys/${id}`, { method: "DELETE" });
+}
+
+export function submitContact(payload: ContactRequest): Promise<void> {
+  return apiRequest<void>("/api/contact", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

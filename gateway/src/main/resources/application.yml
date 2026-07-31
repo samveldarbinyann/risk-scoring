@@ -72,6 +72,7 @@ gateway:
     secure-cookie: ${AUTH_SECURE_COOKIE:false}
   mail:
     from: ${MAIL_USERNAME}
+    contact-recipient: ${MAIL_CONTACT_RECIPIENT:${MAIL_USERNAME}}
   verification:
     code-pepper: ${OTP_PEPPER}
     code-ttl: 10m
@@ -103,6 +104,10 @@ gateway:
   public-scan:
     rate-limit:
       requests: 10
+      window: 1h
+  contact:
+    rate-limit:
+      requests: 5
       window: 1h
 
 logging:

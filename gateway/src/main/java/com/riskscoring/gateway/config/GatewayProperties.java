@@ -23,7 +23,8 @@ public record GatewayProperties(
         @NotNull @Valid Verification verification,
         @NotNull @Valid Billing billing,
         @NotNull @Valid ApiKeys apiKeys,
-        @NotNull @Valid PublicScan publicScan
+        @NotNull @Valid PublicScan publicScan,
+        @NotNull @Valid Contact contact
 ) {
 
     public record Cors(@NotEmpty List<String> allowedOrigins) {
@@ -39,7 +40,10 @@ public record GatewayProperties(
     ) {
     }
 
-    public record Mail(@NotBlank @Email String from) {
+    public record Mail(
+            @NotBlank @Email String from,
+            @NotBlank @Email String contactRecipient
+    ) {
     }
 
     public record Verification(
@@ -80,6 +84,9 @@ public record GatewayProperties(
     }
 
     public record PublicScan(@NotNull @Valid RateLimit rateLimit) {
+    }
+
+    public record Contact(@NotNull @Valid RateLimit rateLimit) {
     }
 
     public record RateLimit(

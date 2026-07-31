@@ -202,3 +202,10 @@ export interface ApiKeyCreatedView {
 export interface CreateApiKeyRequest {
   name: string;
 }
+
+export interface ContactRequest {
+  email: string;
+  subject: string;
+  message: string;
+  scanId: string | null;
+}

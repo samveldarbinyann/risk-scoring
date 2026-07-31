@@ -67,7 +67,8 @@ public class SecurityConfig {
                                 "/api/billing/**",
                                 "/api/api-keys/**")
                         .hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
-                        .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**", "/ws/**")
+                        .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**",
+                                "/api/contact", "/ws/**")
                         .permitAll()
                         .anyRequest().denyAll())
                 .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

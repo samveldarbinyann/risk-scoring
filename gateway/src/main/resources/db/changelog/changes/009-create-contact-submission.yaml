@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-create-contact-submission
+      author: sam
+      changes:
+        - createTable:
+            tableName: contact_submission
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_contact_submission
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(320)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: message
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scan_id
+                  type: uuid
+              - column:
+                  name: status
+                  type: varchar(16)
+                  defaultValue: RECEIVED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ip
+                  type: varchar(64)
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: contact_submission
+            indexName: idx_contact_submission_created_at
+            columns:
+              - column:
+                  name: created_at
