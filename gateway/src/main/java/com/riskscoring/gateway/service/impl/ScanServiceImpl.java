@@ -50,7 +50,7 @@ public class ScanServiceImpl implements ScanService {
     @Override
     @Transactional
     public ScanGroupAcceptedResponse requestScan(ScanCreateRequest request) {
-        return createScanGroup(request, ScanSource.USER);
+        return createScanGroup(request, requestedChains(request), ScanSource.USER);
     }
 
     @Override
@@ -59,10 +59,6 @@ public class ScanServiceImpl implements ScanService {
         List<EvmChain> chains = requestedChains(request);
         billingService.chargeQuota(userId, chains.size());
         return createScanGroup(request, chains, ScanSource.API);
-    }
-
-    private ScanGroupAcceptedResponse createScanGroup(ScanCreateRequest request, ScanSource source) {
-        return createScanGroup(request, requestedChains(request), source);
     }
 
     private ScanGroupAcceptedResponse createScanGroup(ScanCreateRequest request,

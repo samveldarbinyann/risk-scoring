@@ -51,14 +51,13 @@ public record GatewayProperties(
 
     public record Billing(
             @NotNull Duration period,
-            @Positive int maxApiKeysPerUser,
             @NotEmpty @Valid List<Plan> plans
     ) {
         public Plan requirePlan(PlanCode code) {
             return plans.stream()
                     .filter(plan -> plan.code() == code)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown plan: " + code));
+                    .orElseThrow(() -> new IllegalStateException("No plan configured for " + code));
         }
     }
 
@@ -73,7 +72,8 @@ public record GatewayProperties(
 
     public record ApiKeys(
             @NotBlank @Size(min = 16) String pepper,
-            @NotBlank String prefix
+            @NotBlank String prefix,
+            @Positive int maxPerUser
     ) {
     }
 }

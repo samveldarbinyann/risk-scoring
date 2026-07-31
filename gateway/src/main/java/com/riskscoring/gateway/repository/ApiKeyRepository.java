@@ -22,11 +22,11 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
 
     long countByUserIdAndStatus(UUID userId, ApiKeyStatus status);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Modifying
     @Query("""
             UPDATE ApiKey k
             SET k.lastUsedAt = :now
             WHERE k.id = :id
             """)
-    int touchLastUsedAt(@Param("id") UUID id, @Param("now") Instant now);
+    void touchLastUsedAt(@Param("id") UUID id, @Param("now") Instant now);
 }

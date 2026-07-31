@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +30,6 @@ public class BillingServiceImpl implements BillingService {
     private final GatewayProperties gatewayProperties;
 
     @Override
-    @Transactional(readOnly = true)
     public List<PlanView> listPlans() {
         return gatewayProperties.billing().plans().stream()
                 .map(billingMapper::toPlanView)
@@ -55,9 +55,9 @@ public class BillingServiceImpl implements BillingService {
 
         Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
                 .map(active -> applyPlan(active, plan, now))
-                .orElseGet(() -> createSubscription(userId, plan, now));
+                .orElseGet(() -> subscriptionRepository.save(createSubscription(userId, plan, now)));
 
-        return billingMapper.toView(subscriptionRepository.save(subscription));
+        return billingMapper.toView(subscription);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class BillingServiceImpl implements BillingService {
         subscription.setStatus(SubscriptionStatus.CANCELED);
         subscription.setCanceledAt(now);
         subscription.setUpdatedAt(now);
-        return billingMapper.toView(subscriptionRepository.save(subscription));
+        return billingMapper.toView(subscription);
     }
 
     @Override
@@ -87,28 +87,18 @@ public class BillingServiceImpl implements BillingService {
         }
 
         Subscription subscription = resolveActiveSubscription(userId);
-        Instant now = Instant.now();
         int updated = subscriptionRepository.tryCharge(
-                subscription.getId(), units, now, SubscriptionStatus.ACTIVE);
-        if (updated == 1) {
-            return;
+                subscription.getId(), units, Instant.now(), SubscriptionStatus.ACTIVE);
+        if (updated == 0) {
+            throw new QuotaExceededException(
+                    subscription.getMonthlyRequestLimit(), subscription.getRequestsUsed(), units);
         }
-
-        Subscription fresh = subscriptionRepository.findById(subscription.getId())
-                .orElseThrow(NoActiveSubscriptionException::new);
-        if (fresh.getStatus() != SubscriptionStatus.ACTIVE || !fresh.getCurrentPeriodEnd().isAfter(now)) {
-            throw new NoActiveSubscriptionException();
-        }
-        throw new QuotaExceededException(fresh.getMonthlyRequestLimit(), fresh.getRequestsUsed(), units);
     }
 
     private Subscription resolveActiveSubscription(UUID userId) {
         Subscription subscription = subscriptionRepository.findByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
                 .orElseThrow(NoActiveSubscriptionException::new);
         rollPeriodIfNeeded(subscription);
-        if (subscription.getStatus() != SubscriptionStatus.ACTIVE) {
-            throw new NoActiveSubscriptionException();
-        }
         return subscription;
     }
 
@@ -122,15 +112,14 @@ public class BillingServiceImpl implements BillingService {
             return;
         }
 
-        DurationSteps steps = advancePeriod(subscription.getCurrentPeriodStart(),
-                subscription.getCurrentPeriodEnd(),
-                now,
-                gatewayProperties.billing().period());
-        subscription.setCurrentPeriodStart(steps.start());
-        subscription.setCurrentPeriodEnd(steps.end());
+        Duration period = gatewayProperties.billing().period();
+        long elapsedPeriods = Duration.between(subscription.getCurrentPeriodStart(), now).dividedBy(period);
+        Instant periodStart = subscription.getCurrentPeriodStart().plus(period.multipliedBy(elapsedPeriods));
+
+        subscription.setCurrentPeriodStart(periodStart);
+        subscription.setCurrentPeriodEnd(periodStart.plus(period));
         subscription.setRequestsUsed(0);
         subscription.setUpdatedAt(now);
-        subscriptionRepository.save(subscription);
     }
 
     private Subscription createSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
@@ -163,19 +152,4 @@ public class BillingServiceImpl implements BillingService {
         return subscription;
     }
 
-    private static DurationSteps advancePeriod(Instant originalStart,
-                                               Instant originalEnd,
-                                               Instant now,
-                                               java.time.Duration period) {
-        Instant start = originalStart;
-        Instant end = originalEnd;
-        while (!now.isBefore(end)) {
-            start = end;
-            end = start.plus(period);
-        }
-        return new DurationSteps(start, end);
-    }
-
-    private record DurationSteps(Instant start, Instant end) {
-    }
 }

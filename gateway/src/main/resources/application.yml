@@ -79,7 +79,6 @@ gateway:
     max-attempts: 5
   billing:
     period: 30d
-    max-api-keys-per-user: 5
     plans:
       - code: STARTER
         name: Starter
@@ -99,6 +98,7 @@ gateway:
   api-keys:
     pepper: ${API_KEY_PEPPER}
     prefix: rsk_
+    max-per-user: 5
 
 logging:
   level:

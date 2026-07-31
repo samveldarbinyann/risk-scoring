@@ -15,13 +15,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String API_KEY_HEADER = "X-Api-Key";
-    private static final String API_ROLE = "ROLE_API";
+    public static final String API_ROLE = "API";
+
+    private static final String ROLE_PREFIX = "ROLE_";
 
     private final ApiKeyService apiKeyService;
 
@@ -30,17 +33,23 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String rawKey = request.getHeader(API_KEY_HEADER);
-            apiKeyService.resolveActiveKey(rawKey)
+            apiKey(request)
+                    .flatMap(apiKeyService::resolveActiveKey)
                     .ifPresent(ApiKeyAuthenticationFilter::authenticate);
         }
 
         filterChain.doFilter(request, response);
     }
 
+    private Optional<String> apiKey(HttpServletRequest request) {
+        return Optional.ofNullable(request.getHeader(API_KEY_HEADER))
+                .map(String::trim)
+                .filter(key -> !key.isEmpty());
+    }
+
     private static void authenticate(ApiKeyPrincipal principal) {
-        var authentication = new UsernamePasswordAuthenticationToken(
-                principal, null, List.of(new SimpleGrantedAuthority(API_ROLE)));
+        var authority = new SimpleGrantedAuthority(ROLE_PREFIX + API_ROLE);
+        var authentication = new UsernamePasswordAuthenticationToken(principal, null, List.of(authority));
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

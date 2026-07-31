@@ -10,17 +10,16 @@ import com.riskscoring.gateway.exception.ApiKeyNotFoundException;
 import com.riskscoring.gateway.mapper.ApiKeyMapper;
 import com.riskscoring.gateway.model.ApiKeyStatus;
 import com.riskscoring.gateway.repository.ApiKeyRepository;
-import com.riskscoring.gateway.security.ApiKeyHasher;
 import com.riskscoring.gateway.security.ApiKeyPrincipal;
+import com.riskscoring.gateway.security.SecretGenerator;
+import com.riskscoring.gateway.security.SecretHasher;
 import com.riskscoring.gateway.service.ApiKeyService;
 import com.riskscoring.gateway.service.BillingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,23 +28,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ApiKeyServiceImpl implements ApiKeyService {
 
-    private static final int KEY_BYTES = 32;
     private static final int PREFIX_LENGTH = 12;
-    private static final Base64.Encoder KEY_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyMapper apiKeyMapper;
-    private final ApiKeyHasher apiKeyHasher;
+    private final SecretHasher apiKeyHasher;
+    private final SecretGenerator secretGenerator;
     private final BillingService billingService;
     private final GatewayProperties gatewayProperties;
-    private final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     @Transactional
     public ApiKeyCreatedView create(UUID userId, CreateApiKeyRequest request) {
         billingService.requireActiveSubscription(userId);
 
-        int maxKeys = gatewayProperties.billing().maxApiKeysPerUser();
+        int maxKeys = gatewayProperties.apiKeys().maxPerUser();
         long activeCount = apiKeyRepository.countByUserIdAndStatus(userId, ApiKeyStatus.ACTIVE);
         if (activeCount >= maxKeys) {
             throw new ApiKeyLimitExceededException(maxKeys);
@@ -57,7 +54,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .name(request.name().trim())
-                .keyPrefix(plaintext.substring(0, Math.min(PREFIX_LENGTH, plaintext.length())))
+                .keyPrefix(plaintext.substring(0, PREFIX_LENGTH))
                 .keyHash(apiKeyHasher.hash(plaintext))
                 .status(ApiKeyStatus.ACTIVE)
                 .createdAt(now)
@@ -84,21 +81,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             return;
         }
 
-        Instant now = Instant.now();
         apiKey.setStatus(ApiKeyStatus.REVOKED);
-        apiKey.setRevokedAt(now);
-        apiKeyRepository.save(apiKey);
+        apiKey.setRevokedAt(Instant.now());
     }
 
     @Override
     @Transactional
     public Optional<ApiKeyPrincipal> resolveActiveKey(String rawApiKey) {
-        if (rawApiKey == null || rawApiKey.isBlank()) {
-            return Optional.empty();
-        }
-
-        String hash = apiKeyHasher.hash(rawApiKey.trim());
-        return apiKeyRepository.findByKeyHashAndStatus(hash, ApiKeyStatus.ACTIVE)
+        return apiKeyRepository.findByKeyHashAndStatus(apiKeyHasher.hash(rawApiKey), ApiKeyStatus.ACTIVE)
                 .map(key -> {
                     apiKeyRepository.touchLastUsedAt(key.getId(), Instant.now());
                     return new ApiKeyPrincipal(key.getUserId(), key.getId());
@@ -106,8 +96,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     private String generatePlaintext() {
-        byte[] bytes = new byte[KEY_BYTES];
-        secureRandom.nextBytes(bytes);
-        return gatewayProperties.apiKeys().prefix() + KEY_ENCODER.encodeToString(bytes);
+        return gatewayProperties.apiKeys().prefix() + secretGenerator.generate();
     }
 }

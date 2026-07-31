@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.config;
 
+import com.riskscoring.gateway.model.UserRole;
 import com.riskscoring.gateway.security.ApiKeyAuthenticationFilter;
 import com.riskscoring.gateway.security.JwtAuthenticationFilter;
 import com.riskscoring.gateway.security.RestSecurityErrorHandler;
@@ -58,14 +59,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/billing/plans").permitAll()
-                        .requestMatchers("/api/v1/**").hasRole("API")
+                        .requestMatchers("/api/v1/**").hasRole(ApiKeyAuthenticationFilter.API_ROLE)
                         .requestMatchers(
                                 "/api/auth/me",
                                 "/api/watchlist/**",
                                 "/api/alerts/**",
                                 "/api/billing/**",
                                 "/api/api-keys/**")
-                        .hasAnyRole("USER", "ADMIN")
+                        .hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
                         .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**", "/ws/**")
                         .permitAll()
                         .anyRequest().denyAll())

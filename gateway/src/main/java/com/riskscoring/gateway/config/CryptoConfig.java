@@ -1,6 +1,7 @@
 package com.riskscoring.gateway.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.riskscoring.gateway.security.SecretHasher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,16 @@ public class CryptoConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(BCRYPT_STRENGTH);
+    }
+
+    @Bean
+    public SecretHasher secretHasher() {
+        return new SecretHasher(gatewayProperties.verification().codePepper());
+    }
+
+    @Bean
+    public SecretHasher apiKeyHasher() {
+        return new SecretHasher(gatewayProperties.apiKeys().pepper());
     }
 
     @Bean
