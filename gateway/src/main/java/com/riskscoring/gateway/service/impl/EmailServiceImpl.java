@@ -2,6 +2,7 @@ package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.entity.AppUser;
+import com.riskscoring.gateway.entity.ContactSubmission;
 import com.riskscoring.gateway.exception.EmailDeliveryException;
 import com.riskscoring.gateway.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
@@ -15,6 +16,8 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 
@@ -24,6 +27,10 @@ import java.util.Map;
 public class EmailServiceImpl implements EmailService {
 
     private static final String VERIFICATION_TEMPLATE = "email/verification";
+    private static final String CONTACT_TEMPLATE = "email/contact";
+    private static final Locale CONTACT_LOCALE = Locale.ENGLISH;
+    private static final DateTimeFormatter SUBMITTED_AT_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'").withZone(ZoneOffset.UTC);
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
@@ -43,6 +50,21 @@ public class EmailServiceImpl implements EmailService {
                 templateEngine.process(VERIFICATION_TEMPLATE, context));
     }
 
+    @Override
+    public void sendContactNotification(ContactSubmission submission) {
+        Context context = new Context(CONTACT_LOCALE);
+        context.setVariable("email", submission.getEmail());
+        context.setVariable("subject", submission.getSubject());
+        context.setVariable("message", submission.getMessage());
+        context.setVariable("scanId", submission.getScanId());
+        context.setVariable("submittedAt", SUBMITTED_AT_FORMAT.format(submission.getCreatedAt()));
+
+        send(gatewayProperties.mail().contactRecipient(),
+                messageSource.getMessage(
+                        "email.contact.subject", new Object[]{submission.getSubject()}, CONTACT_LOCALE),
+                templateEngine.process(CONTACT_TEMPLATE, context));
+    }
+
     private void send(String to, String subject, String html) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -53,7 +75,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(html, true);
 
             mailSender.send(message);
-            log.info("Verification email sent to {}", mask(to));
+            log.info("Email sent to {}", mask(to));
         } catch (Exception exception) {
             log.error("Failed to send email to {}: {}", mask(to), exception.getMessage());
             throw new EmailDeliveryException(exception);

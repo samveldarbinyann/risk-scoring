@@ -7,6 +7,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -28,6 +29,14 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
 
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", details);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadable(HttpMessageNotReadableException exception) {
+        log.debug("Malformed request body: {}", exception.getMessage());
+
+        String message = messageSource.getMessage("error.malformedRequest", null, LocaleContextHolder.getLocale());
+        return build(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST", message);
     }
 
     @ExceptionHandler(ApiException.class)

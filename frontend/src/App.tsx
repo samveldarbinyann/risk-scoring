@@ -8,6 +8,8 @@ import { RegisterPage } from "@/pages/RegisterPage";
 import { WatchlistPage } from "@/pages/WatchlistPage";
 import { AlertsPage } from "@/pages/AlertsPage";
 import { PricingPage } from "@/pages/PricingPage";
+import { DocsPage } from "@/pages/DocsPage";
+import { ContactPage } from "@/pages/ContactPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { ComingSoonPage } from "@/pages/ComingSoonPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
@@ -21,8 +23,8 @@ export default function App() {
           <Route path="/scan/:groupId" element={<ScanConsolePage />} />
           <Route path="/scan/:groupId/report" element={<ReportPage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/docs" element={<ComingSoonPage titleKey="nav.docs" />} />
-          <Route path="/contact" element={<ComingSoonPage titleKey="nav.contact" />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/dashboard" element={<ComingSoonPage titleKey="nav.dashboard" />} />
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/alerts" element={<AlertsPage />} />

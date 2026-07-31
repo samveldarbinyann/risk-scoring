@@ -7,6 +7,8 @@ export const RISK: Record<RiskLevel, { label: string; text: string; border: stri
   CRITICAL: { label: "CRITICAL", text: "text-risk-critical", border: "border-risk-critical" },
 };
 
+export const RISK_ORDER: RiskLevel[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+
 export function riskAccentClass(level: RiskLevel): string {
   return RISK[level].text;
 }
