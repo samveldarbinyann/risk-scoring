@@ -66,8 +66,8 @@ public class BillingServiceImpl implements BillingService {
         Instant now = Instant.now();
 
         Subscription subscription = subscriptionRepository.findByUserIdAndStatusIn(userId, LIVE_STATUSES)
-                .map(live -> repriceUnpaid(live, plan, now))
-                .orElseGet(() -> subscriptionRepository.save(newUnpaidSubscription(userId, plan, now)));
+                .map(live -> activateLiveSubscription(live, plan, now))
+                .orElseGet(() -> subscriptionRepository.save(newSubscription(userId, plan, now)));
 
         return billingMapper.toView(subscription);
     }
@@ -161,7 +161,51 @@ public class BillingServiceImpl implements BillingService {
                 .orElseThrow(SubscriptionNotFoundException::new);
     }
 
-    private Subscription newUnpaidSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
+    private Subscription activateLiveSubscription(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
+        if (plan.code() == PlanCode.FREE) {
+            return activateFreeSubscription(subscription, plan, now);
+        }
+
+        return repriceUnpaid(subscription, plan, now);
+    }
+
+    private Subscription newSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
+        return plan.code() == PlanCode.FREE
+                ? newActiveSubscription(userId, plan, now)
+                : newPendingSubscription(userId, plan, now);
+    }
+
+    private Subscription activateFreeSubscription(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
+            throw new SubscriptionAlreadyActiveException();
+        }
+
+        subscription.setPlanCode(plan.code());
+        subscription.setStatus(SubscriptionStatus.ACTIVE);
+        subscription.setPriceCents(plan.priceCents());
+        subscription.setCurrency(plan.currency());
+        subscription.setMonthlyRequestLimit(plan.monthlyRequestLimit());
+        subscription.setRequestsUsed(0);
+        subscription.setCurrentPeriodStart(now);
+        subscription.setCurrentPeriodEnd(now.plus(gatewayProperties.billing().period()));
+        subscription.setUpdatedAt(now);
+        return subscription;
+    }
+
+    private Subscription repriceUnpaid(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
+        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
+            throw new SubscriptionAlreadyActiveException();
+        }
+
+        subscription.setPlanCode(plan.code());
+        subscription.setPriceCents(plan.priceCents());
+        subscription.setCurrency(plan.currency());
+        subscription.setMonthlyRequestLimit(plan.monthlyRequestLimit());
+        subscription.setUpdatedAt(now);
+        return subscription;
+    }
+
+    private Subscription newPendingSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
         return Subscription.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
@@ -176,16 +220,20 @@ public class BillingServiceImpl implements BillingService {
                 .build();
     }
 
-    private Subscription repriceUnpaid(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
-        if (subscription.getStatus() == SubscriptionStatus.ACTIVE) {
-            throw new SubscriptionAlreadyActiveException();
-        }
-
-        subscription.setPlanCode(plan.code());
-        subscription.setPriceCents(plan.priceCents());
-        subscription.setCurrency(plan.currency());
-        subscription.setMonthlyRequestLimit(plan.monthlyRequestLimit());
-        subscription.setUpdatedAt(now);
-        return subscription;
+    private Subscription newActiveSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
+        return Subscription.builder()
+                .id(UUID.randomUUID())
+                .userId(userId)
+                .planCode(plan.code())
+                .status(SubscriptionStatus.ACTIVE)
+                .priceCents(plan.priceCents())
+                .currency(plan.currency())
+                .monthlyRequestLimit(plan.monthlyRequestLimit())
+                .requestsUsed(0)
+                .currentPeriodStart(now)
+                .currentPeriodEnd(now.plus(gatewayProperties.billing().period()))
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
     }
 }

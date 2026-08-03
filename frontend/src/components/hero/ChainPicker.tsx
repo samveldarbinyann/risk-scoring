@@ -1,19 +1,19 @@
+import { TargetChip } from "@/components/ui/TargetChip";
 import { Card } from "@/components/ui/Card";
 import { ChainIcon } from "@/components/ui/ChainIcon";
 import { Spinner } from "@/components/ui/Spinner";
 import { useI18n } from "@/lib/i18n/context";
 import { chainLabel } from "@/lib/chains";
-import { formatAddress } from "@/lib/format";
 
 interface ChainPickerProps {
-  address: string;
+  target: string;
   chainIds: number[];
   busyChainId: number | null;
   onSelect: (chainId: number) => void;
-  onChangeAddress: () => void;
+  onChangeTarget: () => void;
 }
 
-export function ChainPicker({ address, chainIds, busyChainId, onSelect, onChangeAddress }: ChainPickerProps) {
+export function ChainPicker({ target, chainIds, busyChainId, onSelect, onChangeTarget }: ChainPickerProps) {
   const { t } = useI18n();
   const isBusy = busyChainId !== null;
 
@@ -34,14 +34,14 @@ export function ChainPicker({ address, chainIds, busyChainId, onSelect, onChange
       </Card>
 
       <div className="flex items-center gap-3">
-        <span className="font-mono text-xs text-text-dim">{formatAddress(address)}</span>
+        <TargetChip value={target} className="text-xs" />
         <button
           type="button"
-          onClick={onChangeAddress}
+          onClick={onChangeTarget}
           disabled={isBusy}
           className="font-mono text-xs uppercase tracking-widest text-text-dim transition-colors hover:text-text disabled:cursor-not-allowed disabled:text-text-faint"
         >
-          {t("landing.changeAddress")}
+          {t("landing.changeTarget")}
         </button>
       </div>
     </div>

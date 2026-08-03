@@ -91,7 +91,11 @@ export function PricingPage() {
     setActionError(null);
     setBusyPlan(plan.code);
     try {
-      setSubscription(await activateSubscription(plan.code));
+      const next = await activateSubscription(plan.code);
+      setSubscription(next);
+      if (next.status === "ACTIVE") {
+        navigate("/settings");
+      }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : t("pricing.activateError"));
     } finally {
@@ -123,17 +127,16 @@ export function PricingPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-10 px-6 py-10">
       <header className="mx-auto max-w-2xl space-y-3 text-center">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("pricing.kicker")}</p>
         <h1 className="font-sans text-3xl font-semibold text-text sm:text-4xl">{t("pricing.title")}</h1>
-        <p className="text-sm text-text-dim">{t("pricing.subtitle")}</p>
+        <p className="text-sm text-accent">{t("pricing.subtitle")}</p>
       </header>
 
       {loadError ? (
         <ErrorMessage message={loadError} size="sm" />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {orderedPlans.map((plan) => (
             <PlanCard
               key={plan.code}

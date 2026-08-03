@@ -1,9 +1,9 @@
 package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.gateway.dto.ChainCandidatesResponse;
-import com.riskscoring.gateway.exception.UnrecognizedAddressException;
-import com.riskscoring.gateway.model.EvmAddresses;
+import com.riskscoring.gateway.model.ScanTargets;
 import com.riskscoring.gateway.service.ChainService;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +17,9 @@ public class ChainServiceImpl implements ChainService {
             .toList();
 
     @Override
-    public ChainCandidatesResponse candidatesFor(String address) {
-        if (!EvmAddresses.isValid(address)) {
-            throw new UnrecognizedAddressException(address);
-        }
+    public ChainCandidatesResponse candidatesFor(String target) {
+        ScanTarget targetType = ScanTargets.classify(target);
 
-        return new ChainCandidatesResponse(EvmAddresses.normalize(address), EVM_CHAIN_IDS);
+        return new ChainCandidatesResponse(targetType, ScanTargets.normalize(target), EVM_CHAIN_IDS);
     }
 }

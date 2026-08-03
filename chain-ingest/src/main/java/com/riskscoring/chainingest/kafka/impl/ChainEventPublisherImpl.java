@@ -19,8 +19,7 @@ public class ChainEventPublisherImpl implements ChainEventPublisher {
     @Override
     public void publishChainFetched(ChainFetched event) {
         kafkaTemplate.send(Topics.CHAIN_FETCHED, event.scanId().toString(), event);
-        log.info("Published {} scanId={} counterparties={}",
-                Topics.CHAIN_FETCHED, event.scanId(), event.counterparties().size());
+        log.info("Published {} scanId={} targetType={}", Topics.CHAIN_FETCHED, event.scanId(), event.targetType());
     }
 
     @Override

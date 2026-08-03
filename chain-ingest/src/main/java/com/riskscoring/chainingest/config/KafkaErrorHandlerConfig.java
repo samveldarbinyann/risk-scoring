@@ -1,5 +1,6 @@
 package com.riskscoring.chainingest.config;
 
+import com.riskscoring.chainingest.exception.MoralisNoDataException;
 import com.riskscoring.chainingest.exception.MoralisRejectedException;
 import com.riskscoring.chainingest.exception.UnsupportedChainException;
 import com.riskscoring.chainingest.kafka.ChainEventPublisher;
@@ -38,7 +39,8 @@ public class KafkaErrorHandlerConfig {
 
         errorHandler.addNotRetryableExceptions(
                 UnsupportedChainException.class,
-                MoralisRejectedException.class);
+                MoralisRejectedException.class,
+                MoralisNoDataException.class);
 
         return errorHandler;
     }

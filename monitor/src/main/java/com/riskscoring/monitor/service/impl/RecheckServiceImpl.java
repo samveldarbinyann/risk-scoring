@@ -49,11 +49,13 @@ public class RecheckServiceImpl implements RecheckService {
             UUID scanId = UUID.randomUUID();
             entry.setPendingScanId(scanId);
             entry.setPendingRequestedAt(now);
+            entry.setUpdatedAt(now);
 
             eventPublisher.publishScanRequested(watchlistMapper.toScanRequested(entry, scanId, now));
         }
 
         if (!due.isEmpty()) {
+            watchlistEntryRepository.saveAll(due);
             log.info("Triggered {} watchlist recheck(s)", due.size());
         }
     }
@@ -61,21 +63,40 @@ public class RecheckServiceImpl implements RecheckService {
     @Override
     @Transactional
     public void handleScanCompleted(ScanCompleted event) {
-        watchlistEntryRepository.findByPendingScanId(event.scanId()).ifPresent(entry -> {
-            RiskLevel newLevel = event.verdict().riskLevel();
-            int newScore = event.verdict().score();
+        var pending = watchlistEntryRepository.findByPendingScanId(event.scanId());
+        if (pending.isPresent()) {
+            applyScanResult(pending.get(), event);
+            return;
+        }
 
-            if (entry.getLastRiskLevel() != null && entry.getLastRiskLevel() != newLevel) {
-                raiseAlert(entry, newLevel, newScore, event.scanId());
-            }
+        var entries = watchlistEntryRepository.findByChainIdAndAddressAndActiveTrue(
+                event.chainId(), event.target());
+        for (WatchlistEntry entry : entries) {
+            applyScanResult(entry, event);
+        }
+        if (!entries.isEmpty()) {
+            log.info("Updated {} watchlist entries from non-monitor scan scanId={}",
+                    entries.size(), event.scanId());
+        }
+    }
 
-            entry.setLastRiskLevel(newLevel);
-            entry.setLastScore(newScore);
-            entry.setLastScanId(event.scanId());
-            entry.setLastCheckedAt(Instant.now());
-            entry.setPendingScanId(null);
-            entry.setPendingRequestedAt(null);
-        });
+    private void applyScanResult(WatchlistEntry entry, ScanCompleted event) {
+        RiskLevel newLevel = event.verdict().riskLevel();
+        int newScore = event.verdict().score();
+
+        if (entry.getLastRiskLevel() != null && entry.getLastRiskLevel() != newLevel) {
+            raiseAlert(entry, newLevel, newScore, event.scanId());
+        }
+
+        Instant now = Instant.now();
+        entry.setLastRiskLevel(newLevel);
+        entry.setLastScore(newScore);
+        entry.setLastScanId(event.scanId());
+        entry.setLastCheckedAt(now);
+        entry.setPendingScanId(null);
+        entry.setPendingRequestedAt(null);
+        entry.setUpdatedAt(now);
+        watchlistEntryRepository.save(entry);
     }
 
     private void raiseAlert(WatchlistEntry entry, RiskLevel newLevel, int newScore, UUID scanId) {

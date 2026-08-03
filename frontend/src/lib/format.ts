@@ -1,14 +1,36 @@
-const WEI_PER_ETHER = 1_000_000_000_000_000_000n;
-
-export function formatWei(wei: string, maxFractionDigits = 4): string {
+export function formatWei(wei: string, locale?: string, maxFractionDigits = 4): string {
   const value = BigInt(wei);
-  const whole = value / WEI_PER_ETHER;
-  const fraction = value % WEI_PER_ETHER;
+  const scale = 10n ** BigInt(18 - maxFractionDigits);
+  const unit = 10n ** BigInt(maxFractionDigits);
+  const roundedScaled = (value + scale / 2n) / scale;
 
-  const fractionStr = fraction.toString().padStart(18, "0").slice(0, maxFractionDigits);
-  const trimmedFraction = fractionStr.replace(/0+$/, "");
+  const whole = roundedScaled / unit;
+  const fraction = roundedScaled % unit;
+  const fractionStr = fraction.toString().padStart(maxFractionDigits, "0").replace(/0+$/, "");
+  const groupedWhole = new Intl.NumberFormat(locale).format(whole);
 
-  return trimmedFraction ? `${whole}.${trimmedFraction}` : whole.toString();
+  return fractionStr ? `${groupedWhole}.${fractionStr}` : groupedWhole;
+}
+
+export function formatTokenAmount(balanceFormatted: string, locale?: string, maxFractionDigits = 4): string {
+  const value = Number(balanceFormatted);
+  if (!Number.isFinite(value)) return balanceFormatted;
+
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: maxFractionDigits }).format(value);
+}
+
+export function formatUsd(value: number, locale?: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value < 1 ? 4 : 2,
+  }).format(value);
+}
+
+const DISPLAYABLE_SYMBOL = /^[A-Za-z0-9.$+\-_ ]{1,15}$/;
+
+export function isDisplayableSymbol(symbol: string): boolean {
+  return DISPLAYABLE_SYMBOL.test(symbol);
 }
 
 export function truncateId(value: string): string {

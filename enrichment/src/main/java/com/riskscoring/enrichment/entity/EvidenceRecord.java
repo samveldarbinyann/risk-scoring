@@ -1,7 +1,10 @@
 package com.riskscoring.enrichment.entity;
 
+import com.riskscoring.common.model.ScanTarget;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -32,8 +35,12 @@ public class EvidenceRecord {
     @Column(name = "scan_id", nullable = false)
     private UUID scanId;
 
-    @Column(nullable = false, length = 42)
-    private String address;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false, length = 16)
+    private ScanTarget targetType;
+
+    @Column(nullable = false, length = 66)
+    private String target;
 
     @Column(name = "chain_id", nullable = false)
     private int chainId;

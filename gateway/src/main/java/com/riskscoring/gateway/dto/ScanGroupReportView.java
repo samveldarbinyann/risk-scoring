@@ -1,11 +1,14 @@
 package com.riskscoring.gateway.dto;
 
+import com.riskscoring.common.model.ScanTarget;
+
 import java.util.List;
 import java.util.UUID;
 
 public record ScanGroupReportView(
         UUID groupId,
-        String address,
+        ScanTarget targetType,
+        String target,
         List<ScanReportView> reports
 ) {
 }

@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/changes/002-add-evidence-fields-to-scan-report.yaml
   - include:
       file: db/changelog/changes/003-add-observation-fields-to-scan-report.yaml
+  - include:
+      file: db/changelog/changes/004-scan-report-target.yaml
+  - include:
+      file: db/changelog/changes/005-scan-report-evidence-json.yaml

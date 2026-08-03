@@ -2,7 +2,7 @@ export type ScanStage = "PENDING" | "FETCHING" | "ENRICHING" | "ANALYZING" | "CO
 export type ScanSource = "USER" | "MONITOR" | "API";
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
-export type PlanCode = "STARTER" | "GROWTH" | "SCALE";
+export type PlanCode = "FREE" | "STARTER" | "GROWTH" | "SCALE";
 export type SubscriptionStatus = "PENDING_PAYMENT" | "ACTIVE" | "CANCELED" | "EXPIRED";
 export type ApiKeyStatus = "ACTIVE" | "REVOKED";
 
@@ -54,19 +54,35 @@ export interface LoginRequest {
   password: string;
 }
 
+export type ScanTarget = "ADDRESS" | "TRANSACTION";
+
+export type LabelCategory = "SANCTION" | "MIXER" | "EXCHANGE";
+
+export type TransferDirection = "IN" | "OUT" | "BOTH";
+
+export type TransactionRole =
+  | "SENDER"
+  | "RECIPIENT"
+  | "INTERNAL_SENDER"
+  | "INTERNAL_RECIPIENT"
+  | "TOKEN_SENDER"
+  | "TOKEN_RECIPIENT";
+
 export interface ScanCreateRequest {
-  address: string;
+  target: string;
   chainIds?: number[];
 }
 
 export interface ScanGroupAcceptedResponse {
   groupId: string;
-  address: string;
+  targetType: ScanTarget;
+  target: string;
   chainIds: number[];
 }
 
 export interface ChainCandidatesResponse {
-  address: string;
+  targetType: ScanTarget;
+  target: string;
   chainIds: number[];
 }
 
@@ -78,7 +94,8 @@ export interface ScanGroupChainStatus {
 
 export interface ScanGroupView {
   groupId: string;
-  address: string;
+  targetType: ScanTarget;
+  target: string;
   completed: boolean;
   chains: ScanGroupChainStatus[];
 }
@@ -89,28 +106,103 @@ export interface TokenBalance {
   usdValue: number | null;
 }
 
+export interface FlaggedExposure {
+  address: string;
+  category: LabelCategory;
+  label: string;
+  source: string;
+  direction: TransferDirection;
+  hops: number;
+  valueWei: string;
+}
+
+export interface MixerExposure {
+  services: string[];
+  percentOfVolume: number;
+  valueWei: string;
+}
+
+export interface Heuristics {
+  freshWallet: boolean;
+  fundedThenDrained: boolean;
+  roundAmounts: boolean;
+  fanIn: number;
+  fanOut: number;
+}
+
+export interface TransactionHeuristics {
+  failed: boolean;
+  zeroValue: boolean;
+  roundValue: boolean;
+  selfTransfer: boolean;
+  tokenOnly: boolean;
+  fanOutInternal: boolean;
+  distinctPartyCount: number;
+}
+
+export interface TransactionParty {
+  address: string;
+  role: TransactionRole;
+  valueWei: string;
+}
+
+export interface AddressEvidence {
+  targetType: "ADDRESS";
+  target: string;
+  chainId: number;
+  observedAt: string;
+  ageDays: number;
+  txCount: number;
+  txCount24h: number;
+  sampleTruncated: boolean;
+  balanceWei: string;
+  tokenBalances: TokenBalance[];
+  counterpartyCount: number;
+  flagged: FlaggedExposure[];
+  mixerExposure: MixerExposure | null;
+  heuristics: Heuristics | null;
+}
+
+export interface TransactionEvidence {
+  targetType: "TRANSACTION";
+  target: string;
+  chainId: number;
+  observedAt: string;
+  fromAddress: string;
+  toAddress: string;
+  valueWei: string;
+  success: boolean;
+  blockTimestamp: string | null;
+  internalTransferCount: number;
+  erc20TransferCount: number;
+  parties: TransactionParty[];
+  flagged: FlaggedExposure[];
+  mixerExposure: MixerExposure | null;
+  heuristics: TransactionHeuristics | null;
+}
+
+export type EvidenceBundle = AddressEvidence | TransactionEvidence;
+
 export interface ScanReportView {
   scanId: string;
-  address: string;
+  targetType: ScanTarget;
+  target: string;
   chainId: number;
   riskLevel: RiskLevel;
   score: number;
   explanation: string;
   decisiveSignals: string[];
   manualChecks: string[];
-  balanceWei: string;
-  txCount: number;
-  txCount24h: number;
-  sampleTruncated: boolean;
   observedAt: string;
-  tokenBalances: TokenBalance[];
+  evidence: EvidenceBundle;
   model: string;
   createdAt: string;
 }
 
 export interface ScanGroupReportView {
   groupId: string;
-  address: string;
+  targetType: ScanTarget;
+  target: string;
   reports: ScanReportView[];
 }
 

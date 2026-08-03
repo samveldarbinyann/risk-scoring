@@ -1,7 +1,8 @@
 package com.riskscoring.gateway.repository.impl;
 
+import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.RiskLevel;
-import com.riskscoring.common.model.TokenBalance;
+import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanReportRow;
 import lombok.RequiredArgsConstructor;
@@ -19,16 +20,13 @@ import java.util.UUID;
 public class ScanReportRepositoryImpl implements ScanReportRepository {
 
     private static final String FIND_BY_SCAN_ID = """
-            SELECT scan_id, address, chain_id, risk_level, score, explanation,
-                   decisive_signals, manual_checks, balance_wei, tx_count, tx_count_24h,
-                   sample_truncated, observed_at, token_balances, model, created_at
+            SELECT scan_id, target_type, target, chain_id, risk_level, score, explanation,
+                   decisive_signals, manual_checks, observed_at, evidence, model, created_at
             FROM riskai.scan_report
             WHERE scan_id = ?
             """;
 
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
-    };
-    private static final TypeReference<List<TokenBalance>> TOKEN_BALANCE_LIST = new TypeReference<>() {
     };
 
     private final JdbcTemplate jdbcTemplate;
@@ -38,19 +36,16 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
     public Optional<ScanReportRow> findByScanId(UUID scanId) {
         return jdbcTemplate.query(FIND_BY_SCAN_ID, (rs, rowNum) -> new ScanReportRow(
                 UUID.fromString(rs.getString("scan_id")),
-                rs.getString("address"),
+                ScanTarget.valueOf(rs.getString("target_type")),
+                rs.getString("target"),
                 rs.getInt("chain_id"),
                 RiskLevel.valueOf(rs.getString("risk_level")),
                 rs.getInt("score"),
                 rs.getString("explanation"),
                 objectMapper.readValue(rs.getString("decisive_signals"), STRING_LIST),
                 objectMapper.readValue(rs.getString("manual_checks"), STRING_LIST),
-                rs.getString("balance_wei"),
-                rs.getLong("tx_count"),
-                rs.getLong("tx_count_24h"),
-                rs.getBoolean("sample_truncated"),
                 rs.getTimestamp("observed_at").toInstant(),
-                objectMapper.readValue(rs.getString("token_balances"), TOKEN_BALANCE_LIST),
+                objectMapper.readValue(rs.getString("evidence"), EvidenceBundle.class),
                 rs.getString("model"),
                 rs.getTimestamp("created_at").toInstant()
         ), scanId).stream().findFirst();

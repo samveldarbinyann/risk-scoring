@@ -2,6 +2,7 @@ package com.riskscoring.gateway.entity;
 
 import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.ScanStage;
+import com.riskscoring.common.model.ScanTarget;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -34,8 +35,12 @@ public class Scan {
     @Column(name = "group_id", nullable = false)
     private UUID groupId;
 
-    @Column(nullable = false, length = 42)
-    private String address;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false, length = 16)
+    private ScanTarget targetType;
+
+    @Column(nullable = false, length = 66)
+    private String target;
 
     @Column(name = "chain_id", nullable = false)
     private int chainId;

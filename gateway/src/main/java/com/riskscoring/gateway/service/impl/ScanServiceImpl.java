@@ -4,6 +4,7 @@ import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.model.EvmChain;
 import com.riskscoring.common.model.Language;
+import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
 import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanGroupReportView;
@@ -16,10 +17,11 @@ import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanGroupReportNotReadyException;
 import com.riskscoring.gateway.exception.ScanNotFoundException;
 import com.riskscoring.gateway.exception.ScanReportNotReadyException;
+import com.riskscoring.gateway.exception.SingleChainRequiredException;
 import com.riskscoring.gateway.exception.UnsupportedChainException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
-import com.riskscoring.gateway.model.EvmAddresses;
+import com.riskscoring.gateway.model.ScanTargets;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
@@ -53,26 +55,30 @@ public class ScanServiceImpl implements ScanService {
     @Transactional
     public ScanGroupAcceptedResponse requestScan(String clientIp, ScanCreateRequest request) {
         rateLimitService.checkPublicScan(clientIp);
-        return createScanGroup(request, requestedChains(request), ScanSource.USER);
+        ScanTarget targetType = ScanTargets.classify(request.target());
+        return createScanGroup(request, targetType, requestedChains(request, targetType), ScanSource.USER);
     }
 
     @Override
     @Transactional
     public ScanGroupAcceptedResponse requestApiScan(UUID userId, ScanCreateRequest request) {
-        List<EvmChain> chains = requestedChains(request);
+        ScanTarget targetType = ScanTargets.classify(request.target());
+        List<EvmChain> chains = requestedChains(request, targetType);
         billingService.chargeQuota(userId, chains.size());
-        return createScanGroup(request, chains, ScanSource.API);
+        return createScanGroup(request, targetType, chains, ScanSource.API);
     }
 
     private ScanGroupAcceptedResponse createScanGroup(ScanCreateRequest request,
+                                                      ScanTarget targetType,
                                                       List<EvmChain> chains,
                                                       ScanSource source) {
-        String address = EvmAddresses.normalize(request.address());
+        String target = ScanTargets.normalize(request.target());
         Instant requestedAt = Instant.now();
 
         ScanGroup group = ScanGroup.builder()
                 .id(UUID.randomUUID())
-                .address(address)
+                .targetType(targetType)
+                .target(target)
                 .requestedAt(requestedAt)
                 .build();
         scanGroupRepository.save(group);
@@ -81,7 +87,8 @@ public class ScanServiceImpl implements ScanService {
                 .map(chain -> Scan.builder()
                         .id(UUID.randomUUID())
                         .groupId(group.getId())
-                        .address(address)
+                        .targetType(targetType)
+                        .target(target)
                         .chainId(chain.chainId())
                         .status(ScanStage.PENDING)
                         .source(source)
@@ -96,15 +103,32 @@ public class ScanServiceImpl implements ScanService {
         return scanMapper.toGroupAcceptedResponse(group, scans);
     }
 
-    private List<EvmChain> requestedChains(ScanCreateRequest request) {
-        if (request.chainIds() == null || request.chainIds().isEmpty()) {
-            return EvmChain.mainnets();
+    private List<EvmChain> requestedChains(ScanCreateRequest request, ScanTarget targetType) {
+        List<EvmChain> chains = explicitChains(request);
+
+        return switch (targetType) {
+            case ADDRESS -> chains.isEmpty() ? EvmChain.mainnets() : chains;
+            case TRANSACTION -> singleChain(chains);
+        };
+    }
+
+    private List<EvmChain> explicitChains(ScanCreateRequest request) {
+        if (request.chainIds() == null) {
+            return List.of();
         }
 
         return request.chainIds().stream()
                 .distinct()
                 .map(chainId -> EvmChain.byId(chainId).orElseThrow(() -> new UnsupportedChainException(chainId)))
                 .toList();
+    }
+
+    private List<EvmChain> singleChain(List<EvmChain> chains) {
+        if (chains.size() != 1) {
+            throw new SingleChainRequiredException(chains.size());
+        }
+
+        return chains;
     }
 
     @Override
@@ -133,7 +157,7 @@ public class ScanServiceImpl implements ScanService {
                 .map(scanMapper::toReportView)
                 .toList();
 
-        return new ScanGroupReportView(groupId, group.address(), reports);
+        return new ScanGroupReportView(groupId, group.targetType(), group.target(), reports);
     }
 
     @Override

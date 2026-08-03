@@ -1,7 +1,7 @@
 import type { MessageKey } from "@/lib/i18n/messageKeys";
 import type { PlanCode } from "@/lib/types";
 
-export const PLAN_ORDER: PlanCode[] = ["STARTER", "GROWTH", "SCALE"];
+export const PLAN_ORDER: PlanCode[] = ["FREE", "STARTER", "GROWTH", "SCALE"];
 
 export const POPULAR_PLAN: PlanCode = "GROWTH";
 

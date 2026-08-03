@@ -1,19 +1,18 @@
 package com.riskscoring.common.event;
 
-import com.riskscoring.common.model.AddressSnapshot;
-import com.riskscoring.common.model.Counterparty;
+import com.riskscoring.common.model.ChainFacts;
 import com.riskscoring.common.model.Language;
+import com.riskscoring.common.model.ScanTarget;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 public record ChainFetched(
         UUID scanId,
-        String address,
+        ScanTarget targetType,
+        String target,
         int chainId,
-        AddressSnapshot snapshot,
-        List<Counterparty> counterparties,
+        ChainFacts facts,
         Language language,
         Instant fetchedAt
 ) {

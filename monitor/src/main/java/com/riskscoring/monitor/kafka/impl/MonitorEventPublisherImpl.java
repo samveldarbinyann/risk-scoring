@@ -20,7 +20,7 @@ public class MonitorEventPublisherImpl implements MonitorEventPublisher {
     public void publishScanRequested(ScanRequested event) {
         kafkaTemplate.send(Topics.SCAN_REQUESTED, event.scanId().toString(), event);
         log.info("Published {} scanId={} address={} chainId={} source={}",
-                Topics.SCAN_REQUESTED, event.scanId(), event.address(), event.chainId(), event.source());
+                Topics.SCAN_REQUESTED, event.scanId(), event.target(), event.chainId(), event.source());
     }
 
     @Override

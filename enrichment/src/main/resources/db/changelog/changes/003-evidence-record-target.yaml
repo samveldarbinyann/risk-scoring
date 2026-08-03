@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-evidence-record-target
+      author: sam
+      changes:
+        - renameColumn:
+            tableName: evidence_record
+            oldColumnName: address
+            newColumnName: target
+            columnDataType: varchar(42)
+        - modifyDataType:
+            tableName: evidence_record
+            columnName: target
+            newDataType: varchar(66)
+        - addColumn:
+            tableName: evidence_record
+            columns:
+              - column:
+                  name: target_type
+                  type: varchar(16)
+                  defaultValue: ADDRESS
+                  constraints:
+                    nullable: false

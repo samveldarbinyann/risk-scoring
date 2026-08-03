@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-transaction-cache
+      author: sam
+      changes:
+        - createTable:
+            tableName: transaction_cache
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_transaction_cache
+                    nullable: false
+              - column:
+                  name: chain_id
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tx_hash
+                  type: varchar(66)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_address
+                  type: varchar(42)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: value_wei
+                  type: numeric(78, 0)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: success
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: block_timestamp
+                  type: timestamptz
+              - column:
+                  name: parties
+                  type: jsonb
+                  constraints:
+                    nullable: false
+              - column:
+                  name: internal_transfer_count
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: erc20_transfer_count
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fetched_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: transaction_cache
+            columnNames: chain_id, tx_hash
+            constraintName: uq_transaction_cache_chain_hash
