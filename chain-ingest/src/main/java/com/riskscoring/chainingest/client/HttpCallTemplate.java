@@ -31,6 +31,11 @@ public class HttpCallTemplate {
     private final int rateLimitRetries;
     private final Duration rateLimitBackoff;
 
+    public <T> T get(String path, Class<T> responseType) {
+        return get(path, builder -> {
+        }, responseType);
+    }
+
     public <T> T get(String path, Consumer<UriBuilder> parameters, Class<T> responseType) {
         for (int attempt = 1; ; attempt++) {
             try {

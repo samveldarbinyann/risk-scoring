@@ -1,17 +1,22 @@
+export const UNKNOWN_VALUE = "—";
+
 export function formatNativeAmount(
   raw: string,
-  decimals: number,
+  decimals: number | null,
   locale?: string,
   maxFractionDigits = 4,
 ): string {
+  if (decimals === null) return UNKNOWN_VALUE;
+
+  const fractionDigits = Math.min(maxFractionDigits, decimals);
   const value = BigInt(raw);
-  const scale = 10n ** BigInt(decimals - maxFractionDigits);
-  const unit = 10n ** BigInt(maxFractionDigits);
+  const scale = 10n ** BigInt(decimals - fractionDigits);
+  const unit = 10n ** BigInt(fractionDigits);
   const roundedScaled = (value + scale / 2n) / scale;
 
   const whole = roundedScaled / unit;
   const fraction = roundedScaled % unit;
-  const fractionStr = fraction.toString().padStart(maxFractionDigits, "0").replace(/0+$/, "");
+  const fractionStr = fraction.toString().padStart(fractionDigits, "0").replace(/0+$/, "");
   const groupedWhole = new Intl.NumberFormat(locale).format(whole);
 
   return fractionStr ? `${groupedWhole}.${fractionStr}` : groupedWhole;

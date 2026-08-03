@@ -11,7 +11,6 @@ public record ChainView(
         String nativeSymbol,
         int nativeDecimals,
         Integer evmChainId,
-        boolean mainnet,
         ChainSupport support
 ) {
 }

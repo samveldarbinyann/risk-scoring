@@ -37,7 +37,7 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
     public AddressEvidence calculate(ChainFetched event, AddressFacts facts, Map<String, Label> labelsByAddress) {
         AddressSnapshot snapshot = facts.snapshot();
         List<Counterparty> counterparties = facts.counterparties();
-        int ageDays = ageDays(snapshot);
+        Integer ageDays = ageDays(snapshot);
 
         return new AddressEvidence(
                 event.target(),
@@ -56,10 +56,10 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
         );
     }
 
-    private int ageDays(AddressSnapshot snapshot) {
+    private Integer ageDays(AddressSnapshot snapshot) {
         return Optional.ofNullable(snapshot.firstSeenAt())
                 .map(firstSeenAt -> (int) Duration.between(firstSeenAt, snapshot.observedAt()).toDays())
-                .orElse(0);
+                .orElse(null);
     }
 
     private List<FlaggedExposure> flaggedExposures(ChainFetched event, AddressFacts facts, Map<String, Label> byAddress) {
@@ -99,9 +99,9 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
 
     private Heuristics heuristics(AddressSnapshot snapshot,
                                   List<Counterparty> counterparties,
-                                  int ageDays,
+                                  Integer ageDays,
                                   Chain chain) {
-        boolean freshWallet = ageDays < properties.freshWalletDays();
+        Boolean freshWallet = ageDays == null ? null : ageDays < properties.freshWalletDays();
         boolean drained = new BigInteger(snapshot.balanceNative()).signum() == 0;
 
         int fanIn = countByDirection(counterparties, TransferDirection.IN);
@@ -109,7 +109,7 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
 
         return new Heuristics(
                 freshWallet,
-                freshWallet && drained && fanIn > 0,
+                freshWallet == null ? null : freshWallet && drained && fanIn > 0,
                 roundAmounts(counterparties, chain),
                 fanIn,
                 fanOut
@@ -121,11 +121,9 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
             return false;
         }
 
-        BigInteger nativeUnit = BigInteger.TEN.pow(chain.nativeDecimals());
-
         long round = counterparties.stream()
                 .map(counterparty -> new BigInteger(counterparty.totalValueNative()))
-                .filter(value -> value.signum() > 0 && value.mod(nativeUnit).signum() == 0)
+                .filter(value -> labels.isRoundAmount(value, chain))
                 .count();
 
         return round * Labels.PERCENT / counterparties.size() >= properties.roundAmountsPercentThreshold();

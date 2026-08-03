@@ -218,7 +218,6 @@ export type MessageKey =
   | "docs.api.quotaBody"
   | "docs.networks.title"
   | "docs.networks.body"
-  | "docs.networks.testnet"
   | "docs.networks.roadmap"
   | "docs.networks.statusLive"
   | "docs.networks.statusSoon"

@@ -7,7 +7,7 @@ public record AddressEvidence(
         String target,
         Chain chain,
         Instant observedAt,
-        int ageDays,
+        Integer ageDays,
         long txCount,
         long txCount24h,
         boolean sampleTruncated,

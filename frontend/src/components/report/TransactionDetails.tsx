@@ -1,7 +1,7 @@
+import { NativeAmount } from "@/components/ui/NativeAmount";
 import { TargetChip } from "@/components/ui/TargetChip";
-import { useChains } from "@/lib/chains/context";
 import type { Chain } from "@/lib/chains/registry";
-import { formatCount, formatDateTime, formatNativeAmount } from "@/lib/format";
+import { formatCount, formatDateTime, UNKNOWN_VALUE } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK } from "@/lib/risk";
 import type { FlaggedExposure, TransactionEvidence } from "@/lib/types";
@@ -13,17 +13,13 @@ interface TransactionDetailsProps {
 
 export function TransactionDetails({ chain, evidence }: TransactionDetailsProps) {
   const { t, locale } = useI18n();
-  const { symbol, decimals } = useChains();
   const statusClass = evidence.success ? RISK.LOW.text : RISK.CRITICAL.text;
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
         <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.txValue")}</p>
-        <p className="mt-2 font-mono text-2xl text-text">
-          {formatNativeAmount(evidence.valueNative, decimals(chain), locale)}{" "}
-          <span className="text-base text-text-dim">{symbol(chain)}</span>
-        </p>
+        <NativeAmount chain={chain} raw={evidence.valueNative} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -39,7 +35,7 @@ export function TransactionDetails({ chain, evidence }: TransactionDetailsProps)
         />
         <StatCell
           label={t("report.txBlockTime")}
-          value={evidence.blockTimestamp === null ? "—" : formatDateTime(evidence.blockTimestamp, locale)}
+          value={evidence.blockTimestamp === null ? UNKNOWN_VALUE : formatDateTime(evidence.blockTimestamp, locale)}
         />
         <StatCell
           label={t("report.txInternalTransfers")}
@@ -67,14 +63,18 @@ export function TransactionDetails({ chain, evidence }: TransactionDetailsProps)
 
 interface PartyRowProps {
   label: string;
-  address: string;
+  address: string | null;
 }
 
 function PartyRow({ label, address }: PartyRowProps) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <span className="font-sans text-xs uppercase tracking-wider text-text-dim">{label}</span>
-      <TargetChip value={address} className="min-w-0 text-sm" />
+      {address === null ? (
+        <span className="font-mono text-sm text-text-faint">{UNKNOWN_VALUE}</span>
+      ) : (
+        <TargetChip value={address} className="min-w-0 text-sm" />
+      )}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.gateway.dto.WatchlistCreateRequest;
 import com.riskscoring.gateway.dto.WatchlistEntryView;
-import com.riskscoring.gateway.exception.TargetChainMismatchException;
 import com.riskscoring.gateway.exception.WatchlistEntryNotFoundException;
 import com.riskscoring.gateway.kafka.WatchlistEventPublisher;
 import com.riskscoring.gateway.mapper.WatchlistMapper;
@@ -33,11 +32,7 @@ public class WatchlistServiceImpl implements WatchlistService {
     @Override
     public void addToWatchlist(UUID userId, WatchlistCreateRequest request) {
         Chain chain = chainService.requireScannable(request.chain());
-        TargetMatch match = ScanTargets.require(request.address(), chain);
-
-        if (match.targetType() != ScanTarget.ADDRESS) {
-            throw new TargetChainMismatchException(request.address(), chain);
-        }
+        TargetMatch match = ScanTargets.require(request.address(), chain, ScanTarget.ADDRESS);
 
         Language language = Language.fromLocale(LocaleContextHolder.getLocale());
 

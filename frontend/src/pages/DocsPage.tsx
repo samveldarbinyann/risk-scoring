@@ -142,11 +142,6 @@ export function DocsPage() {
                 <ChainIcon chain={chain.chain} className="h-5 w-5" />
               </span>
               <span className="flex-1 font-sans text-sm text-text">{chain.displayName}</span>
-              {!chain.mainnet && (
-                <span className="rounded-base border border-border px-2 py-0.5 font-mono text-xs text-text-faint">
-                  {t("docs.networks.testnet")}
-                </span>
-              )}
               <span className="font-mono text-xs text-text-faint">
                 {chain.support === "SUPPORTED" ? t("docs.networks.statusLive") : t("docs.networks.statusSoon")}
               </span>

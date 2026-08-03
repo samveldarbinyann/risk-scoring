@@ -22,7 +22,6 @@ import java.math.BigInteger;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -94,13 +93,12 @@ public class TransactionSignalCalculatorImpl implements TransactionSignalCalcula
 
     private TransactionHeuristics heuristics(TransactionSnapshot transaction, Chain chain) {
         BigInteger value = new BigInteger(transaction.valueNative());
-        BigInteger nativeUnit = BigInteger.TEN.pow(chain.nativeDecimals());
         boolean tokenOnly = value.signum() == 0 && transaction.tokenTransferCount() > 0;
 
         return new TransactionHeuristics(
                 !transaction.success(),
                 value.signum() == 0 && transaction.tokenTransferCount() == 0,
-                value.signum() > 0 && value.mod(nativeUnit).signum() == 0,
+                labels.isRoundAmount(value, chain),
                 selfTransfer(transaction),
                 tokenOnly,
                 transaction.nestedTransferCount() >= properties.internalFanOutThreshold(),

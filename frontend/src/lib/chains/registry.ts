@@ -8,7 +8,6 @@ export type Chain =
   | "ARBITRUM_ONE"
   | "AVALANCHE"
   | "LINEA"
-  | "SEPOLIA"
   | "BITCOIN"
   | "SOLANA"
   | "TRON"
@@ -26,8 +25,5 @@ export interface ChainInfo {
   nativeSymbol: string;
   nativeDecimals: number;
   evmChainId: number | null;
-  mainnet: boolean;
   support: ChainSupport;
 }
-
-export const DEFAULT_NATIVE_DECIMALS = 18;

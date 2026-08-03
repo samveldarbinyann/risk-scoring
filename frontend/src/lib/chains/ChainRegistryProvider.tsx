@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getChainRegistry } from "@/lib/api";
 import { ChainRegistryContext, type ChainRegistryContextValue } from "@/lib/chains/context";
-import { DEFAULT_NATIVE_DECIMALS, type Chain, type ChainInfo } from "@/lib/chains/registry";
+import type { Chain, ChainInfo } from "@/lib/chains/registry";
 
 export function ChainRegistryProvider({ children }: { children: ReactNode }) {
   const [chains, setChains] = useState<ChainInfo[]>([]);
@@ -13,7 +13,9 @@ export function ChainRegistryProvider({ children }: { children: ReactNode }) {
       .then((registry) => {
         if (!abort.signal.aborted) setChains(registry);
       })
-      .catch(() => undefined);
+      .catch((error) => {
+        if (!abort.signal.aborted) console.error("Chain registry unavailable", error);
+      });
 
     return () => {
       abort.abort();
@@ -21,14 +23,15 @@ export function ChainRegistryProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<ChainRegistryContextValue>(() => {
-    const info = (chain: Chain) => chains.find((entry) => entry.chain === chain);
+    const byChain = new Map(chains.map((entry) => [entry.chain, entry]));
+    const info = (chain: Chain) => byChain.get(chain);
 
     return {
       chains,
+      ready: chains.length > 0,
+      defaultChain: chains.find((entry) => entry.support === "SUPPORTED")?.chain ?? null,
       info,
       label: (chain) => info(chain)?.displayName ?? chain,
-      symbol: (chain) => info(chain)?.nativeSymbol ?? "",
-      decimals: (chain) => info(chain)?.nativeDecimals ?? DEFAULT_NATIVE_DECIMALS,
     };
   }, [chains]);
 

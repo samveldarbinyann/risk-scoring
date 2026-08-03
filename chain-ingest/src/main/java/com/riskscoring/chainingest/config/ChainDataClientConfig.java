@@ -7,7 +7,6 @@ import com.riskscoring.common.model.ScanTarget;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -23,10 +22,7 @@ public class ChainDataClientConfig {
 
     @Bean
     public Map<ScanTarget, ChainFactsCacheService> chainFactsCaches(List<ChainFactsCacheService> caches) {
-        return caches.stream().collect(Collectors.toMap(
-                ChainFactsCacheService::target,
-                Function.identity(),
-                (first, second) -> first,
-                () -> new EnumMap<>(ScanTarget.class)));
+        return caches.stream().collect(
+                Collectors.toUnmodifiableMap(ChainFactsCacheService::target, Function.identity()));
     }
 }

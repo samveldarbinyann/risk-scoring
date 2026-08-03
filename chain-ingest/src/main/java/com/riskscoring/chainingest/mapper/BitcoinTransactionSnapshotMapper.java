@@ -12,9 +12,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,13 +27,14 @@ public class BitcoinTransactionSnapshotMapper {
     private static final boolean NEVER_REVERTS = true;
 
     private final BitcoinValues values;
+    private final TransactionPartyAggregator partyAggregator;
 
     public TransactionSnapshot fromMempool(MempoolTransaction transaction) {
         List<MempoolVin> inputs = values.inputs(transaction);
         List<MempoolVout> outputs = values.outputs(transaction);
 
         BigInteger total = outputs.stream()
-                .map(output -> values.satoshi(output.value()))
+                .map(output -> BigInteger.valueOf(output.value()))
                 .reduce(BigInteger.ZERO, BigInteger::add);
 
         return new TransactionSnapshot(
@@ -66,9 +65,9 @@ public class BitcoinTransactionSnapshotMapper {
                 .collect(Collectors.toSet());
 
         return outputs.stream()
-                .filter(output -> !change.contains(values.address(output.address())))
+                .filter(output -> !change.contains(values.normalize(output.address())))
                 .max(Comparator.comparingLong(MempoolVout::value))
-                .map(output -> values.address(output.address()))
+                .map(output -> values.normalize(output.address()))
                 .filter(values::isRoutable)
                 .orElse(null);
     }
@@ -76,33 +75,18 @@ public class BitcoinTransactionSnapshotMapper {
     private List<TransactionParty> parties(List<MempoolVin> inputs, List<MempoolVout> outputs) {
         Stream<Optional<TransactionParty>> senders = inputs.stream()
                 .map(input -> party(values.inputAddress(input),
-                        TransactionRole.SENDER, values.satoshi(values.inputValue(input))));
+                        TransactionRole.SENDER, BigInteger.valueOf(values.inputValue(input))));
 
         Stream<Optional<TransactionParty>> recipients = outputs.stream()
-                .map(output -> party(values.address(output.address()),
-                        TransactionRole.RECIPIENT, values.satoshi(output.value())));
+                .map(output -> party(values.normalize(output.address()),
+                        TransactionRole.RECIPIENT, BigInteger.valueOf(output.value())));
 
-        Map<PartyKey, BigInteger> totals = new LinkedHashMap<>();
-        Stream.concat(senders, recipients)
-                .flatMap(Optional::stream)
-                .forEach(party -> totals.merge(
-                        new PartyKey(party.address(), party.role()),
-                        new BigInteger(party.valueNative()),
-                        BigInteger::add));
-
-        return totals.entrySet().stream()
-                .map(entry -> new TransactionParty(
-                        entry.getKey().address(), entry.getKey().role(), entry.getValue().toString()))
-                .sorted(Comparator.comparing(TransactionParty::role).thenComparing(TransactionParty::address))
-                .toList();
+        return partyAggregator.aggregate(Stream.concat(senders, recipients).flatMap(Optional::stream));
     }
 
     private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger value) {
         return values.isRoutable(address)
                 ? Optional.of(new TransactionParty(address, role, value.toString()))
                 : Optional.empty();
-    }
-
-    private record PartyKey(String address, TransactionRole role) {
     }
 }

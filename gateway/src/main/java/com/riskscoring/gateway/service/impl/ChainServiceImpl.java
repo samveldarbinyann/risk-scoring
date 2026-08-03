@@ -24,8 +24,7 @@ public class ChainServiceImpl implements ChainService {
                     chain.displayName(),
                     chain.nativeSymbol(),
                     chain.nativeDecimals(),
-                    chain.evmChainId().isPresent() ? chain.evmChainId().getAsInt() : null,
-                    chain.mainnet(),
+                    chain.evmChainId().orElse(null),
                     chain.support()))
             .toList();
 
@@ -40,7 +39,9 @@ public class ChainServiceImpl implements ChainService {
 
         return new ChainCandidatesResponse(
                 matches.getFirst().normalizedTarget(),
-                matches.stream().map(ChainServiceImpl::toCandidate).toList());
+                matches.stream()
+                        .map(match -> new ChainCandidate(match.chain(), match.targetType(), match.normalizedTarget()))
+                        .toList());
     }
 
     @Override
@@ -52,18 +53,5 @@ public class ChainServiceImpl implements ChainService {
         }
 
         return chain;
-    }
-
-    private static ChainCandidate toCandidate(TargetMatch match) {
-        Chain chain = match.chain();
-
-        return new ChainCandidate(
-                chain,
-                chain.family(),
-                chain.displayName(),
-                chain.nativeSymbol(),
-                match.targetType(),
-                chain.support(),
-                match.normalizedTarget());
     }
 }

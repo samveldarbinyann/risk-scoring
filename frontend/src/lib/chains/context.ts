@@ -3,10 +3,10 @@ import type { Chain, ChainInfo } from "@/lib/chains/registry";
 
 export interface ChainRegistryContextValue {
   chains: ChainInfo[];
+  ready: boolean;
+  defaultChain: Chain | null;
   info: (chain: Chain) => ChainInfo | undefined;
   label: (chain: Chain) => string;
-  symbol: (chain: Chain) => string;
-  decimals: (chain: Chain) => number;
 }
 
 export const ChainRegistryContext = createContext<ChainRegistryContextValue | null>(null);

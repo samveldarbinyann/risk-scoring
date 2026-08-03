@@ -2,6 +2,7 @@ import { TargetChip } from "@/components/ui/TargetChip";
 import { Card } from "@/components/ui/Card";
 import { ChainIcon } from "@/components/ui/ChainIcon";
 import { Spinner } from "@/components/ui/Spinner";
+import { useChains } from "@/lib/chains/context";
 import { useI18n } from "@/lib/i18n/context";
 import type { Chain } from "@/lib/chains/registry";
 import type { ChainCandidate } from "@/lib/types";
@@ -16,6 +17,7 @@ interface ChainPickerProps {
 
 export function ChainPicker({ target, candidates, busyChain, onSelect, onChangeTarget }: ChainPickerProps) {
   const { t } = useI18n();
+  const { info } = useChains();
   const isBusy = busyChain !== null;
   const mixedTargetTypes = new Set(candidates.map((candidate) => candidate.targetType)).size > 1;
 
@@ -27,9 +29,10 @@ export function ChainPicker({ target, candidates, busyChain, onSelect, onChangeT
             <ChainRow
               key={candidate.chain}
               candidate={candidate}
+              planned={info(candidate.chain)?.support === "PLANNED"}
               showTargetType={mixedTargetTypes}
               busy={busyChain === candidate.chain}
-              disabled={isBusy || candidate.support === "PLANNED"}
+              disabled={isBusy || info(candidate.chain)?.support === "PLANNED"}
               onSelect={() => onSelect(candidate.chain)}
             />
           ))}
@@ -53,15 +56,16 @@ export function ChainPicker({ target, candidates, busyChain, onSelect, onChangeT
 
 interface ChainRowProps {
   candidate: ChainCandidate;
+  planned: boolean;
   showTargetType: boolean;
   busy: boolean;
   disabled: boolean;
   onSelect: () => void;
 }
 
-function ChainRow({ candidate, showTargetType, busy, disabled, onSelect }: ChainRowProps) {
+function ChainRow({ candidate, planned, showTargetType, busy, disabled, onSelect }: ChainRowProps) {
   const { t } = useI18n();
-  const planned = candidate.support === "PLANNED";
+  const { label } = useChains();
 
   return (
     <button
@@ -78,7 +82,7 @@ function ChainRow({ candidate, showTargetType, busy, disabled, onSelect }: Chain
           <ChainIcon chain={candidate.chain} className="h-6 w-6 text-text-dim group-disabled:text-text-faint" />
         )}
       </span>
-      <span className="font-sans text-sm text-text group-disabled:text-text-faint">{candidate.displayName}</span>
+      <span className="font-sans text-sm text-text group-disabled:text-text-faint">{label(candidate.chain)}</span>
 
       {showTargetType && (
         <span className="font-mono text-xs uppercase tracking-widest text-text-faint">

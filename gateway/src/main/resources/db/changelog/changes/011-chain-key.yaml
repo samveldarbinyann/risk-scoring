@@ -24,7 +24,6 @@ databaseChangeLog:
                 WHEN 42161    THEN 'ARBITRUM_ONE'
                 WHEN 43114    THEN 'AVALANCHE'
                 WHEN 59144    THEN 'LINEA'
-                WHEN 11155111 THEN 'SEPOLIA'
               END
               WHERE chain IS NULL
         - sql:

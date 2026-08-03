@@ -8,19 +8,20 @@ import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
 import { addToWatchlist, listWatchlist, removeFromWatchlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
+import { useChains } from "@/lib/chains/context";
 import type { Chain } from "@/lib/chains/registry";
 import { useI18n } from "@/lib/i18n/context";
 import { pollUntil } from "@/lib/poll";
 import type { WatchlistEntryView } from "@/lib/types";
 
-const DEFAULT_CHAIN: Chain = "ETHEREUM";
-
 export function WatchlistPage() {
   const { t } = useI18n();
   const { status } = useAuth();
+  const { defaultChain } = useChains();
   const [entries, setEntries] = useState<WatchlistEntryView[]>([]);
   const [address, setAddress] = useState("");
-  const [chain, setChain] = useState<Chain>(DEFAULT_CHAIN);
+  const [selectedChain, setSelectedChain] = useState<Chain | null>(null);
+  const chain = selectedChain ?? defaultChain;
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export function WatchlistPage() {
     if (isSubmitting) return;
 
     const trimmed = address.trim();
-    if (!trimmed) {
+    if (!trimmed || chain === null) {
       setActionError(t("watchlist.invalidAddress"));
       setStatusMessage(null);
       return;
@@ -135,7 +136,7 @@ export function WatchlistPage() {
           chain={chain}
           isSubmitting={isSubmitting}
           onAddressChange={setAddress}
-          onChainChange={setChain}
+          onChainChange={setSelectedChain}
           onSubmit={() => void handleAdd()}
         />
         <div className="mt-3 flex flex-col gap-2">

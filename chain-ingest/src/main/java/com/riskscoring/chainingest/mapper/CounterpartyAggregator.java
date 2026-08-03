@@ -7,13 +7,19 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
 public class CounterpartyAggregator {
+
+    public static final int FIRST_HOP = 1;
+    public static final int SECOND_HOP = 2;
 
     private static final Comparator<Counterparty> BY_RELEVANCE = Comparator
             .comparingLong(Counterparty::txCount)
@@ -32,6 +38,27 @@ public class CounterpartyAggregator {
                 .map(entry -> toCounterparty(entry.getKey(), entry.getValue(), hops))
                 .sorted(BY_RELEVANCE)
                 .toList();
+    }
+
+    public List<Counterparty> expandSecondHop(List<Counterparty> firstHop,
+                                              String target,
+                                              int maxHops,
+                                              int expandTop,
+                                              Function<String, List<Transfer>> fetch) {
+        if (maxHops < SECOND_HOP || firstHop.isEmpty()) {
+            return List.of();
+        }
+
+        Set<String> known = new HashSet<>(firstHop.stream().map(Counterparty::address).toList());
+        known.add(target);
+
+        List<Transfer> transfers = firstHop.stream()
+                .limit(expandTop)
+                .flatMap(counterparty -> fetch.apply(counterparty.address()).stream())
+                .filter(transfer -> !known.contains(transfer.counterparty()))
+                .toList();
+
+        return aggregate(transfers, SECOND_HOP);
     }
 
     public List<Counterparty> merge(List<Counterparty> nearest, List<Counterparty> farthest, int limit, int reserve) {

@@ -111,7 +111,7 @@ public class ScanServiceImpl implements ScanService {
         }
 
         List<TargetMatch> fanOut = candidates.stream()
-                .filter(match -> match.chain().scannable() && match.chain().mainnet())
+                .filter(match -> match.chain().scannable())
                 .toList();
 
         if (fanOut.isEmpty()) {
@@ -127,8 +127,8 @@ public class ScanServiceImpl implements ScanService {
         }
 
         return request.chains().stream()
-                .distinct()
                 .map(chainService::requireScannable)
+                .distinct()
                 .map(chain -> candidates.stream()
                         .filter(match -> match.chain() == chain)
                         .findFirst()
@@ -137,10 +137,9 @@ public class ScanServiceImpl implements ScanService {
     }
 
     private List<TargetMatch> singleTargetType(List<TargetMatch> matches) {
-        boolean mixed = matches.stream().map(TargetMatch::targetType).distinct().count() > 1;
-        boolean multipleTransactions = matches.getFirst().targetType() == ScanTarget.TRANSACTION && matches.size() > 1;
+        boolean anyTransaction = matches.stream().anyMatch(match -> match.targetType() == ScanTarget.TRANSACTION);
 
-        if (mixed || multipleTransactions) {
+        if (matches.size() > 1 && anyTransaction) {
             throw new SingleChainRequiredException(matches.size());
         }
 

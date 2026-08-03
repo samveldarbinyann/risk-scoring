@@ -5,8 +5,11 @@ import com.riskscoring.common.model.ScanTarget;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public enum ChainTargetFormat {
 
@@ -16,7 +19,9 @@ public enum ChainTargetFormat {
             Normalization.LOWERCASE),
 
     BITCOIN(ChainFamily.BITCOIN,
-            "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[023456789acdefghjklmnpqrstuvwxyz]{11,71})$",
+            "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}"
+                    + "|bc1[023456789acdefghjklmnpqrstuvwxyz]{11,71}"
+                    + "|BC1[023456789ACDEFGHJKLMNPQRSTUVWXYZ]{11,71})$",
             "^[a-fA-F0-9]{64}$",
             Normalization.NONE),
 
@@ -44,6 +49,9 @@ public enum ChainTargetFormat {
         LOWERCASE,
         NONE
     }
+
+    private static final Map<ChainFamily, ChainTargetFormat> BY_FAMILY = Arrays.stream(values())
+            .collect(Collectors.toUnmodifiableMap(ChainTargetFormat::family, Function.identity()));
 
     private final ChainFamily family;
     private final Pattern addressPattern;
@@ -80,9 +88,10 @@ public enum ChainTargetFormat {
     }
 
     public static ChainTargetFormat of(ChainFamily family) {
-        return Arrays.stream(values())
-                .filter(format -> format.family == family)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No target format for family " + family));
+        ChainTargetFormat format = BY_FAMILY.get(family);
+        if (format == null) {
+            throw new IllegalStateException("No target format for family " + family);
+        }
+        return format;
     }
 }

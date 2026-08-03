@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import { useMemo, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n/context";
 
 interface WatchlistFormProps {
   address: string;
-  chain: Chain;
+  chain: Chain | null;
   isSubmitting: boolean;
   onAddressChange: (value: string) => void;
   onChainChange: (value: Chain) => void;
@@ -24,13 +24,17 @@ export function WatchlistForm({
   onSubmit,
 }: WatchlistFormProps) {
   const { t } = useI18n();
-  const { chains } = useChains();
+  const { chains, ready } = useChains();
 
-  const options = chains.map((info) => ({
-    value: info.chain,
-    label: info.support === "PLANNED" ? `${info.displayName} — ${t("landing.chainComingSoon")}` : info.displayName,
-    disabled: info.support === "PLANNED",
-  }));
+  const options = useMemo(
+    () =>
+      chains.map((info) => ({
+        value: info.chain,
+        label: info.support === "PLANNED" ? `${info.displayName} — ${t("landing.chainComingSoon")}` : info.displayName,
+        disabled: info.support === "PLANNED",
+      })),
+    [chains, t],
+  );
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -50,14 +54,14 @@ export function WatchlistForm({
         className="sm:flex-1"
       />
       <Select
-        value={chain}
+        value={chain ?? ""}
         onChange={(event) => onChainChange(event.target.value as Chain)}
         options={options}
-        disabled={isSubmitting}
+        disabled={isSubmitting || !ready}
         aria-label={t("watchlist.chain")}
         className="sm:w-56"
       />
-      <Button type="submit" isLoading={isSubmitting} className="sm:w-auto">
+      <Button type="submit" isLoading={isSubmitting} disabled={!ready} className="sm:w-auto">
         {t("watchlist.add")}
       </Button>
     </form>

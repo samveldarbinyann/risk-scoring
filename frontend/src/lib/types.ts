@@ -1,4 +1,4 @@
-import type { Chain, ChainFamily, ChainSupport } from "@/lib/chains/registry";
+import type { Chain } from "@/lib/chains/registry";
 
 export type ScanStage = "PENDING" | "FETCHING" | "ENRICHING" | "ANALYZING" | "COMPLETED" | "FAILED";
 export type ScanSource = "USER" | "MONITOR" | "API";
@@ -84,11 +84,7 @@ export interface ScanGroupAcceptedResponse {
 
 export interface ChainCandidate {
   chain: Chain;
-  family: ChainFamily;
-  displayName: string;
-  nativeSymbol: string;
   targetType: ScanTarget;
-  support: ChainSupport;
   normalizedTarget: string;
 }
 
@@ -134,8 +130,8 @@ export interface MixerExposure {
 }
 
 export interface Heuristics {
-  freshWallet: boolean;
-  fundedThenDrained: boolean;
+  freshWallet: boolean | null;
+  fundedThenDrained: boolean | null;
   roundAmounts: boolean;
   fanIn: number;
   fanOut: number;
@@ -162,7 +158,7 @@ export interface AddressEvidence {
   target: string;
   chain: Chain;
   observedAt: string;
-  ageDays: number;
+  ageDays: number | null;
   txCount: number;
   txCount24h: number;
   sampleTruncated: boolean;
@@ -179,8 +175,8 @@ export interface TransactionEvidence {
   target: string;
   chain: Chain;
   observedAt: string;
-  fromAddress: string;
-  toAddress: string;
+  fromAddress: string | null;
+  toAddress: string | null;
   valueNative: string;
   success: boolean;
   blockTimestamp: string | null;

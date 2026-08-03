@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useChains } from "@/lib/chains/context";
+import { NativeAmount } from "@/components/ui/NativeAmount";
 import type { Chain } from "@/lib/chains/registry";
 import {
   formatCount,
   formatDateTime,
-  formatNativeAmount,
   formatTokenAmount,
   formatUsd,
   isDisplayableSymbol,
@@ -34,7 +33,6 @@ export function WalletStats({
   observedAt,
 }: WalletStatsProps) {
   const { t, locale } = useI18n();
-  const { symbol, decimals } = useChains();
   const [expanded, setExpanded] = useState(false);
 
   const displayableTokens = tokenBalances.filter((token) => isDisplayableSymbol(token.symbol));
@@ -47,10 +45,7 @@ export function WalletStats({
     <div className="flex flex-col gap-6 p-6">
       <div>
         <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.balance")}</p>
-        <p className="mt-2 font-mono text-2xl text-text">
-          {formatNativeAmount(balanceNative, decimals(chain), locale)}{" "}
-          <span className="text-base text-text-dim">{symbol(chain)}</span>
-        </p>
+        <NativeAmount chain={chain} raw={balanceNative} />
       </div>
 
       {sortedTokens.length > 0 && (

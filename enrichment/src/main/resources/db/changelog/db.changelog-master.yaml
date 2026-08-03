@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/004-chain-key.yaml
   - include:
       file: db/changelog/changes/005-seed-bitcoin-labels.yaml
+  - include:
+      file: db/changelog/changes/006-evidence-payload-native-names.yaml

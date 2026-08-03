@@ -3,6 +3,7 @@ package com.riskscoring.chainingest.config;
 import com.riskscoring.chainingest.exception.ChainDataNotFoundException;
 import com.riskscoring.chainingest.exception.ChainDataRejectedException;
 import com.riskscoring.chainingest.exception.UnsupportedChainException;
+import com.riskscoring.chainingest.exception.UserFacingChainFailure;
 import com.riskscoring.chainingest.kafka.ChainEventPublisher;
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanRequested;
@@ -23,7 +24,6 @@ public class KafkaErrorHandlerConfig {
     private static final long RETRY_INTERVAL_MS = 5_000L;
     private static final long MAX_RETRIES = 2L;
     private static final String FAILURE_MESSAGE = "Chain data fetch failed";
-    private static final String UNSUPPORTED_MESSAGE = "%s";
 
     @Bean
     public DefaultErrorHandler kafkaErrorHandler(ChainEventPublisher eventPublisher) {
@@ -48,8 +48,8 @@ public class KafkaErrorHandlerConfig {
     }
 
     private static String failureMessage(Exception exception) {
-        return NestedExceptionUtils.getMostSpecificCause(exception) instanceof UnsupportedChainException unsupported
-                ? UNSUPPORTED_MESSAGE.formatted(unsupported.getMessage())
+        return NestedExceptionUtils.getMostSpecificCause(exception) instanceof UserFacingChainFailure failure
+                ? failure.progressMessage()
                 : FAILURE_MESSAGE;
     }
 }

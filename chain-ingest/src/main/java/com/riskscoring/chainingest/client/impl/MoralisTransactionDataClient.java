@@ -2,6 +2,7 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.ChainDataClient;
 import com.riskscoring.chainingest.client.MoralisApi;
+import com.riskscoring.chainingest.mapper.MoralisValues;
 import com.riskscoring.chainingest.mapper.TransactionSnapshotMapper;
 import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ChainFamily;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +20,7 @@ import java.util.Locale;
 public class MoralisTransactionDataClient implements ChainDataClient {
 
     private final MoralisApi moralisApi;
+    private final MoralisValues values;
     private final TransactionSnapshotMapper transactionSnapshotMapper;
 
     @Override
@@ -34,7 +35,7 @@ public class MoralisTransactionDataClient implements ChainDataClient {
 
     @Override
     public TransactionFacts fetch(String hash, Chain chain) {
-        String target = hash.toLowerCase(Locale.ROOT);
+        String target = values.address(hash);
 
         TransactionSnapshot snapshot = transactionSnapshotMapper.fromMoralis(moralisApi.transaction(target, chain));
 

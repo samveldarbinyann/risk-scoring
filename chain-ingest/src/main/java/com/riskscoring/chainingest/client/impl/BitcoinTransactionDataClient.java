@@ -34,7 +34,7 @@ public class BitcoinTransactionDataClient implements ChainDataClient {
 
     @Override
     public TransactionFacts fetch(String hash, Chain chain) {
-        String target = values.address(hash);
+        String target = values.normalize(hash);
 
         TransactionSnapshot snapshot = bitcoinTransactionSnapshotMapper.fromMempool(mempoolApi.transaction(target));
 

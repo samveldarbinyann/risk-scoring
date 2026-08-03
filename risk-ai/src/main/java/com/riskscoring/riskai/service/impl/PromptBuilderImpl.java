@@ -34,6 +34,9 @@ public class PromptBuilderImpl implements PromptBuilder {
             - An EXCHANGE label is context and usually lowers suspicion: it indicates a KYC-bearing venue.
             - A young wallet is only suspicious together with other signals. An old, active wallet with
               clean counterparties is normally LOW even if it has many transactions.
+            - ageDays, freshWallet and fundedThenDrained are null when the address's first-ever activity
+              could not be determined. Null means UNKNOWN, never "young" and never "old": say the age is
+              unknown and do not let it push the verdict in either direction.
             - Direction matters: receiving funds FROM a flagged address is worse than sending TO it.
             - When sampleTruncated is true the address is busier than the counterparty list shows:
               never conclude the address is low-activity or dormant.
@@ -68,6 +71,9 @@ public class PromptBuilderImpl implements PromptBuilder {
               activity: never describe it as "the wallet" or infer the owner's total holdings from it.
             - tokenBalances is always empty on this chain because token holdings are not tracked here.
               Never read the empty list as "the wallet holds no tokens".
+            - The address's first-ever activity is not available from this data source, so ageDays,
+              freshWallet and fundedThenDrained are always null here. A large txCount alone already tells
+              you the address is not new.
             """;
 
     private static final String TRANSACTION_CORE_PROMPT = """
@@ -157,6 +163,10 @@ public class PromptBuilderImpl implements PromptBuilder {
             Keep "riskLevel" exactly as one of LOW, MEDIUM, HIGH, CRITICAL — never translate it.
             """;
 
+    private static final Map<ChainFamily, FamilyPromptRules> FAMILY_RULES = Map.of(
+            ChainFamily.EVM, new FamilyPromptRules(ADDRESS_EVM_PROMPT, TRANSACTION_EVM_PROMPT),
+            ChainFamily.BITCOIN, new FamilyPromptRules(ADDRESS_UTXO_PROMPT, TRANSACTION_UTXO_PROMPT));
+
     private static final Map<Language, String> LANGUAGE_NAMES = Map.of(
             Language.EN, "English",
             Language.RU, "Russian"
@@ -211,22 +221,20 @@ public class PromptBuilderImpl implements PromptBuilder {
     }
 
     private String domainRules(EvidenceBundle evidence) {
-        ChainFamily family = evidence.chain().family();
+        FamilyPromptRules rules = familyRules(evidence.chain().family());
 
         return switch (evidence) {
-            case AddressEvidence ignored ->
-                    ADDRESS_CORE_PROMPT + familyRules(family, ADDRESS_EVM_PROMPT, ADDRESS_UTXO_PROMPT);
-            case TransactionEvidence ignored ->
-                    TRANSACTION_CORE_PROMPT + familyRules(family, TRANSACTION_EVM_PROMPT, TRANSACTION_UTXO_PROMPT);
+            case AddressEvidence ignored -> ADDRESS_CORE_PROMPT + rules.addressRules();
+            case TransactionEvidence ignored -> TRANSACTION_CORE_PROMPT + rules.transactionRules();
         };
     }
 
-    private String familyRules(ChainFamily family, String evmRules, String utxoRules) {
-        return switch (family) {
-            case EVM -> evmRules;
-            case BITCOIN -> utxoRules;
-            case SOLANA, TRON, TON, SUI -> throw new UnsupportedChainFamilyException(family);
-        };
+    private FamilyPromptRules familyRules(ChainFamily family) {
+        FamilyPromptRules rules = FAMILY_RULES.get(family);
+        if (rules == null) {
+            throw new UnsupportedChainFamilyException(family);
+        }
+        return rules;
     }
 
     private String units(Chain chain) {
@@ -236,5 +244,8 @@ public class PromptBuilderImpl implements PromptBuilder {
 
     private String asJson(EvidenceBundle evidence) {
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(evidence);
+    }
+
+    private record FamilyPromptRules(String addressRules, String transactionRules) {
     }
 }

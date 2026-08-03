@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-evidence-payload-native-names
+      author: sam
+      changes:
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record
+              SET payload = (payload - 'chainId'::text) || jsonb_build_object('chain', chain)
+              WHERE jsonb_exists(payload, 'chainId')
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record
+              SET payload = (payload - 'balanceWei'::text)
+                || jsonb_build_object('balanceNative', payload -> 'balanceWei')
+              WHERE jsonb_exists(payload, 'balanceWei')
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record
+              SET payload = (payload - 'valueWei'::text - 'internalTransferCount'::text - 'erc20TransferCount'::text)
+                || jsonb_build_object(
+                     'valueNative', payload -> 'valueWei',
+                     'nestedTransferCount', payload -> 'internalTransferCount',
+                     'tokenTransferCount', payload -> 'erc20TransferCount')
+              WHERE jsonb_exists(payload, 'valueWei')
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record SET payload = jsonb_set(payload, '{flagged}', (
+                SELECT COALESCE(jsonb_agg(
+                  (item - 'valueWei'::text) || jsonb_build_object('valueNative', item -> 'valueWei')), '[]'::jsonb)
+                FROM jsonb_array_elements(payload -> 'flagged') AS item))
+              WHERE jsonb_typeof(payload -> 'flagged') = 'array'
+                AND EXISTS (
+                  SELECT 1 FROM jsonb_array_elements(payload -> 'flagged') AS item
+                  WHERE jsonb_exists(item, 'valueWei'))
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record SET payload = jsonb_set(payload, '{parties}', (
+                SELECT COALESCE(jsonb_agg(
+                  (item - 'valueWei'::text) || jsonb_build_object('valueNative', item -> 'valueWei')), '[]'::jsonb)
+                FROM jsonb_array_elements(payload -> 'parties') AS item))
+              WHERE jsonb_typeof(payload -> 'parties') = 'array'
+                AND EXISTS (
+                  SELECT 1 FROM jsonb_array_elements(payload -> 'parties') AS item
+                  WHERE jsonb_exists(item, 'valueWei'))
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record SET payload = jsonb_set(payload, '{mixerExposure}',
+                ((payload -> 'mixerExposure') - 'valueWei'::text)
+                  || jsonb_build_object('valueNative', payload -> 'mixerExposure' -> 'valueWei'))
+              WHERE jsonb_typeof(payload -> 'mixerExposure') = 'object'
+                AND jsonb_exists(payload -> 'mixerExposure', 'valueWei')

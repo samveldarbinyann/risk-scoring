@@ -6,7 +6,6 @@ import com.riskscoring.chainingest.client.dto.mempool.MempoolVin;
 import com.riskscoring.chainingest.client.dto.mempool.MempoolVout;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -14,16 +13,12 @@ import java.util.Optional;
 @Component
 public class BitcoinValues {
 
-    public String address(String address) {
-        return address == null ? "" : address.trim();
+    public String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 
     public boolean isRoutable(String address) {
         return !address.isEmpty();
-    }
-
-    public BigInteger satoshi(long value) {
-        return BigInteger.valueOf(value);
     }
 
     public Instant timestamp(MempoolStatus status) {
@@ -42,7 +37,7 @@ public class BitcoinValues {
     }
 
     public String inputAddress(MempoolVin input) {
-        return Optional.ofNullable(input.prevout()).map(MempoolVout::address).map(this::address).orElse("");
+        return Optional.ofNullable(input.prevout()).map(MempoolVout::address).map(this::normalize).orElse("");
     }
 
     public long inputValue(MempoolVin input) {

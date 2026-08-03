@@ -8,6 +8,7 @@ import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;
+import com.riskscoring.chainingest.mapper.MoralisValues;
 import com.riskscoring.chainingest.mapper.TransferMapper;
 import com.riskscoring.common.model.AddressFacts;
 import com.riskscoring.common.model.AddressSnapshot;
@@ -23,12 +24,9 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 @Component
@@ -36,11 +34,10 @@ import java.util.stream.Stream;
 @Slf4j
 public class MoralisAddressDataClient implements ChainDataClient {
 
-    private static final int FIRST_HOP = 1;
-    private static final int SECOND_HOP = 2;
     private static final Duration WINDOW_24H = Duration.ofHours(24);
 
     private final MoralisApi moralisApi;
+    private final MoralisValues values;
     private final TransferMapper transferMapper;
     private final CounterpartyAggregator counterpartyAggregator;
     private final ChainIngestProperties properties;
@@ -57,11 +54,14 @@ public class MoralisAddressDataClient implements ChainDataClient {
 
     @Override
     public AddressFacts fetch(String address, Chain chain) {
-        String target = address.toLowerCase(Locale.ROOT);
+        String target = values.address(address);
 
         TransferSample sample = fetchTransfers(target, chain);
-        List<Counterparty> firstHop = counterpartyAggregator.aggregate(sample.transfers(), FIRST_HOP);
-        List<Counterparty> secondHop = expandSecondHop(firstHop, target, chain);
+        List<Counterparty> firstHop = counterpartyAggregator.aggregate(
+                sample.transfers(), CounterpartyAggregator.FIRST_HOP);
+        List<Counterparty> secondHop = counterpartyAggregator.expandSecondHop(
+                firstHop, target, properties.maxHops(), properties.hop2ExpandTop(),
+                counterparty -> fetchTransfers(counterparty, chain).transfers());
 
         List<Counterparty> counterparties = counterpartyAggregator.merge(
                 firstHop, secondHop, properties.maxCounterparties(), properties.hop2Reserve());
@@ -78,30 +78,12 @@ public class MoralisAddressDataClient implements ChainDataClient {
         return new TransferSample(transfers, envelope.cursor() != null);
     }
 
-    private List<Counterparty> expandSecondHop(List<Counterparty> firstHop, String target, Chain chain) {
-        if (properties.maxHops() < SECOND_HOP || firstHop.isEmpty()) {
-            return List.of();
-        }
-
-        Set<String> known = new HashSet<>(firstHop.stream().map(Counterparty::address).toList());
-        known.add(target);
-
-        List<Transfer> transfers = firstHop.stream()
-                .limit(properties.hop2ExpandTop())
-                .flatMap(counterparty -> fetchTransfers(counterparty.address(), chain).transfers().stream())
-                .filter(transfer -> !known.contains(transfer.counterparty()))
-                .toList();
-
-        return counterpartyAggregator.aggregate(transfers, SECOND_HOP);
-    }
-
     private AddressSnapshot snapshot(String address, Chain chain, TransferSample sample) {
         Instant observedAt = Instant.now();
         Optional<MoralisActiveChain> activity = moralisApi.walletActivity(address, chain);
 
-        Instant firstSeenAt = activity.map(MoralisActiveChain::firstTransaction)
-                .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
-                .orElseGet(() -> transferTimes(sample).min(Comparator.naturalOrder()).orElse(null));
+        Optional<Instant> lifetimeFirstSeenAt = activity.map(MoralisActiveChain::firstTransaction)
+                .map(ref -> transferMapper.timestamp(ref.blockTimestamp()));
         Instant lastSeenAt = activity.map(MoralisActiveChain::lastTransaction)
                 .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
                 .orElseGet(() -> transferTimes(sample).max(Comparator.naturalOrder()).orElse(null));
@@ -111,7 +93,7 @@ public class MoralisAddressDataClient implements ChainDataClient {
                 txCount24h(sample, observedAt),
                 moralisApi.balanceNative(address, chain),
                 tokenBalances(address, chain),
-                firstSeenAt,
+                lifetimeFirstSeenAt.orElse(null),
                 lastSeenAt,
                 sample.truncated(),
                 observedAt);

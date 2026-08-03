@@ -6,6 +6,7 @@ import com.riskscoring.common.model.TransferDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
@@ -38,7 +39,7 @@ public class BitcoinTransferMapper {
     private Stream<Transfer> recipients(MempoolTransaction transaction, String address, Instant at) {
         return values.outputs(transaction).stream()
                 .map(output -> new Transfer(
-                        values.address(output.address()), TransferDirection.OUT, values.satoshi(output.value()), at))
+                        values.normalize(output.address()), TransferDirection.OUT, BigInteger.valueOf(output.value()), at))
                 .filter(transfer -> isOther(transfer, address));
     }
 
@@ -47,7 +48,7 @@ public class BitcoinTransferMapper {
                 .map(input -> new Transfer(
                         values.inputAddress(input),
                         TransferDirection.IN,
-                        values.satoshi(values.inputValue(input)),
+                        BigInteger.valueOf(values.inputValue(input)),
                         at))
                 .filter(transfer -> isOther(transfer, address));
     }
