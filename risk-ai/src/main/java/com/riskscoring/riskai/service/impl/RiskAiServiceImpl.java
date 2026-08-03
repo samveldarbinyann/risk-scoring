@@ -4,14 +4,15 @@ import com.riskscoring.common.event.ScanCompleted;
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.event.SignalsComputed;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.Verdict;
 import com.riskscoring.riskai.client.LlmClient;
 import com.riskscoring.riskai.config.RiskAiProperties;
+import com.riskscoring.riskai.entity.ScanReport;
 import com.riskscoring.riskai.exception.InvalidVerdictException;
 import com.riskscoring.riskai.kafka.RiskAiEventPublisher;
-import com.riskscoring.riskai.entity.ScanReport;
 import com.riskscoring.riskai.mapper.ScanReportMapper;
 import com.riskscoring.riskai.repository.ScanReportRepository;
 import com.riskscoring.riskai.service.PromptBuilder;
@@ -69,7 +70,7 @@ public class RiskAiServiceImpl implements RiskAiService {
                 event.scanId(),
                 event.targetType(),
                 event.target(),
-                event.chainId(),
+                event.chain(),
                 verdict,
                 model,
                 completedAt

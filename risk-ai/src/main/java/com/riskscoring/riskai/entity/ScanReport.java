@@ -1,5 +1,6 @@
 package com.riskscoring.riskai.entity;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.common.model.ScanTarget;
 import jakarta.persistence.Column;
@@ -40,11 +41,12 @@ public class ScanReport {
     @Column(name = "target_type", nullable = false, length = 16)
     private ScanTarget targetType;
 
-    @Column(nullable = false, length = 66)
+    @Column(nullable = false, length = 128)
     private String target;
 
-    @Column(name = "chain_id", nullable = false)
-    private int chainId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private Chain chain;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "risk_level", nullable = false, length = 16)

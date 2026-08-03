@@ -17,7 +17,7 @@ public class CounterpartyAggregator {
 
     private static final Comparator<Counterparty> BY_RELEVANCE = Comparator
             .comparingLong(Counterparty::txCount)
-            .thenComparing(counterparty -> new BigInteger(counterparty.totalValueWei()))
+            .thenComparing(counterparty -> new BigInteger(counterparty.totalValueNative()))
             .reversed();
 
     private static final Comparator<Counterparty> BY_PROXIMITY = Comparator
@@ -49,11 +49,11 @@ public class CounterpartyAggregator {
     }
 
     private Counterparty toCounterparty(String address, List<Transfer> transfers, int hops) {
-        BigInteger totalValueWei = transfers.stream()
-                .map(Transfer::valueWei)
+        BigInteger totalValueNative = transfers.stream()
+                .map(Transfer::valueNative)
                 .reduce(BigInteger.ZERO, BigInteger::add);
 
-        return new Counterparty(address, direction(transfers), transfers.size(), totalValueWei.toString(), hops);
+        return new Counterparty(address, direction(transfers), transfers.size(), totalValueNative.toString(), hops);
     }
 
     private TransferDirection direction(List<Transfer> transfers) {

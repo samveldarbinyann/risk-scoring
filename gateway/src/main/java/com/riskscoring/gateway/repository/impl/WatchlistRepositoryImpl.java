@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.repository.impl;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.gateway.repository.WatchlistEntryRow;
 import com.riskscoring.gateway.repository.WatchlistRepository;
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class WatchlistRepositoryImpl implements WatchlistRepository {
 
     private static final String FIND_ALL_BY_USER_ID = """
-            SELECT id, address, chain_id, last_risk_level, last_score,
+            SELECT id, address, chain, last_risk_level, last_score,
                    last_scan_id, last_checked_at, created_at
             FROM monitor.watchlist_entry
             WHERE user_id = ? AND active = true
@@ -39,7 +40,7 @@ public class WatchlistRepositoryImpl implements WatchlistRepository {
             return new WatchlistEntryRow(
                     UUID.fromString(rs.getString("id")),
                     rs.getString("address"),
-                    rs.getInt("chain_id"),
+                    Chain.valueOf(rs.getString("chain")),
                     riskLevel != null ? RiskLevel.valueOf(riskLevel) : null,
                     rs.getObject("last_score", Integer.class),
                     lastScanId != null ? UUID.fromString(lastScanId) : null,

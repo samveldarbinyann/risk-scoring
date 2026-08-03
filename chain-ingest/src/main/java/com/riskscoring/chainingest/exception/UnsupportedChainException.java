@@ -1,10 +1,14 @@
 package com.riskscoring.chainingest.exception;
 
-import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.Chain;
+import com.riskscoring.common.model.ScanTarget;
+
+import java.util.Locale;
 
 public class UnsupportedChainException extends RuntimeException {
 
-    public UnsupportedChainException(int chainId) {
-        super("Unsupported chainId %d, supported: %s".formatted(chainId, EvmChain.supportedIds()));
+    public UnsupportedChainException(Chain chain, ScanTarget target) {
+        super("%s %s scans are not supported yet"
+                .formatted(chain.displayName(), target.name().toLowerCase(Locale.ROOT)));
     }
 }

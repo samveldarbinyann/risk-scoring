@@ -3,6 +3,7 @@ package com.riskscoring.monitor.mapper;
 import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.WatchlistAddRequested;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.monitor.entity.WatchlistEntry;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,7 @@ public class WatchlistMapper {
                 .id(UUID.randomUUID())
                 .userId(event.userId())
                 .address(event.address())
-                .chainId(event.chainId())
+                .chain(event.chain())
                 .language(event.language())
                 .active(true)
                 .createdAt(now)
@@ -28,7 +29,7 @@ public class WatchlistMapper {
 
     public ScanRequested toScanRequested(WatchlistEntry entry, UUID scanId, Instant requestedAt) {
         return new ScanRequested(
-                scanId, ScanTarget.ADDRESS, entry.getAddress(), entry.getChainId(),
+                scanId, ScanTarget.ADDRESS, entry.getAddress(), entry.getChain(),
                 requestedAt, ScanSource.MONITOR, entry.getLanguage());
     }
 }

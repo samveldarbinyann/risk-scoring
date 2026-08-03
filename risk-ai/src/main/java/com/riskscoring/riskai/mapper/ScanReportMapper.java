@@ -1,6 +1,7 @@
 package com.riskscoring.riskai.mapper;
 
 import com.riskscoring.common.event.SignalsComputed;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Verdict;
 import com.riskscoring.riskai.entity.ScanReport;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class ScanReportMapper {
                 .scanId(event.scanId())
                 .targetType(event.targetType())
                 .target(event.target())
-                .chainId(event.chainId())
+                .chain(event.chain())
                 .riskLevel(verdict.riskLevel())
                 .score(verdict.score())
                 .explanation(verdict.explanation())

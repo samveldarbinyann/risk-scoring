@@ -12,7 +12,7 @@ public class AlertMapper {
                 row.id(),
                 row.watchlistEntryId(),
                 row.address(),
-                row.chainId(),
+                row.chain(),
                 row.previousRiskLevel(),
                 row.previousScore(),
                 row.newRiskLevel(),

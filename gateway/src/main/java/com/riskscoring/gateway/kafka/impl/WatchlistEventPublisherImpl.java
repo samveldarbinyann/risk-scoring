@@ -18,10 +18,10 @@ public class WatchlistEventPublisherImpl implements WatchlistEventPublisher {
 
     @Override
     public void publishWatchlistAddRequested(WatchlistAddRequested event) {
-        String key = "%s:%d:%s".formatted(event.userId(), event.chainId(), event.address());
+        String key = "%s:%s:%s".formatted(event.userId(), event.chain(), event.address());
         kafkaTemplate.send(Topics.WATCHLIST_ADD_REQUESTED, key, event);
-        log.info("Published {} userId={} address={} chainId={}",
-                Topics.WATCHLIST_ADD_REQUESTED, event.userId(), event.address(), event.chainId());
+        log.info("Published {} userId={} address={} chain={}",
+                Topics.WATCHLIST_ADD_REQUESTED, event.userId(), event.address(), event.chain());
     }
 
     @Override

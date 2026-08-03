@@ -1,6 +1,11 @@
-export function formatWei(wei: string, locale?: string, maxFractionDigits = 4): string {
-  const value = BigInt(wei);
-  const scale = 10n ** BigInt(18 - maxFractionDigits);
+export function formatNativeAmount(
+  raw: string,
+  decimals: number,
+  locale?: string,
+  maxFractionDigits = 4,
+): string {
+  const value = BigInt(raw);
+  const scale = 10n ** BigInt(decimals - maxFractionDigits);
   const unit = 10n ** BigInt(maxFractionDigits);
   const roundedScaled = (value + scale / 2n) / scale;
 

@@ -3,6 +3,7 @@ package com.riskscoring.monitor.kafka.impl;
 import com.riskscoring.common.Topics;
 import com.riskscoring.common.event.AlertTriggered;
 import com.riskscoring.common.event.ScanRequested;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.monitor.kafka.MonitorEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,8 @@ public class MonitorEventPublisherImpl implements MonitorEventPublisher {
     @Override
     public void publishScanRequested(ScanRequested event) {
         kafkaTemplate.send(Topics.SCAN_REQUESTED, event.scanId().toString(), event);
-        log.info("Published {} scanId={} address={} chainId={} source={}",
-                Topics.SCAN_REQUESTED, event.scanId(), event.target(), event.chainId(), event.source());
+        log.info("Published {} scanId={} address={} chain={} source={}",
+                Topics.SCAN_REQUESTED, event.scanId(), event.target(), event.chain(), event.source());
     }
 
     @Override

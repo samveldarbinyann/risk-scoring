@@ -4,6 +4,7 @@ import com.riskscoring.common.event.ChainFetched;
 import com.riskscoring.common.model.AddressEvidence;
 import com.riskscoring.common.model.AddressFacts;
 import com.riskscoring.common.model.AddressSnapshot;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.FlaggedExposure;
 import com.riskscoring.common.model.Heuristics;
@@ -27,7 +28,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
 
-    private static final BigInteger WEI_IN_ETHER = BigInteger.TEN.pow(18);
     private static final int SELF_HOPS = 0;
 
     private final EnrichmentProperties properties;
@@ -41,18 +41,18 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
 
         return new AddressEvidence(
                 event.target(),
-                event.chainId(),
+                event.chain(),
                 snapshot.observedAt(),
                 ageDays,
                 snapshot.txCount(),
                 snapshot.txCount24h(),
                 snapshot.sampleTruncated(),
-                snapshot.balanceWei(),
+                snapshot.balanceNative(),
                 snapshot.tokenBalances(),
                 counterparties.size(),
                 flaggedExposures(event, facts, labelsByAddress),
                 mixerExposure(counterparties, labelsByAddress),
-                heuristics(snapshot, counterparties, ageDays)
+                heuristics(snapshot, counterparties, ageDays, event.chain())
         );
     }
 
@@ -67,13 +67,13 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
 
         labels.flagged(byAddress, event.target())
                 .map(label -> labels.toExposure(label, event.target(), TransferDirection.BOTH,
-                        SELF_HOPS, facts.snapshot().balanceWei()))
+                        SELF_HOPS, facts.snapshot().balanceNative()))
                 .ifPresent(exposures::add);
 
         facts.counterparties().forEach(counterparty ->
                 labels.flagged(byAddress, counterparty.address())
                         .map(label -> labels.toExposure(label, counterparty.address(), counterparty.direction(),
-                                counterparty.hops(), counterparty.totalValueWei()))
+                                counterparty.hops(), counterparty.totalValueNative()))
                         .ifPresent(exposures::add));
 
         return List.copyOf(exposures);
@@ -97,9 +97,12 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
         return new MixerExposure(services, labels.percent(mixerVolume, totalVolume(counterparties)), mixerVolume.toString());
     }
 
-    private Heuristics heuristics(AddressSnapshot snapshot, List<Counterparty> counterparties, int ageDays) {
+    private Heuristics heuristics(AddressSnapshot snapshot,
+                                  List<Counterparty> counterparties,
+                                  int ageDays,
+                                  Chain chain) {
         boolean freshWallet = ageDays < properties.freshWalletDays();
-        boolean drained = new BigInteger(snapshot.balanceWei()).signum() == 0;
+        boolean drained = new BigInteger(snapshot.balanceNative()).signum() == 0;
 
         int fanIn = countByDirection(counterparties, TransferDirection.IN);
         int fanOut = countByDirection(counterparties, TransferDirection.OUT);
@@ -107,20 +110,22 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
         return new Heuristics(
                 freshWallet,
                 freshWallet && drained && fanIn > 0,
-                roundAmounts(counterparties),
+                roundAmounts(counterparties, chain),
                 fanIn,
                 fanOut
         );
     }
 
-    private boolean roundAmounts(List<Counterparty> counterparties) {
+    private boolean roundAmounts(List<Counterparty> counterparties, Chain chain) {
         if (counterparties.isEmpty()) {
             return false;
         }
 
+        BigInteger nativeUnit = BigInteger.TEN.pow(chain.nativeDecimals());
+
         long round = counterparties.stream()
-                .map(counterparty -> new BigInteger(counterparty.totalValueWei()))
-                .filter(value -> value.signum() > 0 && value.mod(WEI_IN_ETHER).signum() == 0)
+                .map(counterparty -> new BigInteger(counterparty.totalValueNative()))
+                .filter(value -> value.signum() > 0 && value.mod(nativeUnit).signum() == 0)
                 .count();
 
         return round * Labels.PERCENT / counterparties.size() >= properties.roundAmountsPercentThreshold();
@@ -135,7 +140,7 @@ public class AddressSignalCalculatorImpl implements AddressSignalCalculator {
 
     private BigInteger totalVolume(List<Counterparty> counterparties) {
         return counterparties.stream()
-                .map(counterparty -> new BigInteger(counterparty.totalValueWei()))
+                .map(counterparty -> new BigInteger(counterparty.totalValueNative()))
                 .reduce(BigInteger.ZERO, BigInteger::add);
     }
 }

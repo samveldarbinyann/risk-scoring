@@ -29,7 +29,7 @@ public class ScanMapper {
                 scan.getId(),
                 scan.getTargetType(),
                 scan.getTarget(),
-                scan.getChainId(),
+                scan.getChain(),
                 scan.getRequestedAt(),
                 scan.getSource(),
                 language
@@ -45,13 +45,13 @@ public class ScanMapper {
                 group.getId(),
                 group.getTargetType(),
                 group.getTarget(),
-                scans.stream().map(Scan::getChainId).toList()
+                scans.stream().map(Scan::getChain).toList()
         );
     }
 
     public ScanGroupView toGroupView(UUID groupId, List<Scan> scans) {
         List<ScanGroupChainStatus> chains = scans.stream()
-                .map(scan -> new ScanGroupChainStatus(scan.getChainId(), scan.getId(), scan.getStatus()))
+                .map(scan -> new ScanGroupChainStatus(scan.getChain(), scan.getId(), scan.getStatus()))
                 .toList();
 
         boolean completed = scans.stream().allMatch(scan -> TERMINAL_STAGES.contains(scan.getStatus()));
@@ -65,7 +65,7 @@ public class ScanMapper {
                 scan.getId(),
                 scan.getTargetType(),
                 scan.getTarget(),
-                scan.getChainId(),
+                scan.getChain(),
                 scan.getStatus(),
                 scan.getSource(),
                 scan.getRequestedAt(),
@@ -78,7 +78,7 @@ public class ScanMapper {
                 row.scanId(),
                 row.targetType(),
                 row.target(),
-                row.chainId(),
+                row.chain(),
                 row.riskLevel(),
                 row.score(),
                 row.explanation(),

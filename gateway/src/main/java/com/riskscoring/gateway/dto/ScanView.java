@@ -2,6 +2,7 @@ package com.riskscoring.gateway.dto;
 
 import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.ScanStage;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ScanTarget;
 
 import java.time.Instant;
@@ -11,7 +12,7 @@ public record ScanView(
         UUID scanId,
         ScanTarget targetType,
         String target,
-        int chainId,
+        Chain chain,
         ScanStage status,
         ScanSource source,
         Instant requestedAt,

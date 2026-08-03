@@ -65,7 +65,7 @@ public class TransactionSnapshotMapper {
                 .flatMap(stream -> stream.flatMap(Optional::stream))
                 .forEach(party -> totals.merge(
                         new PartyKey(party.address(), party.role()),
-                        new BigInteger(party.valueWei()),
+                        new BigInteger(party.valueNative()),
                         BigInteger::add));
 
         return totals.entrySet().stream()

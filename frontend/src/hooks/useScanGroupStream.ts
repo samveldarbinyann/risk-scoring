@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { getScanGroup } from "@/lib/api";
 import { subscribeScanGroupProgress } from "@/lib/ws";
+import type { Chain } from "@/lib/chains/registry";
 import type { ScanProgressMessage, ScanStage, ScanTarget } from "@/lib/types";
 
 const TERMINAL_STAGES: ScanStage[] = ["COMPLETED", "FAILED"];
 
 interface ScanGroupStreamState {
   lines: ScanProgressMessage[];
-  chainByScanId: Map<string, number>;
+  chainByScanId: Map<string, Chain>;
   completed: boolean;
   targetType: ScanTarget | null;
   target: string;
@@ -15,7 +16,7 @@ interface ScanGroupStreamState {
 
 export function useScanGroupStream(groupId: string): ScanGroupStreamState {
   const [lines, setLines] = useState<ScanProgressMessage[]>([]);
-  const [chainByScanId, setChainByScanId] = useState<Map<string, number>>(new Map());
+  const [chainByScanId, setChainByScanId] = useState<Map<string, Chain>>(new Map());
   const [expectedScanIds, setExpectedScanIds] = useState<Set<string>>(new Set());
   const [initiallyCompleted, setInitiallyCompleted] = useState(false);
   const [targetType, setTargetType] = useState<ScanTarget | null>(null);
@@ -33,7 +34,7 @@ export function useScanGroupStream(groupId: string): ScanGroupStreamState {
     let cancelled = false;
     getScanGroup(groupId).then((group) => {
       if (cancelled) return;
-      setChainByScanId(new Map(group.chains.map((chain) => [chain.scanId, chain.chainId])));
+      setChainByScanId(new Map(group.chains.map((chain) => [chain.scanId, chain.chain])));
       setExpectedScanIds(new Set(group.chains.map((chain) => chain.scanId)));
       setInitiallyCompleted(group.completed);
       setTargetType(group.targetType);

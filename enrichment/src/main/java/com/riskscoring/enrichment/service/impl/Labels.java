@@ -32,7 +32,7 @@ public class Labels {
     }
 
     public FlaggedExposure toExposure(Label label, String address, TransferDirection direction,
-                                      int hops, String valueWei) {
+                                      int hops, String valueNative) {
         return new FlaggedExposure(
                 address,
                 label.getCategory(),
@@ -40,7 +40,7 @@ public class Labels {
                 label.getSource(),
                 direction,
                 hops,
-                valueWei);
+                valueNative);
     }
 
     public int percent(BigInteger part, BigInteger total) {

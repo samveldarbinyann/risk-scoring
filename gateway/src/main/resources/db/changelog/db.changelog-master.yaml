@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/changes/009-create-contact-submission.yaml
   - include:
       file: db/changelog/changes/010-scan-target-type.yaml
+  - include:
+      file: db/changelog/changes/011-chain-key.yaml

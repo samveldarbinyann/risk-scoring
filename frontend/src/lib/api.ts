@@ -1,3 +1,4 @@
+import type { ChainInfo } from "@/lib/chains/registry";
 import type {
   AlertView,
   ApiKeyCreatedView,
@@ -145,6 +146,10 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
     return rawRequest<T>(path, init);
   }
+}
+
+export function getChainRegistry(init?: RequestInit): Promise<ChainInfo[]> {
+  return apiRequest<ChainInfo[]>("/api/chains", init);
 }
 
 export function getChainCandidates(target: string): Promise<ChainCandidatesResponse> {

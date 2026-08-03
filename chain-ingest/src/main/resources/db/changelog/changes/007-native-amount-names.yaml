@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-native-amount-names
+      author: sam
+      changes:
+        - renameColumn:
+            tableName: address_cache
+            oldColumnName: balance_wei
+            newColumnName: balance_native
+            columnDataType: numeric(78)
+        - renameColumn:
+            tableName: counterparty_cache
+            oldColumnName: total_value_wei
+            newColumnName: total_value_native
+            columnDataType: numeric(78)
+        - renameColumn:
+            tableName: transaction_cache
+            oldColumnName: value_wei
+            newColumnName: value_native
+            columnDataType: numeric(78)
+        - renameColumn:
+            tableName: transaction_cache
+            oldColumnName: internal_transfer_count
+            newColumnName: nested_transfer_count
+            columnDataType: int
+        - renameColumn:
+            tableName: transaction_cache
+            oldColumnName: erc20_transfer_count
+            newColumnName: token_transfer_count
+            columnDataType: int

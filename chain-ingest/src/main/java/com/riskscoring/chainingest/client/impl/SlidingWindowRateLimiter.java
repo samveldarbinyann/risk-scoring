@@ -1,15 +1,12 @@
 package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.RateLimiter;
-import com.riskscoring.chainingest.config.ChainIngestProperties;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.TimeUnit;
 
-@Component
 public class SlidingWindowRateLimiter implements RateLimiter {
 
     private static final long WINDOW_NANOS = Duration.ofSeconds(1).toNanos();
@@ -17,8 +14,8 @@ public class SlidingWindowRateLimiter implements RateLimiter {
     private final int permits;
     private final Deque<Long> issuedAt = new ArrayDeque<>();
 
-    public SlidingWindowRateLimiter(ChainIngestProperties properties) {
-        this.permits = properties.moralis().callsPerSecond();
+    public SlidingWindowRateLimiter(int permits) {
+        this.permits = permits;
     }
 
     @Override

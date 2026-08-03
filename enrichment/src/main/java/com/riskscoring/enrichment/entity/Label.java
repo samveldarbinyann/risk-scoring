@@ -1,5 +1,6 @@
 package com.riskscoring.enrichment.entity;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.LabelCategory;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,10 +31,11 @@ public class Label {
     @Id
     private UUID id;
 
-    @Column(name = "chain_id", nullable = false)
-    private int chainId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private Chain chain;
 
-    @Column(nullable = false, length = 42)
+    @Column(nullable = false, length = 128)
     private String address;
 
     @Enumerated(EnumType.STRING)

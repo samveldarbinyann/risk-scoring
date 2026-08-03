@@ -1,7 +1,10 @@
 package com.riskscoring.chainingest.entity;
 
+import com.riskscoring.common.model.Chain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -30,20 +33,21 @@ public class TransactionCache {
     @Id
     private UUID id;
 
-    @Column(name = "chain_id", nullable = false)
-    private int chainId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private Chain chain;
 
-    @Column(name = "tx_hash", nullable = false, length = 66)
+    @Column(name = "tx_hash", nullable = false, length = 128)
     private String txHash;
 
-    @Column(name = "from_address", nullable = false, length = 42)
+    @Column(name = "from_address", length = 128)
     private String fromAddress;
 
-    @Column(name = "to_address", nullable = false, length = 42)
+    @Column(name = "to_address", length = 128)
     private String toAddress;
 
-    @Column(name = "value_wei", nullable = false, precision = 78)
-    private BigInteger valueWei;
+    @Column(name = "value_native", nullable = false, precision = 78)
+    private BigInteger valueNative;
 
     @Column(nullable = false)
     private boolean success;
@@ -55,11 +59,11 @@ public class TransactionCache {
     @Column(nullable = false, columnDefinition = "jsonb")
     private String parties;
 
-    @Column(name = "internal_transfer_count", nullable = false)
-    private int internalTransferCount;
+    @Column(name = "nested_transfer_count", nullable = false)
+    private int nestedTransferCount;
 
-    @Column(name = "erc20_transfer_count", nullable = false)
-    private int erc20TransferCount;
+    @Column(name = "token_transfer_count", nullable = false)
+    private int tokenTransferCount;
 
     @Column(name = "fetched_at", nullable = false)
     private Instant fetchedAt;

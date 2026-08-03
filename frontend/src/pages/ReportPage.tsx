@@ -53,16 +53,16 @@ export function ReportPage() {
       </header>
 
       {group.reports.map((report) => (
-        <div key={report.chainId} className="overflow-hidden rounded-panel border border-border bg-surface">
-          <ChainReportHeader chainId={report.chainId} createdAt={report.createdAt} />
+        <div key={report.chain} className="overflow-hidden rounded-panel border border-border bg-surface">
+          <ChainReportHeader chain={report.chain} createdAt={report.createdAt} />
           <div className="border-t border-border">
             <VerdictReveal level={report.riskLevel} score={report.score} />
           </div>
           <div className="border-t border-border">
             {report.evidence.targetType === "ADDRESS" ? (
               <WalletStats
-                chainId={report.chainId}
-                balanceWei={report.evidence.balanceWei}
+                chain={report.chain}
+                balanceNative={report.evidence.balanceNative}
                 tokenBalances={report.evidence.tokenBalances}
                 txCount={report.evidence.txCount}
                 txCount24h={report.evidence.txCount24h}
@@ -70,7 +70,7 @@ export function ReportPage() {
                 observedAt={report.evidence.observedAt}
               />
             ) : (
-              <TransactionDetails chainId={report.chainId} evidence={report.evidence} />
+              <TransactionDetails chain={report.chain} evidence={report.evidence} />
             )}
           </div>
           <div className="border-t border-border">

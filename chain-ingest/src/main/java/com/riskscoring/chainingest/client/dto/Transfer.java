@@ -8,7 +8,7 @@ import java.time.Instant;
 public record Transfer(
         String counterparty,
         TransferDirection direction,
-        BigInteger valueWei,
+        BigInteger valueNative,
         Instant at
 ) {
 }

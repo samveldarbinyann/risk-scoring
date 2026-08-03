@@ -1,5 +1,6 @@
 package com.riskscoring.common.event;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ChainFacts;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.ScanTarget;
@@ -11,7 +12,7 @@ public record ChainFetched(
         UUID scanId,
         ScanTarget targetType,
         String target,
-        int chainId,
+        Chain chain,
         ChainFacts facts,
         Language language,
         Instant fetchedAt

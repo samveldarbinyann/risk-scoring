@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 interface SelectOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "children"> {
@@ -21,7 +22,7 @@ export function Select({ options, className, ...props }: SelectProps) {
       {...props}
     >
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option key={option.value} value={option.value} disabled={option.disabled}>
           {option.label}
         </option>
       ))}

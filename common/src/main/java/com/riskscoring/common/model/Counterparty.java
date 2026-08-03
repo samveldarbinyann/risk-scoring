@@ -4,7 +4,7 @@ public record Counterparty(
         String address,
         TransferDirection direction,
         long txCount,
-        String totalValueWei,
+        String totalValueNative,
         int hops
 ) {
 }

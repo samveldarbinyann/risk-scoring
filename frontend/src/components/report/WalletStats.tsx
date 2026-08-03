@@ -1,14 +1,22 @@
 import { useState } from "react";
-import { nativeSymbol } from "@/lib/chains";
-import { formatCount, formatDateTime, formatTokenAmount, formatUsd, formatWei, isDisplayableSymbol } from "@/lib/format";
+import { useChains } from "@/lib/chains/context";
+import type { Chain } from "@/lib/chains/registry";
+import {
+  formatCount,
+  formatDateTime,
+  formatNativeAmount,
+  formatTokenAmount,
+  formatUsd,
+  isDisplayableSymbol,
+} from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { TokenBalance } from "@/lib/types";
 
 const VISIBLE_TOKEN_LIMIT = 5;
 
 interface WalletStatsProps {
-  chainId: number;
-  balanceWei: string;
+  chain: Chain;
+  balanceNative: string;
   tokenBalances: TokenBalance[];
   txCount: number;
   txCount24h: number;
@@ -17,8 +25,8 @@ interface WalletStatsProps {
 }
 
 export function WalletStats({
-  chainId,
-  balanceWei,
+  chain,
+  balanceNative,
   tokenBalances,
   txCount,
   txCount24h,
@@ -26,6 +34,7 @@ export function WalletStats({
   observedAt,
 }: WalletStatsProps) {
   const { t, locale } = useI18n();
+  const { symbol, decimals } = useChains();
   const [expanded, setExpanded] = useState(false);
 
   const displayableTokens = tokenBalances.filter((token) => isDisplayableSymbol(token.symbol));
@@ -39,7 +48,8 @@ export function WalletStats({
       <div>
         <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.balance")}</p>
         <p className="mt-2 font-mono text-2xl text-text">
-          {formatWei(balanceWei, locale)} <span className="text-base text-text-dim">{nativeSymbol(chainId)}</span>
+          {formatNativeAmount(balanceNative, decimals(chain), locale)}{" "}
+          <span className="text-base text-text-dim">{symbol(chain)}</span>
         </p>
       </div>
 

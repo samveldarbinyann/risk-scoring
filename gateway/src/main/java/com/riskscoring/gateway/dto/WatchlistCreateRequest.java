@@ -1,17 +1,16 @@
 package com.riskscoring.gateway.dto;
 
-import com.riskscoring.gateway.model.EvmAddresses;
+import com.riskscoring.gateway.model.ScanTargets;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record WatchlistCreateRequest(
 
         @NotBlank(message = "{validation.address.required}")
-        @Pattern(regexp = EvmAddresses.PATTERN, message = "{validation.address.invalid}")
+        @Size(max = ScanTargets.MAX_LENGTH, message = "{validation.address.invalid}")
         String address,
 
-        @NotNull(message = "{validation.chainId.required}")
-        Integer chainId
+        @NotBlank(message = "{validation.chain.required}")
+        String chain
 ) {
 }

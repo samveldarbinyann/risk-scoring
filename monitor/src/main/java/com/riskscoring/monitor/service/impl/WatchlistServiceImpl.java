@@ -2,6 +2,7 @@ package com.riskscoring.monitor.service.impl;
 
 import com.riskscoring.common.event.WatchlistAddRequested;
 import com.riskscoring.common.event.WatchlistRemoveRequested;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.monitor.entity.WatchlistEntry;
 import com.riskscoring.monitor.mapper.WatchlistMapper;
 import com.riskscoring.monitor.repository.WatchlistEntryRepository;
@@ -27,12 +28,12 @@ public class WatchlistServiceImpl implements WatchlistService {
         Instant now = Instant.now();
 
         WatchlistEntry entry = watchlistEntryRepository
-                .findByUserIdAndChainIdAndAddress(event.userId(), event.chainId(), event.address())
+                .findByUserIdAndChainAndAddress(event.userId(), event.chain(), event.address())
                 .map(existing -> reactivate(existing, event, now))
                 .orElseGet(() -> watchlistEntryRepository.save(watchlistMapper.toEntity(event, now)));
 
-        log.info("Watchlist entry upserted id={} userId={} address={} chainId={}",
-                entry.getId(), event.userId(), event.address(), event.chainId());
+        log.info("Watchlist entry upserted id={} userId={} address={} chain={}",
+                entry.getId(), event.userId(), event.address(), event.chain());
     }
 
     @Override

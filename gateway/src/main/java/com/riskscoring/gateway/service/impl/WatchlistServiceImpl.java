@@ -1,15 +1,18 @@
 package com.riskscoring.gateway.service.impl;
 
-import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Language;
+import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.gateway.dto.WatchlistCreateRequest;
 import com.riskscoring.gateway.dto.WatchlistEntryView;
-import com.riskscoring.gateway.exception.UnsupportedChainException;
+import com.riskscoring.gateway.exception.TargetChainMismatchException;
 import com.riskscoring.gateway.exception.WatchlistEntryNotFoundException;
 import com.riskscoring.gateway.kafka.WatchlistEventPublisher;
 import com.riskscoring.gateway.mapper.WatchlistMapper;
-import com.riskscoring.gateway.model.EvmAddresses;
+import com.riskscoring.gateway.model.ScanTargets;
+import com.riskscoring.gateway.model.TargetMatch;
 import com.riskscoring.gateway.repository.WatchlistRepository;
+import com.riskscoring.gateway.service.ChainService;
 import com.riskscoring.gateway.service.WatchlistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -25,16 +28,21 @@ public class WatchlistServiceImpl implements WatchlistService {
     private final WatchlistRepository watchlistRepository;
     private final WatchlistEventPublisher watchlistEventPublisher;
     private final WatchlistMapper watchlistMapper;
+    private final ChainService chainService;
 
     @Override
     public void addToWatchlist(UUID userId, WatchlistCreateRequest request) {
-        String address = EvmAddresses.normalize(request.address());
-        EvmChain chain = EvmChain.byId(request.chainId())
-                .orElseThrow(() -> new UnsupportedChainException(request.chainId()));
+        Chain chain = chainService.requireScannable(request.chain());
+        TargetMatch match = ScanTargets.require(request.address(), chain);
+
+        if (match.targetType() != ScanTarget.ADDRESS) {
+            throw new TargetChainMismatchException(request.address(), chain);
+        }
+
         Language language = Language.fromLocale(LocaleContextHolder.getLocale());
 
         watchlistEventPublisher.publishWatchlistAddRequested(
-                watchlistMapper.toAddRequested(userId, address, chain.chainId(), language));
+                watchlistMapper.toAddRequested(userId, match.normalizedTarget(), chain, language));
     }
 
     @Override

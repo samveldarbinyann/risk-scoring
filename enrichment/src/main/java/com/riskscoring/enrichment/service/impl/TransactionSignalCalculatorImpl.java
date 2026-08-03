@@ -1,6 +1,7 @@
 package com.riskscoring.enrichment.service.impl;
 
 import com.riskscoring.common.event.ChainFetched;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.FlaggedExposure;
 import com.riskscoring.common.model.LabelCategory;
 import com.riskscoring.common.model.MixerExposure;
@@ -21,13 +22,13 @@ import java.math.BigInteger;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionSignalCalculatorImpl implements TransactionSignalCalculator {
 
-    private static final BigInteger WEI_IN_ETHER = BigInteger.TEN.pow(18);
     private static final int DIRECT_HOPS = 0;
     private static final int NESTED_HOPS = 1;
 
@@ -45,19 +46,19 @@ public class TransactionSignalCalculatorImpl implements TransactionSignalCalcula
 
         return new TransactionEvidence(
                 event.target(),
-                event.chainId(),
+                event.chain(),
                 transaction.observedAt(),
                 transaction.fromAddress(),
                 transaction.toAddress(),
-                transaction.valueWei(),
+                transaction.valueNative(),
                 transaction.success(),
                 transaction.blockTimestamp(),
-                transaction.internalTransferCount(),
-                transaction.erc20TransferCount(),
+                transaction.nestedTransferCount(),
+                transaction.tokenTransferCount(),
                 transaction.parties(),
                 flaggedExposures(transaction, byAddress),
                 mixerExposure(transaction, byAddress),
-                heuristics(transaction)
+                heuristics(transaction, event.chain())
         );
     }
 
@@ -65,7 +66,7 @@ public class TransactionSignalCalculatorImpl implements TransactionSignalCalcula
         return transaction.parties().stream()
                 .flatMap(party -> labels.flagged(byAddress, party.address())
                         .map(label -> labels.toExposure(label, party.address(), direction(party),
-                                hops(party), party.valueWei()))
+                                hops(party), party.valueNative()))
                         .stream())
                 .toList();
     }
@@ -91,19 +92,25 @@ public class TransactionSignalCalculatorImpl implements TransactionSignalCalcula
                 mixerVolume.toString());
     }
 
-    private TransactionHeuristics heuristics(TransactionSnapshot transaction) {
-        BigInteger value = new BigInteger(transaction.valueWei());
-        boolean tokenOnly = value.signum() == 0 && transaction.erc20TransferCount() > 0;
+    private TransactionHeuristics heuristics(TransactionSnapshot transaction, Chain chain) {
+        BigInteger value = new BigInteger(transaction.valueNative());
+        BigInteger nativeUnit = BigInteger.TEN.pow(chain.nativeDecimals());
+        boolean tokenOnly = value.signum() == 0 && transaction.tokenTransferCount() > 0;
 
         return new TransactionHeuristics(
                 !transaction.success(),
-                value.signum() == 0 && transaction.erc20TransferCount() == 0,
-                value.signum() > 0 && value.mod(WEI_IN_ETHER).signum() == 0,
-                transaction.fromAddress().equals(transaction.toAddress()),
+                value.signum() == 0 && transaction.tokenTransferCount() == 0,
+                value.signum() > 0 && value.mod(nativeUnit).signum() == 0,
+                selfTransfer(transaction),
                 tokenOnly,
-                transaction.internalTransferCount() >= properties.internalFanOutThreshold(),
+                transaction.nestedTransferCount() >= properties.internalFanOutThreshold(),
                 (int) transaction.parties().stream().map(TransactionParty::address).distinct().count()
         );
+    }
+
+    private boolean selfTransfer(TransactionSnapshot transaction) {
+        return transaction.fromAddress() != null
+                && transaction.fromAddress().equals(transaction.toAddress());
     }
 
     private TransferDirection direction(TransactionParty party) {
@@ -116,7 +123,7 @@ public class TransactionSignalCalculatorImpl implements TransactionSignalCalcula
 
     private BigInteger totalVolume(List<TransactionParty> parties) {
         return parties.stream()
-                .map(party -> new BigInteger(party.valueWei()))
+                .map(party -> new BigInteger(party.valueNative()))
                 .reduce(BigInteger.ZERO, BigInteger::add);
     }
 }

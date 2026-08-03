@@ -1,5 +1,6 @@
 package com.riskscoring.common.event;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.common.model.Verdict;
 
@@ -10,7 +11,7 @@ public record ScanCompleted(
         UUID scanId,
         ScanTarget targetType,
         String target,
-        int chainId,
+        Chain chain,
         Verdict verdict,
         String model,
         Instant completedAt

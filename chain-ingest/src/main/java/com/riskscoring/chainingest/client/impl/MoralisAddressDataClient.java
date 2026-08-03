@@ -7,13 +7,13 @@ import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
 import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
-import com.riskscoring.chainingest.exception.UnsupportedChainException;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;
 import com.riskscoring.chainingest.mapper.TransferMapper;
 import com.riskscoring.common.model.AddressFacts;
 import com.riskscoring.common.model.AddressSnapshot;
+import com.riskscoring.common.model.Chain;
+import com.riskscoring.common.model.ChainFamily;
 import com.riskscoring.common.model.Counterparty;
-import com.riskscoring.common.model.EvmChain;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.common.model.TokenBalance;
 import lombok.RequiredArgsConstructor;
@@ -46,18 +46,22 @@ public class MoralisAddressDataClient implements ChainDataClient {
     private final ChainIngestProperties properties;
 
     @Override
+    public ChainFamily family() {
+        return ChainFamily.EVM;
+    }
+
+    @Override
     public ScanTarget target() {
         return ScanTarget.ADDRESS;
     }
 
     @Override
-    public AddressFacts fetch(String address, int chainId) {
-        EvmChain chain = EvmChain.byId(chainId).orElseThrow(() -> new UnsupportedChainException(chainId));
+    public AddressFacts fetch(String address, Chain chain) {
         String target = address.toLowerCase(Locale.ROOT);
 
-        TransferSample sample = fetchTransfers(target, chainId);
+        TransferSample sample = fetchTransfers(target, chain);
         List<Counterparty> firstHop = counterpartyAggregator.aggregate(sample.transfers(), FIRST_HOP);
-        List<Counterparty> secondHop = expandSecondHop(firstHop, target, chainId);
+        List<Counterparty> secondHop = expandSecondHop(firstHop, target, chain);
 
         List<Counterparty> counterparties = counterpartyAggregator.merge(
                 firstHop, secondHop, properties.maxCounterparties(), properties.hop2Reserve());
@@ -65,16 +69,16 @@ public class MoralisAddressDataClient implements ChainDataClient {
         log.info("Fetched {} on {}: {} transfers, {} counterparties (truncated={})",
                 target, chain.displayName(), sample.transfers().size(), counterparties.size(), sample.truncated());
 
-        return new AddressFacts(snapshot(target, chainId, sample), counterparties);
+        return new AddressFacts(snapshot(target, chain, sample), counterparties);
     }
 
-    private TransferSample fetchTransfers(String address, int chainId) {
-        MoralisHistoryEnvelope envelope = moralisApi.walletHistory(address, chainId);
+    private TransferSample fetchTransfers(String address, Chain chain) {
+        MoralisHistoryEnvelope envelope = moralisApi.walletHistory(address, chain);
         List<Transfer> transfers = transferMapper.fromTransactions(envelope.result(), address);
         return new TransferSample(transfers, envelope.cursor() != null);
     }
 
-    private List<Counterparty> expandSecondHop(List<Counterparty> firstHop, String target, int chainId) {
+    private List<Counterparty> expandSecondHop(List<Counterparty> firstHop, String target, Chain chain) {
         if (properties.maxHops() < SECOND_HOP || firstHop.isEmpty()) {
             return List.of();
         }
@@ -84,16 +88,16 @@ public class MoralisAddressDataClient implements ChainDataClient {
 
         List<Transfer> transfers = firstHop.stream()
                 .limit(properties.hop2ExpandTop())
-                .flatMap(counterparty -> fetchTransfers(counterparty.address(), chainId).transfers().stream())
+                .flatMap(counterparty -> fetchTransfers(counterparty.address(), chain).transfers().stream())
                 .filter(transfer -> !known.contains(transfer.counterparty()))
                 .toList();
 
         return counterpartyAggregator.aggregate(transfers, SECOND_HOP);
     }
 
-    private AddressSnapshot snapshot(String address, int chainId, TransferSample sample) {
+    private AddressSnapshot snapshot(String address, Chain chain, TransferSample sample) {
         Instant observedAt = Instant.now();
-        Optional<MoralisActiveChain> activity = moralisApi.walletActivity(address, chainId);
+        Optional<MoralisActiveChain> activity = moralisApi.walletActivity(address, chain);
 
         Instant firstSeenAt = activity.map(MoralisActiveChain::firstTransaction)
                 .map(ref -> transferMapper.timestamp(ref.blockTimestamp()))
@@ -105,8 +109,8 @@ public class MoralisAddressDataClient implements ChainDataClient {
         return new AddressSnapshot(
                 sample.transfers().size(),
                 txCount24h(sample, observedAt),
-                moralisApi.balanceWei(address, chainId),
-                tokenBalances(address, chainId),
+                moralisApi.balanceNative(address, chain),
+                tokenBalances(address, chain),
                 firstSeenAt,
                 lastSeenAt,
                 sample.truncated(),
@@ -126,8 +130,8 @@ public class MoralisAddressDataClient implements ChainDataClient {
                 .count();
     }
 
-    private List<TokenBalance> tokenBalances(String address, int chainId) {
-        return moralisApi.tokenBalances(address, chainId).stream()
+    private List<TokenBalance> tokenBalances(String address, Chain chain) {
+        return moralisApi.tokenBalances(address, chain).stream()
                 .sorted(Comparator.comparing(
                         (MoralisTokenBalance token) -> Optional.ofNullable(token.usdValue()).orElse(0.0)).reversed())
                 .limit(properties.maxTokenBalances())

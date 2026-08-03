@@ -1,17 +1,19 @@
 import { TargetChip } from "@/components/ui/TargetChip";
-import { nativeSymbol } from "@/lib/chains";
-import { formatCount, formatDateTime, formatWei } from "@/lib/format";
+import { useChains } from "@/lib/chains/context";
+import type { Chain } from "@/lib/chains/registry";
+import { formatCount, formatDateTime, formatNativeAmount } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK } from "@/lib/risk";
 import type { FlaggedExposure, TransactionEvidence } from "@/lib/types";
 
 interface TransactionDetailsProps {
-  chainId: number;
+  chain: Chain;
   evidence: TransactionEvidence;
 }
 
-export function TransactionDetails({ chainId, evidence }: TransactionDetailsProps) {
+export function TransactionDetails({ chain, evidence }: TransactionDetailsProps) {
   const { t, locale } = useI18n();
+  const { symbol, decimals } = useChains();
   const statusClass = evidence.success ? RISK.LOW.text : RISK.CRITICAL.text;
 
   return (
@@ -19,7 +21,8 @@ export function TransactionDetails({ chainId, evidence }: TransactionDetailsProp
       <div>
         <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.txValue")}</p>
         <p className="mt-2 font-mono text-2xl text-text">
-          {formatWei(evidence.valueWei, locale)} <span className="text-base text-text-dim">{nativeSymbol(chainId)}</span>
+          {formatNativeAmount(evidence.valueNative, decimals(chain), locale)}{" "}
+          <span className="text-base text-text-dim">{symbol(chain)}</span>
         </p>
       </div>
 
@@ -40,9 +43,9 @@ export function TransactionDetails({ chainId, evidence }: TransactionDetailsProp
         />
         <StatCell
           label={t("report.txInternalTransfers")}
-          value={formatCount(evidence.internalTransferCount, locale)}
+          value={formatCount(evidence.nestedTransferCount, locale)}
         />
-        <StatCell label={t("report.txTokenTransfers")} value={formatCount(evidence.erc20TransferCount, locale)} />
+        <StatCell label={t("report.txTokenTransfers")} value={formatCount(evidence.tokenTransferCount, locale)} />
       </div>
 
       <div className="flex flex-col gap-2">
