@@ -5,7 +5,7 @@ import com.riskscoring.common.model.Language;
 
 public interface PromptBuilder {
 
-    String systemPrompt(Language language);
+    String systemPrompt(EvidenceBundle evidence, Language language);
 
     String userPrompt(EvidenceBundle evidence);
 

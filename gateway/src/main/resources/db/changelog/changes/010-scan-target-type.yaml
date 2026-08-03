@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-scan-target-type
+      author: sam
+      changes:
+        - dropIndex:
+            tableName: scan
+            indexName: idx_scan_address_chain
+        - dropIndex:
+            tableName: scan_group
+            indexName: idx_scan_group_address
+        - renameColumn:
+            tableName: scan
+            oldColumnName: address
+            newColumnName: target
+            columnDataType: varchar(42)
+        - renameColumn:
+            tableName: scan_group
+            oldColumnName: address
+            newColumnName: target
+            columnDataType: varchar(42)
+        - modifyDataType:
+            tableName: scan
+            columnName: target
+            newDataType: varchar(66)
+        - modifyDataType:
+            tableName: scan_group
+            columnName: target
+            newDataType: varchar(66)
+        - addColumn:
+            tableName: scan
+            columns:
+              - column:
+                  name: target_type
+                  type: varchar(16)
+                  defaultValue: ADDRESS
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: scan_group
+            columns:
+              - column:
+                  name: target_type
+                  type: varchar(16)
+                  defaultValue: ADDRESS
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: scan
+            indexName: idx_scan_target_chain
+            columns:
+              - column:
+                  name: target
+              - column:
+                  name: chain_id
+        - createIndex:
+            tableName: scan_group
+            indexName: idx_scan_group_target
+            columns:
+              - column:
+                  name: target

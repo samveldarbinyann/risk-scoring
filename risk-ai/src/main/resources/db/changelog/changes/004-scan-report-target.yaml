@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-scan-report-target
+      author: sam
+      changes:
+        - dropIndex:
+            tableName: scan_report
+            indexName: idx_scan_report_address_chain
+        - renameColumn:
+            tableName: scan_report
+            oldColumnName: address
+            newColumnName: target
+            columnDataType: varchar(42)
+        - modifyDataType:
+            tableName: scan_report
+            columnName: target
+            newDataType: varchar(66)
+        - addColumn:
+            tableName: scan_report
+            columns:
+              - column:
+                  name: target_type
+                  type: varchar(16)
+                  defaultValue: ADDRESS
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: scan_report
+            indexName: idx_scan_report_target_chain
+            columns:
+              - column:
+                  name: target
+              - column:
+                  name: chain_id

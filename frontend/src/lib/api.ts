@@ -147,8 +147,8 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
-export function getChainCandidates(address: string): Promise<ChainCandidatesResponse> {
-  return apiRequest<ChainCandidatesResponse>(`/api/chains/candidates?address=${encodeURIComponent(address)}`);
+export function getChainCandidates(target: string): Promise<ChainCandidatesResponse> {
+  return apiRequest<ChainCandidatesResponse>(`/api/chains/candidates?target=${encodeURIComponent(target)}`);
 }
 
 export function createScan(payload: ScanCreateRequest): Promise<ScanGroupAcceptedResponse> {

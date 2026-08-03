@@ -3,8 +3,8 @@ import { animate } from "motion/react";
 
 export const TYPEWRITER_MS_PER_CHAR = 12;
 
-export function typewriterDurationMs(text: string): number {
-  return text.length * TYPEWRITER_MS_PER_CHAR;
+export function typewriterDurationMs(text: string, msPerChar = TYPEWRITER_MS_PER_CHAR): number {
+  return text.length * msPerChar;
 }
 
 interface TypewriterState {
@@ -12,7 +12,7 @@ interface TypewriterState {
   isTyping: boolean;
 }
 
-export function useTypewriter(text: string, delayMs = 0): TypewriterState {
+export function useTypewriter(text: string, delayMs = 0, msPerChar = TYPEWRITER_MS_PER_CHAR): TypewriterState {
   const [charCount, setCharCount] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const prevTextRef = useRef(text);
@@ -30,7 +30,7 @@ export function useTypewriter(text: string, delayMs = 0): TypewriterState {
     const timeout = setTimeout(() => {
       setIsTyping(true);
       controls = animate(0, text.length, {
-        duration: typewriterDurationMs(text) / 1000,
+        duration: typewriterDurationMs(text, msPerChar) / 1000,
         ease: "linear",
         onUpdate: (latest) => setCharCount(Math.floor(latest)),
         onComplete: () => setIsTyping(false),
@@ -41,7 +41,7 @@ export function useTypewriter(text: string, delayMs = 0): TypewriterState {
       clearTimeout(timeout);
       controls?.stop();
     };
-  }, [text, delayMs]);
+  }, [text, delayMs, msPerChar]);
 
   return { text: text.slice(0, charCount), isTyping };
 }

@@ -81,6 +81,11 @@ gateway:
   billing:
     period: 30d
     plans:
+      - code: FREE
+        name: Free
+        price-cents: 0
+        currency: USD
+        monthly-request-limit: 10
       - code: STARTER
         name: Starter
         price-cents: 2000

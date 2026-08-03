@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { getScanGroupReport } from "@/lib/api";
 import type { ScanGroupReportView } from "@/lib/types";
+import { ChainReportHeader } from "@/components/report/ChainReportHeader";
 import { VerdictReveal } from "@/components/report/VerdictReveal";
 import { WalletStats } from "@/components/report/WalletStats";
+import { TransactionDetails } from "@/components/report/TransactionDetails";
 import { EvidenceList } from "@/components/report/EvidenceList";
 import { GraphPlaceholder } from "@/components/report/GraphPlaceholder";
 import { Spinner } from "@/components/ui/Spinner";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
-import { formatAddress, formatDateTime } from "@/lib/format";
-import { chainLabel } from "@/lib/chains";
+import { TargetChip } from "@/components/ui/TargetChip";
 import { useI18n } from "@/lib/i18n/context";
 
 export function ReportPage() {
   const { groupId } = useParams<{ groupId: string }>();
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const [group, setGroup] = useState<ScanGroupReportView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,34 +47,39 @@ export function ReportPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
       <header>
-        <p className="font-mono text-sm text-text">{formatAddress(group.address)}</p>
+        <TargetChip value={group.target} className="text-sm" />
       </header>
 
       {group.reports.map((report) => (
-        <div key={report.chainId} className="flex flex-col gap-6 border-t border-border pt-8 first:border-t-0 first:pt-0">
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-mono text-sm uppercase tracking-widest text-accent">{chainLabel(report.chainId)}</p>
-            <p className="font-mono text-xs text-text-faint">
-              {report.model} · {formatDateTime(report.createdAt, locale)}
-            </p>
+        <div key={report.chainId} className="overflow-hidden rounded-panel border border-border bg-surface">
+          <ChainReportHeader chainId={report.chainId} createdAt={report.createdAt} />
+          <div className="border-t border-border">
+            <VerdictReveal level={report.riskLevel} score={report.score} />
           </div>
-          <VerdictReveal level={report.riskLevel} score={report.score} />
-          <WalletStats
-            chainId={report.chainId}
-            balanceWei={report.balanceWei}
-            tokenBalances={report.tokenBalances}
-            txCount={report.txCount}
-            txCount24h={report.txCount24h}
-            sampleTruncated={report.sampleTruncated}
-            observedAt={report.observedAt}
-          />
-          <EvidenceList
-            explanation={report.explanation}
-            decisiveSignals={report.decisiveSignals}
-            manualChecks={report.manualChecks}
-          />
+          <div className="border-t border-border">
+            {report.evidence.targetType === "ADDRESS" ? (
+              <WalletStats
+                chainId={report.chainId}
+                balanceWei={report.evidence.balanceWei}
+                tokenBalances={report.evidence.tokenBalances}
+                txCount={report.evidence.txCount}
+                txCount24h={report.evidence.txCount24h}
+                sampleTruncated={report.evidence.sampleTruncated}
+                observedAt={report.evidence.observedAt}
+              />
+            ) : (
+              <TransactionDetails chainId={report.chainId} evidence={report.evidence} />
+            )}
+          </div>
+          <div className="border-t border-border">
+            <EvidenceList
+              explanation={report.explanation}
+              decisiveSignals={report.decisiveSignals}
+              manualChecks={report.manualChecks}
+            />
+          </div>
         </div>
       ))}
 

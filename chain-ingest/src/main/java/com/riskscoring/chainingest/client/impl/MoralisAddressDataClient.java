@@ -1,6 +1,5 @@
 package com.riskscoring.chainingest.client.impl;
 
-import com.riskscoring.chainingest.client.ChainData;
 import com.riskscoring.chainingest.client.ChainDataClient;
 import com.riskscoring.chainingest.client.MoralisApi;
 import com.riskscoring.chainingest.client.dto.MoralisActiveChain;
@@ -11,9 +10,11 @@ import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.exception.UnsupportedChainException;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;
 import com.riskscoring.chainingest.mapper.TransferMapper;
+import com.riskscoring.common.model.AddressFacts;
 import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.common.model.TokenBalance;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import java.util.stream.Stream;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class MoralisChainDataClient implements ChainDataClient {
+public class MoralisAddressDataClient implements ChainDataClient {
 
     private static final int FIRST_HOP = 1;
     private static final int SECOND_HOP = 2;
@@ -45,7 +46,12 @@ public class MoralisChainDataClient implements ChainDataClient {
     private final ChainIngestProperties properties;
 
     @Override
-    public ChainData fetch(String address, int chainId) {
+    public ScanTarget target() {
+        return ScanTarget.ADDRESS;
+    }
+
+    @Override
+    public AddressFacts fetch(String address, int chainId) {
         EvmChain chain = EvmChain.byId(chainId).orElseThrow(() -> new UnsupportedChainException(chainId));
         String target = address.toLowerCase(Locale.ROOT);
 
@@ -59,7 +65,7 @@ public class MoralisChainDataClient implements ChainDataClient {
         log.info("Fetched {} on {}: {} transfers, {} counterparties (truncated={})",
                 target, chain.displayName(), sample.transfers().size(), counterparties.size(), sample.truncated());
 
-        return new ChainData(snapshot(target, chainId, sample), counterparties);
+        return new AddressFacts(snapshot(target, chainId, sample), counterparties);
     }
 
     private TransferSample fetchTransfers(String address, int chainId) {

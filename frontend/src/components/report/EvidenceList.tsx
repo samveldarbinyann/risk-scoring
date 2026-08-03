@@ -1,5 +1,4 @@
 import { motion } from "motion/react";
-import { Card } from "@/components/ui/Card";
 import { useI18n } from "@/lib/i18n/context";
 
 interface EvidenceListProps {
@@ -22,13 +21,15 @@ export function EvidenceList({ explanation, decisiveSignals, manualChecks }: Evi
   const { t } = useI18n();
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-6">
-      <Card title={t("report.explanation")}>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col gap-6 p-6">
+      <div>
+        <h3 className="mb-3 font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.explanation")}</h3>
         <p className="text-sm leading-relaxed text-text">{explanation}</p>
-      </Card>
+      </div>
 
       {decisiveSignals.length > 0 && (
-        <Card title={t("report.decisiveSignals")}>
+        <div className="border-t border-border pt-6">
+          <h3 className="mb-3 font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.decisiveSignals")}</h3>
           <ul className="flex flex-col gap-2">
             {decisiveSignals.map((signal, index) => (
               <motion.li key={index} variants={itemVariants} className="font-mono text-sm text-text">
@@ -36,11 +37,12 @@ export function EvidenceList({ explanation, decisiveSignals, manualChecks }: Evi
               </motion.li>
             ))}
           </ul>
-        </Card>
+        </div>
       )}
 
       {manualChecks.length > 0 && (
-        <Card title={t("report.manualChecks")}>
+        <div className="border-t border-border pt-6">
+          <h3 className="mb-3 font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.manualChecks")}</h3>
           <ul className="flex flex-col gap-2">
             {manualChecks.map((check, index) => (
               <motion.li key={index} variants={itemVariants} className="text-sm text-text-dim">
@@ -48,7 +50,7 @@ export function EvidenceList({ explanation, decisiveSignals, manualChecks }: Evi
               </motion.li>
             ))}
           </ul>
-        </Card>
+        </div>
       )}
     </motion.div>
   );

@@ -19,6 +19,8 @@ public interface WatchlistEntryRepository extends JpaRepository<WatchlistEntry, 
 
     Optional<WatchlistEntry> findByPendingScanId(UUID pendingScanId);
 
+    List<WatchlistEntry> findByChainIdAndAddressAndActiveTrue(int chainId, String address);
+
     @Query("""
             SELECT w FROM WatchlistEntry w
             WHERE w.active = true

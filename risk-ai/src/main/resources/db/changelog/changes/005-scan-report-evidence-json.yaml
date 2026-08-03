@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-scan-report-evidence-json
+      author: sam
+      changes:
+        - addColumn:
+            tableName: scan_report
+            columns:
+              - column:
+                  name: evidence
+                  type: jsonb
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report
+              SET evidence = jsonb_build_object(
+                'targetType', 'ADDRESS',
+                'target', target,
+                'chainId', chain_id,
+                'observedAt', to_char(observed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+                'ageDays', 0,
+                'txCount', tx_count,
+                'txCount24h', tx_count_24h,
+                'sampleTruncated', sample_truncated,
+                'balanceWei', balance_wei,
+                'tokenBalances', token_balances,
+                'counterpartyCount', 0,
+                'flagged', '[]'::jsonb,
+                'mixerExposure', NULL,
+                'heuristics', NULL)
+              WHERE evidence IS NULL
+        - addNotNullConstraint:
+            tableName: scan_report
+            columnName: evidence
+            columnDataType: jsonb
+        - dropColumn:
+            tableName: scan_report
+            columns:
+              - column:
+                  name: balance_wei
+              - column:
+                  name: tx_count
+              - column:
+                  name: tx_count_24h
+              - column:
+                  name: sample_truncated
+              - column:
+                  name: token_balances

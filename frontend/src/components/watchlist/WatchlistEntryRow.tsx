@@ -1,8 +1,9 @@
+import { TargetChip } from "@/components/ui/TargetChip";
 import { Button } from "@/components/ui/Button";
 import { ChainIcon } from "@/components/ui/ChainIcon";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { chainLabel } from "@/lib/chains";
-import { formatAddress, formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { WatchlistEntryView } from "@/lib/types";
 
@@ -21,9 +22,7 @@ export function WatchlistEntryRow({ entry, isRemoving, onRemove }: WatchlistEntr
         <div className="flex items-center gap-3">
           <ChainIcon chainId={entry.chainId} className="h-5 w-5 shrink-0 text-text-dim" />
           <span className="font-sans text-sm text-text">{chainLabel(entry.chainId)}</span>
-          <span className="truncate font-mono text-sm text-text-dim" title={entry.address}>
-            {formatAddress(entry.address)}
-          </span>
+          <TargetChip value={entry.address} className="min-w-0 text-sm" />
         </div>
         <div className="flex flex-wrap items-center gap-3 pl-8">
           {entry.lastRiskLevel ? (

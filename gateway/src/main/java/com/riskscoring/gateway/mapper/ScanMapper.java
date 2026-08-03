@@ -27,7 +27,8 @@ public class ScanMapper {
     public ScanRequested toEvent(Scan scan, Language language) {
         return new ScanRequested(
                 scan.getId(),
-                scan.getAddress(),
+                scan.getTargetType(),
+                scan.getTarget(),
                 scan.getChainId(),
                 scan.getRequestedAt(),
                 scan.getSource(),
@@ -42,7 +43,8 @@ public class ScanMapper {
     public ScanGroupAcceptedResponse toGroupAcceptedResponse(ScanGroup group, List<Scan> scans) {
         return new ScanGroupAcceptedResponse(
                 group.getId(),
-                group.getAddress(),
+                group.getTargetType(),
+                group.getTarget(),
                 scans.stream().map(Scan::getChainId).toList()
         );
     }
@@ -53,14 +55,16 @@ public class ScanMapper {
                 .toList();
 
         boolean completed = scans.stream().allMatch(scan -> TERMINAL_STAGES.contains(scan.getStatus()));
+        Scan first = scans.getFirst();
 
-        return new ScanGroupView(groupId, scans.getFirst().getAddress(), completed, chains);
+        return new ScanGroupView(groupId, first.getTargetType(), first.getTarget(), completed, chains);
     }
 
     public ScanView toView(Scan scan) {
         return new ScanView(
                 scan.getId(),
-                scan.getAddress(),
+                scan.getTargetType(),
+                scan.getTarget(),
                 scan.getChainId(),
                 scan.getStatus(),
                 scan.getSource(),
@@ -72,19 +76,16 @@ public class ScanMapper {
     public ScanReportView toReportView(ScanReportRow row) {
         return new ScanReportView(
                 row.scanId(),
-                row.address(),
+                row.targetType(),
+                row.target(),
                 row.chainId(),
                 row.riskLevel(),
                 row.score(),
                 row.explanation(),
                 row.decisiveSignals(),
                 row.manualChecks(),
-                row.balanceWei(),
-                row.txCount(),
-                row.txCount24h(),
-                row.sampleTruncated(),
                 row.observedAt(),
-                row.tokenBalances(),
+                row.evidence(),
                 row.model(),
                 row.createdAt()
         );

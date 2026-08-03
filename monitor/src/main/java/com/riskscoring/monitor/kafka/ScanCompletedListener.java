@@ -17,7 +17,8 @@ public class ScanCompletedListener {
 
     @KafkaListener(topics = Topics.SCAN_COMPLETED)
     public void onScanCompleted(ScanCompleted event) {
-        log.debug("Received {} scanId={} address={}", Topics.SCAN_COMPLETED, event.scanId(), event.address());
+        log.debug("Received {} scanId={} {}={}",
+                Topics.SCAN_COMPLETED, event.scanId(), event.targetType(), event.target());
         recheckService.handleScanCompleted(event);
     }
 }

@@ -17,7 +17,8 @@ public class ScanRequestedListener {
 
     @KafkaListener(topics = Topics.SCAN_REQUESTED)
     public void onScanRequested(ScanRequested event) {
-        log.info("Received {} scanId={} address={}", Topics.SCAN_REQUESTED, event.scanId(), event.address());
+        log.info("Received {} scanId={} {}={}",
+                Topics.SCAN_REQUESTED, event.scanId(), event.targetType(), event.target());
         chainIngestService.ingest(event);
     }
 }

@@ -1,21 +1,20 @@
 package com.riskscoring.common.model;
 
-import java.time.Instant;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-public record EvidenceBundle(
-        String address,
-        int chainId,
-        int ageDays,
-        long txCount,
-        long txCount24h,
-        boolean sampleTruncated,
-        Instant observedAt,
-        String balanceWei,
-        List<TokenBalance> tokenBalances,
-        int counterpartyCount,
-        List<FlaggedExposure> flagged,
-        MixerExposure mixerExposure,
-        Heuristics heuristics
-) {
+import java.time.Instant;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "targetType")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = AddressEvidence.class, name = "ADDRESS"),
+        @JsonSubTypes.Type(value = TransactionEvidence.class, name = "TRANSACTION")
+})
+public sealed interface EvidenceBundle permits AddressEvidence, TransactionEvidence {
+
+    String target();
+
+    int chainId();
+
+    Instant observedAt();
 }

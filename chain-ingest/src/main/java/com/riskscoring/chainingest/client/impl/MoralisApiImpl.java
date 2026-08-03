@@ -7,6 +7,7 @@ import com.riskscoring.chainingest.client.dto.MoralisBalance;
 import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
 import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
 import com.riskscoring.chainingest.client.dto.MoralisTokenBalancesEnvelope;
+import com.riskscoring.chainingest.client.dto.MoralisTransaction;
 import com.riskscoring.chainingest.client.dto.MoralisWalletChainsEnvelope;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.exception.MoralisException;
@@ -39,6 +40,8 @@ public class MoralisApiImpl implements MoralisApi {
     private static final String PARAM_ORDER = "order";
     private static final String PARAM_LIMIT = "limit";
     private static final String PARAM_INCLUDE_INTERNAL = "include_internal_transactions";
+    private static final String PARAM_INCLUDE = "include";
+    private static final String INCLUDE_INTERNAL_TRANSACTIONS = "internal_transactions";
     private static final String PARAM_EXCLUDE_SPAM = "exclude_spam";
     private static final String PARAM_EXCLUDE_NATIVE = "exclude_native";
     private static final String ORDER_DESC = "DESC";
@@ -47,6 +50,7 @@ public class MoralisApiImpl implements MoralisApi {
     private static final String PATH_HISTORY = "/wallets/%s/history";
     private static final String PATH_CHAINS = "/wallets/%s/chains";
     private static final String PATH_TOKENS = "/wallets/%s/tokens";
+    private static final String PATH_TRANSACTION = "/transaction/%s";
 
     private static final Set<Integer> NO_DATA_STATUSES =
             Set.of(HttpStatus.BAD_REQUEST.value(), HttpStatus.NOT_FOUND.value());
@@ -62,6 +66,14 @@ public class MoralisApiImpl implements MoralisApi {
                 .queryParam(PARAM_CHAIN, chainHex(chainId)), MoralisBalance.class);
 
         return requirePayload(balance.balance(), path);
+    }
+
+    @Override
+    public MoralisTransaction transaction(String hash, int chainId) {
+        String path = PATH_TRANSACTION.formatted(hash);
+        return call(path, builder -> builder
+                .queryParam(PARAM_CHAIN, chainHex(chainId))
+                .queryParam(PARAM_INCLUDE, INCLUDE_INTERNAL_TRANSACTIONS), MoralisTransaction.class);
     }
 
     @Override

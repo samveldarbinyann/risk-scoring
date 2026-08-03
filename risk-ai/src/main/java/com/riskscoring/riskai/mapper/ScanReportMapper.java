@@ -1,7 +1,6 @@
 package com.riskscoring.riskai.mapper;
 
 import com.riskscoring.common.event.SignalsComputed;
-import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.Verdict;
 import com.riskscoring.riskai.entity.ScanReport;
 import lombok.RequiredArgsConstructor;
@@ -24,24 +23,19 @@ public class ScanReportMapper {
 
     public ScanReport toEntity(SignalsComputed event, Verdict verdict, String model,
                                String promptVersion, Instant createdAt) {
-        EvidenceBundle evidence = event.evidence();
-
         return ScanReport.builder()
                 .id(UUID.randomUUID())
                 .scanId(event.scanId())
-                .address(event.address())
+                .targetType(event.targetType())
+                .target(event.target())
                 .chainId(event.chainId())
                 .riskLevel(verdict.riskLevel())
                 .score(verdict.score())
                 .explanation(verdict.explanation())
                 .decisiveSignals(objectMapper.writeValueAsString(verdict.decisiveSignals()))
                 .manualChecks(objectMapper.writeValueAsString(verdict.manualChecks()))
-                .balanceWei(evidence.balanceWei())
-                .txCount(evidence.txCount())
-                .txCount24h(evidence.txCount24h())
-                .sampleTruncated(evidence.sampleTruncated())
-                .observedAt(evidence.observedAt())
-                .tokenBalances(objectMapper.writeValueAsString(evidence.tokenBalances()))
+                .observedAt(event.evidence().observedAt())
+                .evidence(objectMapper.writeValueAsString(event.evidence()))
                 .model(model)
                 .promptVersion(promptVersion)
                 .createdAt(createdAt)

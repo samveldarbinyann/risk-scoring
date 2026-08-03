@@ -93,7 +93,12 @@ function PlanCta({ kind, isBusy, onSelect, onConfirm, onSignIn }: PlanCtaProps) 
   switch (kind) {
     case "signIn":
       return (
-        <Button type="button" variant="ghost" onClick={onSignIn} className="w-full">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onSignIn}
+          className="w-full whitespace-nowrap text-sm font-normal"
+        >
           {t("pricing.cta.signIn")}
         </Button>
       );

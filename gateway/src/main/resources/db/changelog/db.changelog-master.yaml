@@ -17,3 +17,5 @@ databaseChangeLog:
       file: db/changelog/changes/008-subscription-pending-payment.yaml
   - include:
       file: db/changelog/changes/009-create-contact-submission.yaml
+  - include:
+      file: db/changelog/changes/010-scan-target-type.yaml

@@ -17,7 +17,8 @@ public class ChainFetchedListener {
 
     @KafkaListener(topics = Topics.CHAIN_FETCHED)
     public void onChainFetched(ChainFetched event) {
-        log.info("Received {} scanId={} address={}", Topics.CHAIN_FETCHED, event.scanId(), event.address());
+        log.info("Received {} scanId={} {}={}",
+                Topics.CHAIN_FETCHED, event.scanId(), event.targetType(), event.target());
         enrichmentService.enrich(event);
     }
 }

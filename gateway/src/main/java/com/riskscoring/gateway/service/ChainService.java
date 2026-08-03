@@ -4,5 +4,5 @@ import com.riskscoring.gateway.dto.ChainCandidatesResponse;
 
 public interface ChainService {
 
-    ChainCandidatesResponse candidatesFor(String address);
+    ChainCandidatesResponse candidatesFor(String target);
 }

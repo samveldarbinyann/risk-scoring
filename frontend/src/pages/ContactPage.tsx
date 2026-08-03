@@ -48,9 +48,8 @@ export function ContactPage() {
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-3">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("contact.kicker")}</p>
         <h1 className="font-sans text-3xl font-semibold text-text sm:text-4xl">{t("contact.title")}</h1>
-        <p className="text-sm leading-relaxed text-text-dim">{t("contact.subtitle")}</p>
+        <p className="text-sm leading-relaxed text-accent">{t("contact.subtitle")}</p>
       </header>
 
       <Card>

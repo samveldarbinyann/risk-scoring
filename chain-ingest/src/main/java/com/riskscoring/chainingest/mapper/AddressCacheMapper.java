@@ -1,8 +1,8 @@
 package com.riskscoring.chainingest.mapper;
 
-import com.riskscoring.chainingest.client.ChainData;
 import com.riskscoring.chainingest.entity.AddressCache;
 import com.riskscoring.chainingest.entity.CounterpartyCache;
+import com.riskscoring.common.model.AddressFacts;
 import com.riskscoring.common.model.AddressSnapshot;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.TokenBalance;
@@ -24,7 +24,7 @@ public class AddressCacheMapper {
 
     private final ObjectMapper objectMapper;
 
-    public ChainData toChainData(AddressCache cache) {
+    public AddressFacts toFacts(AddressCache cache) {
         AddressSnapshot snapshot = new AddressSnapshot(
                 cache.getTxCount(),
                 cache.getTxCount24h(),
@@ -46,7 +46,7 @@ public class AddressCacheMapper {
                 ))
                 .toList();
 
-        return new ChainData(snapshot, counterparties);
+        return new AddressFacts(snapshot, counterparties);
     }
 
     public AddressCache newEntity(String address, int chainId) {

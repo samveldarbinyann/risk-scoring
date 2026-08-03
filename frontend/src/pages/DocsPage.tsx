@@ -74,9 +74,8 @@ export function DocsPage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-10 px-6 py-10">
       <header className="flex flex-col gap-3">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("docs.kicker")}</p>
         <h1 className="font-sans text-3xl font-semibold text-text sm:text-4xl">{t("docs.title")}</h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-text-dim">{t("docs.subtitle")}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-accent">{t("docs.subtitle")}</p>
       </header>
 
       <DocsSection index={1} title={t("docs.pipeline.title")} body={t("docs.pipeline.body")}>

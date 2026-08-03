@@ -1,6 +1,7 @@
 package com.riskscoring.riskai.entity;
 
 import com.riskscoring.common.model.RiskLevel;
+import com.riskscoring.common.model.ScanTarget;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,8 +36,12 @@ public class ScanReport {
     @Column(name = "scan_id", nullable = false, unique = true)
     private UUID scanId;
 
-    @Column(nullable = false, length = 42)
-    private String address;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false, length = 16)
+    private ScanTarget targetType;
+
+    @Column(nullable = false, length = 66)
+    private String target;
 
     @Column(name = "chain_id", nullable = false)
     private int chainId;
@@ -59,24 +64,12 @@ public class ScanReport {
     @Column(name = "manual_checks", nullable = false, columnDefinition = "jsonb")
     private String manualChecks;
 
-    @Column(name = "balance_wei", nullable = false, columnDefinition = "text")
-    private String balanceWei;
-
-    @Column(name = "tx_count", nullable = false)
-    private long txCount;
-
-    @Column(name = "tx_count_24h", nullable = false)
-    private long txCount24h;
-
-    @Column(name = "sample_truncated", nullable = false)
-    private boolean sampleTruncated;
-
     @Column(name = "observed_at", nullable = false)
     private Instant observedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "token_balances", nullable = false, columnDefinition = "jsonb")
-    private String tokenBalances;
+    @Column(nullable = false, columnDefinition = "jsonb")
+    private String evidence;
 
     @Column(nullable = false, length = 64)
     private String model;

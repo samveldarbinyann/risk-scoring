@@ -18,7 +18,7 @@ export function BackgroundVideo() {
         initial={{ opacity: 0 }}
         animate={{ opacity: isVisible ? OPACITY : 0 }}
         transition={{ duration: FADE_IN_S, ease: "easeInOut" }}
-        src="/background-loop.mp4"
+        src="/backround.webm"
         autoPlay
         loop
         muted

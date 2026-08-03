@@ -53,6 +53,7 @@ public class RiskAiServiceImpl implements RiskAiService {
                 new ScanProgress(event.scanId(), ScanStage.ANALYZING, PROGRESS_MESSAGE, Instant.now()));
 
         Verdict verdict = askForVerdict(event.evidence(), event.language());
+
         Instant completedAt = Instant.now();
 
         scanReportRepository.save(scanReportMapper.toEntity(
@@ -66,7 +67,8 @@ public class RiskAiServiceImpl implements RiskAiService {
     private void publishCompletion(SignalsComputed event, Verdict verdict, String model, Instant completedAt) {
         eventPublisher.publishScanCompleted(new ScanCompleted(
                 event.scanId(),
-                event.address(),
+                event.targetType(),
+                event.target(),
                 event.chainId(),
                 verdict,
                 model,
@@ -77,7 +79,7 @@ public class RiskAiServiceImpl implements RiskAiService {
     }
 
     private Verdict askForVerdict(EvidenceBundle evidence, Language language) {
-        String systemPrompt = promptBuilder.systemPrompt(language);
+        String systemPrompt = promptBuilder.systemPrompt(evidence, language);
         String prompt = promptBuilder.userPrompt(evidence);
         InvalidVerdictException lastFailure = null;
 

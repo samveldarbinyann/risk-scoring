@@ -17,7 +17,8 @@ public class SignalsComputedListener {
 
     @KafkaListener(topics = Topics.SIGNALS_COMPUTED)
     public void onSignalsComputed(SignalsComputed event) {
-        log.info("Received {} scanId={} address={}", Topics.SIGNALS_COMPUTED, event.scanId(), event.address());
+        log.info("Received {} scanId={} {}={}",
+                Topics.SIGNALS_COMPUTED, event.scanId(), event.targetType(), event.target());
         riskAiService.analyze(event);
     }
 }

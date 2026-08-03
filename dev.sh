@@ -84,8 +84,23 @@ start_frontend() {
   start_process "frontend" "$ROOT_DIR/frontend" "npm run dev"
 }
 
+check_not_running() {
+  local running=()
+  for name in "${JAVA_SERVICES[@]}" frontend; do
+    local pidfile="$LOG_DIR/$name.pid"
+    if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+      running+=("$name")
+    fi
+  done
+  if [ "${#running[@]}" -gt 0 ]; then
+    echo "Уже запущено: ${running[*]}. Сначала ./dev.sh stop, иначе старая сессия осиротеет и продолжит держать партиции Kafka." >&2
+    exit 1
+  fi
+}
+
 cmd_start() {
   ensure_java
+  check_not_running
   load_env
 
   echo "Поднимаю Kafka + Postgres..."

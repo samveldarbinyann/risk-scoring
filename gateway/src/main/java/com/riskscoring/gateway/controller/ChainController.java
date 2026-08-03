@@ -16,7 +16,7 @@ public class ChainController {
     private final ChainService chainService;
 
     @GetMapping("/candidates")
-    public ChainCandidatesResponse candidates(@RequestParam(required = false) String address) {
-        return chainService.candidatesFor(address);
+    public ChainCandidatesResponse candidates(@RequestParam(required = false) String target) {
+        return chainService.candidatesFor(target);
     }
 }
