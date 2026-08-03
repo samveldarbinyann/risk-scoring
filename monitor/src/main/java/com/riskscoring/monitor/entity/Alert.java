@@ -1,5 +1,6 @@
 package com.riskscoring.monitor.entity;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,11 +37,12 @@ public class Alert {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(nullable = false, length = 42)
+    @Column(nullable = false, length = 128)
     private String address;
 
-    @Column(name = "chain_id", nullable = false)
-    private int chainId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private Chain chain;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "previous_risk_level", nullable = false, length = 16)

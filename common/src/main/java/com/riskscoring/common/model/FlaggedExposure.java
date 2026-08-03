@@ -7,6 +7,6 @@ public record FlaggedExposure(
         String source,
         TransferDirection direction,
         int hops,
-        String valueWei
+        String valueNative
 ) {
 }

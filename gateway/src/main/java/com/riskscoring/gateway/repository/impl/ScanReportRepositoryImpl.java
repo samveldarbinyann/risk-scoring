@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.repository.impl;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.common.model.ScanTarget;
@@ -20,7 +21,7 @@ import java.util.UUID;
 public class ScanReportRepositoryImpl implements ScanReportRepository {
 
     private static final String FIND_BY_SCAN_ID = """
-            SELECT scan_id, target_type, target, chain_id, risk_level, score, explanation,
+            SELECT scan_id, target_type, target, chain, risk_level, score, explanation,
                    decisive_signals, manual_checks, observed_at, evidence, model, created_at
             FROM riskai.scan_report
             WHERE scan_id = ?
@@ -38,7 +39,7 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
                 UUID.fromString(rs.getString("scan_id")),
                 ScanTarget.valueOf(rs.getString("target_type")),
                 rs.getString("target"),
-                rs.getInt("chain_id"),
+                Chain.valueOf(rs.getString("chain")),
                 RiskLevel.valueOf(rs.getString("risk_level")),
                 rs.getInt("score"),
                 rs.getString("explanation"),

@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.dto;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ScanTarget;
 
 import java.util.List;
@@ -9,6 +10,6 @@ public record ScanGroupAcceptedResponse(
         UUID groupId,
         ScanTarget targetType,
         String target,
-        List<Integer> chainIds
+        List<Chain> chains
 ) {
 }

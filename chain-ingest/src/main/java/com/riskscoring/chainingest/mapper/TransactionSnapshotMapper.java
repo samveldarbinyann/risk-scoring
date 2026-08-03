@@ -11,10 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -23,6 +20,7 @@ import java.util.stream.Stream;
 public class TransactionSnapshotMapper {
 
     private final MoralisValues values;
+    private final TransactionPartyAggregator partyAggregator;
 
     public TransactionSnapshot fromMoralis(MoralisTransaction transaction) {
         List<MoralisInternalTransfer> internals =
@@ -60,19 +58,8 @@ public class TransactionSnapshotMapper {
                 party(transfer.fromAddress(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
                 party(transfer.toAddress(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
 
-        Map<PartyKey, BigInteger> totals = new LinkedHashMap<>();
-        Stream.of(direct, internal, token)
-                .flatMap(stream -> stream.flatMap(Optional::stream))
-                .forEach(party -> totals.merge(
-                        new PartyKey(party.address(), party.role()),
-                        new BigInteger(party.valueWei()),
-                        BigInteger::add));
-
-        return totals.entrySet().stream()
-                .map(entry -> new TransactionParty(
-                        entry.getKey().address(), entry.getKey().role(), entry.getValue().toString()))
-                .sorted(Comparator.comparing(TransactionParty::role).thenComparing(TransactionParty::address))
-                .toList();
+        return partyAggregator.aggregate(
+                Stream.of(direct, internal, token).flatMap(stream -> stream.flatMap(Optional::stream)));
     }
 
     private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger value) {
@@ -80,8 +67,5 @@ public class TransactionSnapshotMapper {
         return values.isRoutable(normalized)
                 ? Optional.of(new TransactionParty(normalized, role, value.toString()))
                 : Optional.empty();
-    }
-
-    private record PartyKey(String address, TransactionRole role) {
     }
 }

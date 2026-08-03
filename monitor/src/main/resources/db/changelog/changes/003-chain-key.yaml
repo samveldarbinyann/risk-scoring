@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-chain-key
+      author: sam
+      changes:
+        - dropUniqueConstraint:
+            tableName: watchlist_entry
+            constraintName: uq_watchlist_entry_user_chain_address
+        - addColumn:
+            tableName: watchlist_entry
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+        - addColumn:
+            tableName: alert
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+        - sql:
+            sql: >
+              UPDATE monitor.watchlist_entry SET chain = CASE chain_id
+                WHEN 1        THEN 'ETHEREUM'
+                WHEN 10       THEN 'OPTIMISM'
+                WHEN 56       THEN 'BNB_SMART_CHAIN'
+                WHEN 100      THEN 'GNOSIS'
+                WHEN 137      THEN 'POLYGON'
+                WHEN 8453     THEN 'BASE'
+                WHEN 42161    THEN 'ARBITRUM_ONE'
+                WHEN 43114    THEN 'AVALANCHE'
+                WHEN 59144    THEN 'LINEA'
+              END
+              WHERE chain IS NULL
+        - sql:
+            sql: >
+              UPDATE monitor.alert SET chain = CASE chain_id
+                WHEN 1        THEN 'ETHEREUM'
+                WHEN 10       THEN 'OPTIMISM'
+                WHEN 56       THEN 'BNB_SMART_CHAIN'
+                WHEN 100      THEN 'GNOSIS'
+                WHEN 137      THEN 'POLYGON'
+                WHEN 8453     THEN 'BASE'
+                WHEN 42161    THEN 'ARBITRUM_ONE'
+                WHEN 43114    THEN 'AVALANCHE'
+                WHEN 59144    THEN 'LINEA'
+              END
+              WHERE chain IS NULL
+        - sql:
+            sql: DELETE FROM monitor.alert WHERE chain IS NULL
+        - sql:
+            sql: DELETE FROM monitor.watchlist_entry WHERE chain IS NULL
+        - addNotNullConstraint:
+            tableName: watchlist_entry
+            columnName: chain
+            columnDataType: varchar(32)
+        - addNotNullConstraint:
+            tableName: alert
+            columnName: chain
+            columnDataType: varchar(32)
+        - dropColumn:
+            tableName: watchlist_entry
+            columns:
+              - column:
+                  name: chain_id
+        - dropColumn:
+            tableName: alert
+            columns:
+              - column:
+                  name: chain_id
+        - addUniqueConstraint:
+            tableName: watchlist_entry
+            columnNames: user_id, chain, address
+            constraintName: uq_watchlist_entry_user_chain_address
+        - modifyDataType:
+            tableName: watchlist_entry
+            columnName: address
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: alert
+            columnName: address
+            newDataType: varchar(128)

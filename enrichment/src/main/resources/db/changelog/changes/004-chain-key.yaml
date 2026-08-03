@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-chain-key
+      author: sam
+      changes:
+        - dropUniqueConstraint:
+            tableName: label
+            constraintName: uq_label_chain_address
+        - addColumn:
+            tableName: label
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+        - addColumn:
+            tableName: evidence_record
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+        - sql:
+            sql: >
+              UPDATE enrichment.label SET chain = CASE chain_id
+                WHEN 1        THEN 'ETHEREUM'
+                WHEN 10       THEN 'OPTIMISM'
+                WHEN 56       THEN 'BNB_SMART_CHAIN'
+                WHEN 100      THEN 'GNOSIS'
+                WHEN 137      THEN 'POLYGON'
+                WHEN 8453     THEN 'BASE'
+                WHEN 42161    THEN 'ARBITRUM_ONE'
+                WHEN 43114    THEN 'AVALANCHE'
+                WHEN 59144    THEN 'LINEA'
+              END
+              WHERE chain IS NULL
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record SET chain = CASE chain_id
+                WHEN 1        THEN 'ETHEREUM'
+                WHEN 10       THEN 'OPTIMISM'
+                WHEN 56       THEN 'BNB_SMART_CHAIN'
+                WHEN 100      THEN 'GNOSIS'
+                WHEN 137      THEN 'POLYGON'
+                WHEN 8453     THEN 'BASE'
+                WHEN 42161    THEN 'ARBITRUM_ONE'
+                WHEN 43114    THEN 'AVALANCHE'
+                WHEN 59144    THEN 'LINEA'
+              END
+              WHERE chain IS NULL
+        - sql:
+            sql: DELETE FROM enrichment.label WHERE chain IS NULL
+        - sql:
+            sql: DELETE FROM enrichment.evidence_record WHERE chain IS NULL
+        - addNotNullConstraint:
+            tableName: label
+            columnName: chain
+            columnDataType: varchar(32)
+        - addNotNullConstraint:
+            tableName: evidence_record
+            columnName: chain
+            columnDataType: varchar(32)
+        - dropColumn:
+            tableName: label
+            columns:
+              - column:
+                  name: chain_id
+        - dropColumn:
+            tableName: evidence_record
+            columns:
+              - column:
+                  name: chain_id
+        - addUniqueConstraint:
+            tableName: label
+            columnNames: chain, address
+            constraintName: uq_label_chain_address
+        - modifyDataType:
+            tableName: label
+            columnName: address
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: evidence_record
+            columnName: target
+            newDataType: varchar(128)

@@ -1,5 +1,6 @@
 package com.riskscoring.common.event;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Language;
 
 import java.time.Instant;
@@ -9,7 +10,7 @@ public record WatchlistAddRequested(
         UUID requestId,
         UUID userId,
         String address,
-        int chainId,
+        Chain chain,
         Language language,
         Instant requestedAt
 ) {

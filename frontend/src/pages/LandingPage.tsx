@@ -7,9 +7,9 @@ import { TypewriterText } from "@/components/ui/TypewriterText";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { typewriterDurationMs } from "@/hooks/useTypewriter";
 import { createScan, getChainCandidates } from "@/lib/api";
-import { classifyTarget } from "@/lib/scanTarget";
 import { useI18n } from "@/lib/i18n/context";
 import { SCAN_FLOW_HIDDEN, SCAN_FLOW_TRANSITION, SCAN_FLOW_VISIBLE } from "@/lib/scanFlowMotion";
+import type { Chain } from "@/lib/chains/registry";
 import type { ChainCandidatesResponse } from "@/lib/types";
 
 const PANEL = {
@@ -26,7 +26,7 @@ export function LandingPage() {
   const [target, setTarget] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
-  const [busyChainId, setBusyChainId] = useState<number | null>(null);
+  const [busyChain, setBusyChain] = useState<Chain | null>(null);
   const [candidates, setCandidates] = useState<ChainCandidatesResponse | null>(null);
   const [startedGroupId, setStartedGroupId] = useState<string | null>(null);
 
@@ -34,7 +34,7 @@ export function LandingPage() {
     if (isDetecting) return;
 
     const trimmedTarget = target.trim();
-    if (classifyTarget(trimmedTarget) === null) {
+    if (!trimmedTarget) {
       setError(t("landing.errorInvalidTarget"));
       return;
     }
@@ -50,17 +50,18 @@ export function LandingPage() {
     }
   }
 
-  async function handleSelectChain(chainId: number) {
-    if (!candidates) return;
+  async function handleSelectChain(chain: Chain) {
+    const candidate = candidates?.candidates.find((entry) => entry.chain === chain);
+    if (!candidate) return;
 
     setError(null);
-    setBusyChainId(chainId);
+    setBusyChain(chain);
     try {
-      const { groupId } = await createScan({ target: candidates.target, chainIds: [chainId] });
+      const { groupId } = await createScan({ target: candidate.normalizedTarget, chains: [chain] });
       setStartedGroupId(groupId);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("landing.errorCreateFailed"));
-      setBusyChainId(null);
+      setBusyChain(null);
     }
   }
 
@@ -85,7 +86,7 @@ export function LandingPage() {
               <TypewriterText
                 as="h1"
                 text={
-                  candidates.targetType === "TRANSACTION"
+                  candidates.candidates.every((candidate) => candidate.targetType === "TRANSACTION")
                     ? t("landing.chainPickerTitleTransaction")
                     : t("landing.chainPickerTitle")
                 }
@@ -93,8 +94,8 @@ export function LandingPage() {
               />
               <ChainPicker
                 target={candidates.target}
-                chainIds={candidates.chainIds}
-                busyChainId={busyChainId}
+                candidates={candidates.candidates}
+                busyChain={busyChain}
                 onSelect={handleSelectChain}
                 onChangeTarget={handleChangeTarget}
               />

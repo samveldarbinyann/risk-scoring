@@ -1,6 +1,7 @@
 package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.entity.TransactionCache;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.TransactionParty;
 import com.riskscoring.common.model.TransactionSnapshot;
 import lombok.RequiredArgsConstructor;
@@ -26,28 +27,28 @@ public class TransactionCacheMapper {
                 cache.getTxHash(),
                 cache.getFromAddress(),
                 cache.getToAddress(),
-                cache.getValueWei().toString(),
+                cache.getValueNative().toString(),
                 cache.isSuccess(),
                 cache.getBlockTimestamp(),
                 objectMapper.readValue(cache.getParties(), PARTY_LIST),
-                cache.getInternalTransferCount(),
-                cache.getErc20TransferCount(),
+                cache.getNestedTransferCount(),
+                cache.getTokenTransferCount(),
                 cache.getFetchedAt());
     }
 
-    public TransactionCache toEntity(int chainId, TransactionSnapshot snapshot) {
+    public TransactionCache toEntity(Chain chain, TransactionSnapshot snapshot) {
         return TransactionCache.builder()
                 .id(UUID.randomUUID())
-                .chainId(chainId)
+                .chain(chain)
                 .txHash(snapshot.hash())
                 .fromAddress(snapshot.fromAddress())
                 .toAddress(snapshot.toAddress())
-                .valueWei(new BigInteger(snapshot.valueWei()))
+                .valueNative(new BigInteger(snapshot.valueNative()))
                 .success(snapshot.success())
                 .blockTimestamp(snapshot.blockTimestamp())
                 .parties(objectMapper.writeValueAsString(snapshot.parties()))
-                .internalTransferCount(snapshot.internalTransferCount())
-                .erc20TransferCount(snapshot.erc20TransferCount())
+                .nestedTransferCount(snapshot.nestedTransferCount())
+                .tokenTransferCount(snapshot.tokenTransferCount())
                 .fetchedAt(snapshot.observedAt())
                 .build();
     }

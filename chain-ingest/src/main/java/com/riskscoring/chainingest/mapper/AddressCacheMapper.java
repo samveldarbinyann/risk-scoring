@@ -4,6 +4,7 @@ import com.riskscoring.chainingest.entity.AddressCache;
 import com.riskscoring.chainingest.entity.CounterpartyCache;
 import com.riskscoring.common.model.AddressFacts;
 import com.riskscoring.common.model.AddressSnapshot;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.TokenBalance;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class AddressCacheMapper {
         AddressSnapshot snapshot = new AddressSnapshot(
                 cache.getTxCount(),
                 cache.getTxCount24h(),
-                cache.getBalanceWei().toString(),
+                cache.getBalanceNative().toString(),
                 objectMapper.readValue(cache.getTokenBalances(), TOKEN_BALANCE_LIST),
                 cache.getFirstSeenAt(),
                 cache.getLastSeenAt(),
@@ -41,7 +42,7 @@ public class AddressCacheMapper {
                         counterparty.getAddress(),
                         counterparty.getDirection(),
                         counterparty.getTxCount(),
-                        counterparty.getTotalValueWei().toString(),
+                        counterparty.getTotalValueNative().toString(),
                         counterparty.getHops()
                 ))
                 .toList();
@@ -49,10 +50,10 @@ public class AddressCacheMapper {
         return new AddressFacts(snapshot, counterparties);
     }
 
-    public AddressCache newEntity(String address, int chainId) {
+    public AddressCache newEntity(String address, Chain chain) {
         return AddressCache.builder()
                 .id(UUID.randomUUID())
-                .chainId(chainId)
+                .chain(chain)
                 .address(address)
                 .build();
     }
@@ -60,7 +61,7 @@ public class AddressCacheMapper {
     public void updateSnapshot(AddressCache cache, AddressSnapshot snapshot) {
         cache.setTxCount(snapshot.txCount());
         cache.setTxCount24h(snapshot.txCount24h());
-        cache.setBalanceWei(new BigInteger(snapshot.balanceWei()));
+        cache.setBalanceNative(new BigInteger(snapshot.balanceNative()));
         cache.setTokenBalances(objectMapper.writeValueAsString(snapshot.tokenBalances()));
         cache.setFirstSeenAt(snapshot.firstSeenAt());
         cache.setLastSeenAt(snapshot.lastSeenAt());
@@ -75,7 +76,7 @@ public class AddressCacheMapper {
                         .address(counterparty.address())
                         .direction(counterparty.direction())
                         .txCount(counterparty.txCount())
-                        .totalValueWei(new BigInteger(counterparty.totalValueWei()))
+                        .totalValueNative(new BigInteger(counterparty.totalValueNative()))
                         .hops(counterparty.hops())
                         .build())
                 .toList();

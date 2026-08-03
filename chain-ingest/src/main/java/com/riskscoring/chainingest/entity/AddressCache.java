@@ -1,8 +1,11 @@
 package com.riskscoring.chainingest.entity;
 
+import com.riskscoring.common.model.Chain;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -34,10 +37,11 @@ public class AddressCache {
     @Id
     private UUID id;
 
-    @Column(name = "chain_id", nullable = false)
-    private int chainId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private Chain chain;
 
-    @Column(nullable = false, length = 42)
+    @Column(nullable = false, length = 128)
     private String address;
 
     @Column(name = "tx_count", nullable = false)
@@ -46,8 +50,8 @@ public class AddressCache {
     @Column(name = "tx_count_24h", nullable = false)
     private long txCount24h;
 
-    @Column(name = "balance_wei", nullable = false, precision = 78)
-    private BigInteger balanceWei;
+    @Column(name = "balance_native", nullable = false, precision = 78)
+    private BigInteger balanceNative;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "token_balances", nullable = false, columnDefinition = "jsonb")

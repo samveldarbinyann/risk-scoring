@@ -7,12 +7,12 @@ public record TransactionSnapshot(
         String hash,
         String fromAddress,
         String toAddress,
-        String valueWei,
+        String valueNative,
         boolean success,
         Instant blockTimestamp,
         List<TransactionParty> parties,
-        int internalTransferCount,
-        int erc20TransferCount,
+        int nestedTransferCount,
+        int tokenTransferCount,
         Instant observedAt
 ) {
 }

@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.dto;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 
 import java.time.Instant;
@@ -8,7 +9,7 @@ import java.util.UUID;
 public record WatchlistEntryView(
         UUID id,
         String address,
-        int chainId,
+        Chain chain,
         RiskLevel lastRiskLevel,
         Integer lastScore,
         UUID lastScanId,

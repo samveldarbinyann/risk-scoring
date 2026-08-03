@@ -1,3 +1,5 @@
+import type { Chain } from "@/lib/chains/registry";
+
 export type ScanStage = "PENDING" | "FETCHING" | "ENRICHING" | "ANALYZING" | "COMPLETED" | "FAILED";
 export type ScanSource = "USER" | "MONITOR" | "API";
 export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -70,24 +72,29 @@ export type TransactionRole =
 
 export interface ScanCreateRequest {
   target: string;
-  chainIds?: number[];
+  chains?: Chain[];
 }
 
 export interface ScanGroupAcceptedResponse {
   groupId: string;
   targetType: ScanTarget;
   target: string;
-  chainIds: number[];
+  chains: Chain[];
+}
+
+export interface ChainCandidate {
+  chain: Chain;
+  targetType: ScanTarget;
+  normalizedTarget: string;
 }
 
 export interface ChainCandidatesResponse {
-  targetType: ScanTarget;
   target: string;
-  chainIds: number[];
+  candidates: ChainCandidate[];
 }
 
 export interface ScanGroupChainStatus {
-  chainId: number;
+  chain: Chain;
   scanId: string;
   status: ScanStage;
 }
@@ -113,18 +120,18 @@ export interface FlaggedExposure {
   source: string;
   direction: TransferDirection;
   hops: number;
-  valueWei: string;
+  valueNative: string;
 }
 
 export interface MixerExposure {
   services: string[];
   percentOfVolume: number;
-  valueWei: string;
+  valueNative: string;
 }
 
 export interface Heuristics {
-  freshWallet: boolean;
-  fundedThenDrained: boolean;
+  freshWallet: boolean | null;
+  fundedThenDrained: boolean | null;
   roundAmounts: boolean;
   fanIn: number;
   fanOut: number;
@@ -143,19 +150,19 @@ export interface TransactionHeuristics {
 export interface TransactionParty {
   address: string;
   role: TransactionRole;
-  valueWei: string;
+  valueNative: string;
 }
 
 export interface AddressEvidence {
   targetType: "ADDRESS";
   target: string;
-  chainId: number;
+  chain: Chain;
   observedAt: string;
-  ageDays: number;
+  ageDays: number | null;
   txCount: number;
   txCount24h: number;
   sampleTruncated: boolean;
-  balanceWei: string;
+  balanceNative: string;
   tokenBalances: TokenBalance[];
   counterpartyCount: number;
   flagged: FlaggedExposure[];
@@ -166,15 +173,15 @@ export interface AddressEvidence {
 export interface TransactionEvidence {
   targetType: "TRANSACTION";
   target: string;
-  chainId: number;
+  chain: Chain;
   observedAt: string;
-  fromAddress: string;
-  toAddress: string;
-  valueWei: string;
+  fromAddress: string | null;
+  toAddress: string | null;
+  valueNative: string;
   success: boolean;
   blockTimestamp: string | null;
-  internalTransferCount: number;
-  erc20TransferCount: number;
+  nestedTransferCount: number;
+  tokenTransferCount: number;
   parties: TransactionParty[];
   flagged: FlaggedExposure[];
   mixerExposure: MixerExposure | null;
@@ -187,7 +194,7 @@ export interface ScanReportView {
   scanId: string;
   targetType: ScanTarget;
   target: string;
-  chainId: number;
+  chain: Chain;
   riskLevel: RiskLevel;
   score: number;
   explanation: string;
@@ -221,13 +228,13 @@ export interface ErrorResponse {
 
 export interface WatchlistCreateRequest {
   address: string;
-  chainId: number;
+  chain: Chain;
 }
 
 export interface WatchlistEntryView {
   id: string;
   address: string;
-  chainId: number;
+  chain: Chain;
   lastRiskLevel: RiskLevel | null;
   lastScore: number | null;
   lastScanId: string | null;
@@ -239,7 +246,7 @@ export interface AlertView {
   id: string;
   watchlistEntryId: string;
   address: string;
-  chainId: number;
+  chain: Chain;
   previousRiskLevel: RiskLevel;
   previousScore: number;
   newRiskLevel: RiskLevel;

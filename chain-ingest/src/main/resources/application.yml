@@ -52,6 +52,14 @@ chain-ingest:
     rate-limit-backoff: 1s
     connect-timeout: 10s
     read-timeout: 30s
+  mempool:
+    base-url: ${MEMPOOL_BASE_URL:https://mempool.space/api}
+    max-hops: 1
+    calls-per-second: 2
+    rate-limit-retries: 4
+    rate-limit-backoff: 2s
+    connect-timeout: 10s
+    read-timeout: 30s
 
 logging:
   level:

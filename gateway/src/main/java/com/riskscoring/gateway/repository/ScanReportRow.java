@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.repository;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.common.model.ScanTarget;
@@ -12,7 +13,7 @@ public record ScanReportRow(
         UUID scanId,
         ScanTarget targetType,
         String target,
-        int chainId,
+        Chain chain,
         RiskLevel riskLevel,
         int score,
         String explanation,

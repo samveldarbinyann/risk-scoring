@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-watchlist-entry.yaml
   - include:
       file: db/changelog/changes/002-create-alert.yaml
+  - include:
+      file: db/changelog/changes/003-chain-key.yaml

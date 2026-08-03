@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-chain-key
+      author: sam
+      changes:
+        - dropIndex:
+            tableName: scan
+            indexName: idx_scan_target_chain
+        - addColumn:
+            tableName: scan
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+        - sql:
+            sql: >
+              UPDATE gateway.scan SET chain = CASE chain_id
+                WHEN 1        THEN 'ETHEREUM'
+                WHEN 10       THEN 'OPTIMISM'
+                WHEN 56       THEN 'BNB_SMART_CHAIN'
+                WHEN 100      THEN 'GNOSIS'
+                WHEN 137      THEN 'POLYGON'
+                WHEN 8453     THEN 'BASE'
+                WHEN 42161    THEN 'ARBITRUM_ONE'
+                WHEN 43114    THEN 'AVALANCHE'
+                WHEN 59144    THEN 'LINEA'
+              END
+              WHERE chain IS NULL
+        - sql:
+            sql: DELETE FROM gateway.scan WHERE chain IS NULL
+        - addNotNullConstraint:
+            tableName: scan
+            columnName: chain
+            columnDataType: varchar(32)
+        - dropColumn:
+            tableName: scan
+            columns:
+              - column:
+                  name: chain_id
+        - createIndex:
+            tableName: scan
+            indexName: idx_scan_target_chain
+            columns:
+              - column:
+                  name: target
+              - column:
+                  name: chain
+        - modifyDataType:
+            tableName: scan
+            columnName: target
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: scan_group
+            columnName: target
+            newDataType: varchar(128)

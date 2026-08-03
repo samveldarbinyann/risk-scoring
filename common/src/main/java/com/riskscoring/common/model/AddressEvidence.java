@@ -5,13 +5,13 @@ import java.util.List;
 
 public record AddressEvidence(
         String target,
-        int chainId,
+        Chain chain,
         Instant observedAt,
-        int ageDays,
+        Integer ageDays,
         long txCount,
         long txCount24h,
         boolean sampleTruncated,
-        String balanceWei,
+        String balanceNative,
         List<TokenBalance> tokenBalances,
         int counterpartyCount,
         List<FlaggedExposure> flagged,

@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-chain-key
+      author: sam
+      changes:
+        - sql:
+            sql: DELETE FROM chain.address_cache
+        - sql:
+            sql: DELETE FROM chain.transaction_cache
+        - dropUniqueConstraint:
+            tableName: address_cache
+            constraintName: uq_address_cache_chain_address
+        - dropUniqueConstraint:
+            tableName: transaction_cache
+            constraintName: uq_transaction_cache_chain_hash
+        - dropColumn:
+            tableName: address_cache
+            columns:
+              - column:
+                  name: chain_id
+        - dropColumn:
+            tableName: transaction_cache
+            columns:
+              - column:
+                  name: chain_id
+        - addColumn:
+            tableName: address_cache
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: transaction_cache
+            columns:
+              - column:
+                  name: chain
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: address_cache
+            columnNames: chain, address
+            constraintName: uq_address_cache_chain_address
+        - addUniqueConstraint:
+            tableName: transaction_cache
+            columnNames: chain, tx_hash
+            constraintName: uq_transaction_cache_chain_hash
+        - modifyDataType:
+            tableName: address_cache
+            columnName: address
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: counterparty_cache
+            columnName: address
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: transaction_cache
+            columnName: tx_hash
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: transaction_cache
+            columnName: from_address
+            newDataType: varchar(128)
+        - modifyDataType:
+            tableName: transaction_cache
+            columnName: to_address
+            newDataType: varchar(128)
+        - dropNotNullConstraint:
+            tableName: transaction_cache
+            columnName: from_address
+            columnDataType: varchar(128)
+        - dropNotNullConstraint:
+            tableName: transaction_cache
+            columnName: to_address
+            columnDataType: varchar(128)

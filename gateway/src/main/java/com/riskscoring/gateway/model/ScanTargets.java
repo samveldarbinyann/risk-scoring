@@ -1,31 +1,52 @@
 package com.riskscoring.gateway.model;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ScanTarget;
+import com.riskscoring.gateway.exception.TargetChainMismatchException;
 import com.riskscoring.gateway.exception.UnrecognizedTargetException;
 
-import java.util.Locale;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 
 public final class ScanTargets {
 
-    public static final String PATTERN = "^0x([a-fA-F0-9]{40}|[a-fA-F0-9]{64})$";
+    public static final int MAX_LENGTH = 128;
+
+    private static final Comparator<TargetMatch> CANDIDATE_ORDER =
+            Comparator.comparing((TargetMatch match) -> match.chain().support())
+                    .thenComparing(TargetMatch::chain);
 
     private ScanTargets() {
     }
 
-    public static ScanTarget classify(String value) {
-        String normalized = normalize(value);
+    public static List<TargetMatch> classify(String raw) {
+        List<TargetMatch> matches = Arrays.stream(ChainTargetFormat.values())
+                .flatMap(format -> format.classify(raw).stream()
+                        .flatMap(targetType -> matches(format, raw, targetType)))
+                .sorted(CANDIDATE_ORDER)
+                .toList();
 
-        if (EvmAddresses.isValid(normalized)) {
-            return ScanTarget.ADDRESS;
-        }
-        if (EvmTxHashes.isValid(normalized)) {
-            return ScanTarget.TRANSACTION;
+        if (matches.isEmpty()) {
+            throw new UnrecognizedTargetException(raw);
         }
 
-        throw new UnrecognizedTargetException(value);
+        return matches;
     }
 
-    public static String normalize(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    public static TargetMatch require(String raw, Chain chain, ScanTarget expected) {
+        ChainTargetFormat format = ChainTargetFormat.of(chain.family());
+
+        return format.classify(raw)
+                .filter(targetType -> targetType == expected)
+                .map(targetType -> new TargetMatch(chain, targetType, format.normalize(raw)))
+                .orElseThrow(() -> new TargetChainMismatchException(raw, chain));
+    }
+
+    private static Stream<TargetMatch> matches(ChainTargetFormat format, String raw, ScanTarget targetType) {
+        String normalized = format.normalize(raw);
+        return Chain.of(format.family()).stream()
+                .map(chain -> new TargetMatch(chain, targetType, normalized));
     }
 }

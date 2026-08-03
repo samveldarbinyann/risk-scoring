@@ -1,5 +1,6 @@
 package com.riskscoring.enrichment.service.impl;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.FlaggedExposure;
 import com.riskscoring.common.model.LabelCategory;
 import com.riskscoring.common.model.TransferDirection;
@@ -32,7 +33,7 @@ public class Labels {
     }
 
     public FlaggedExposure toExposure(Label label, String address, TransferDirection direction,
-                                      int hops, String valueWei) {
+                                      int hops, String valueNative) {
         return new FlaggedExposure(
                 address,
                 label.getCategory(),
@@ -40,7 +41,11 @@ public class Labels {
                 label.getSource(),
                 direction,
                 hops,
-                valueWei);
+                valueNative);
+    }
+
+    public boolean isRoundAmount(BigInteger value, Chain chain) {
+        return value.signum() > 0 && value.mod(chain.nativeUnit()).signum() == 0;
     }
 
     public int percent(BigInteger part, BigInteger total) {

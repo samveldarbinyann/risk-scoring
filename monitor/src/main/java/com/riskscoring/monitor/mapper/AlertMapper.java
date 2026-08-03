@@ -1,6 +1,7 @@
 package com.riskscoring.monitor.mapper;
 
 import com.riskscoring.common.event.AlertTriggered;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.monitor.entity.Alert;
 import com.riskscoring.monitor.entity.WatchlistEntry;
@@ -18,7 +19,7 @@ public class AlertMapper {
                 .watchlistEntryId(entry.getId())
                 .userId(entry.getUserId())
                 .address(entry.getAddress())
-                .chainId(entry.getChainId())
+                .chain(entry.getChain())
                 .previousRiskLevel(entry.getLastRiskLevel())
                 .previousScore(entry.getLastScore())
                 .newRiskLevel(newLevel)
@@ -34,7 +35,7 @@ public class AlertMapper {
                 alert.getWatchlistEntryId(),
                 alert.getUserId(),
                 alert.getAddress(),
-                alert.getChainId(),
+                alert.getChain(),
                 alert.getPreviousRiskLevel(),
                 alert.getPreviousScore(),
                 alert.getNewRiskLevel(),

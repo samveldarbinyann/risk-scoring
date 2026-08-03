@@ -1,16 +1,17 @@
+import { NativeAmount } from "@/components/ui/NativeAmount";
 import { TargetChip } from "@/components/ui/TargetChip";
-import { nativeSymbol } from "@/lib/chains";
-import { formatCount, formatDateTime, formatWei } from "@/lib/format";
+import type { Chain } from "@/lib/chains/registry";
+import { formatCount, formatDateTime, UNKNOWN_VALUE } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK } from "@/lib/risk";
 import type { FlaggedExposure, TransactionEvidence } from "@/lib/types";
 
 interface TransactionDetailsProps {
-  chainId: number;
+  chain: Chain;
   evidence: TransactionEvidence;
 }
 
-export function TransactionDetails({ chainId, evidence }: TransactionDetailsProps) {
+export function TransactionDetails({ chain, evidence }: TransactionDetailsProps) {
   const { t, locale } = useI18n();
   const statusClass = evidence.success ? RISK.LOW.text : RISK.CRITICAL.text;
 
@@ -18,9 +19,7 @@ export function TransactionDetails({ chainId, evidence }: TransactionDetailsProp
     <div className="flex flex-col gap-6 p-6">
       <div>
         <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.txValue")}</p>
-        <p className="mt-2 font-mono text-2xl text-text">
-          {formatWei(evidence.valueWei, locale)} <span className="text-base text-text-dim">{nativeSymbol(chainId)}</span>
-        </p>
+        <NativeAmount chain={chain} raw={evidence.valueNative} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -36,13 +35,13 @@ export function TransactionDetails({ chainId, evidence }: TransactionDetailsProp
         />
         <StatCell
           label={t("report.txBlockTime")}
-          value={evidence.blockTimestamp === null ? "—" : formatDateTime(evidence.blockTimestamp, locale)}
+          value={evidence.blockTimestamp === null ? UNKNOWN_VALUE : formatDateTime(evidence.blockTimestamp, locale)}
         />
         <StatCell
           label={t("report.txInternalTransfers")}
-          value={formatCount(evidence.internalTransferCount, locale)}
+          value={formatCount(evidence.nestedTransferCount, locale)}
         />
-        <StatCell label={t("report.txTokenTransfers")} value={formatCount(evidence.erc20TransferCount, locale)} />
+        <StatCell label={t("report.txTokenTransfers")} value={formatCount(evidence.tokenTransferCount, locale)} />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -64,14 +63,18 @@ export function TransactionDetails({ chainId, evidence }: TransactionDetailsProp
 
 interface PartyRowProps {
   label: string;
-  address: string;
+  address: string | null;
 }
 
 function PartyRow({ label, address }: PartyRowProps) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <span className="font-sans text-xs uppercase tracking-wider text-text-dim">{label}</span>
-      <TargetChip value={address} className="min-w-0 text-sm" />
+      {address === null ? (
+        <span className="font-mono text-sm text-text-faint">{UNKNOWN_VALUE}</span>
+      ) : (
+        <TargetChip value={address} className="min-w-0 text-sm" />
+      )}
     </div>
   );
 }

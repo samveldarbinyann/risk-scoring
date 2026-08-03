@@ -1,5 +1,6 @@
 package com.riskscoring.monitor.repository;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.monitor.entity.WatchlistEntry;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,13 +14,13 @@ import java.util.UUID;
 
 public interface WatchlistEntryRepository extends JpaRepository<WatchlistEntry, UUID> {
 
-    Optional<WatchlistEntry> findByUserIdAndChainIdAndAddress(UUID userId, int chainId, String address);
+    Optional<WatchlistEntry> findByUserIdAndChainAndAddress(UUID userId, Chain chain, String address);
 
     Optional<WatchlistEntry> findByIdAndUserId(UUID id, UUID userId);
 
     Optional<WatchlistEntry> findByPendingScanId(UUID pendingScanId);
 
-    List<WatchlistEntry> findByChainIdAndAddressAndActiveTrue(int chainId, String address);
+    List<WatchlistEntry> findByChainAndAddressAndActiveTrue(Chain chain, String address);
 
     @Query("""
             SELECT w FROM WatchlistEntry w

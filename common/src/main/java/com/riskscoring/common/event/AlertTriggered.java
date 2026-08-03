@@ -1,5 +1,6 @@
 package com.riskscoring.common.event;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 
 import java.time.Instant;
@@ -10,7 +11,7 @@ public record AlertTriggered(
         UUID watchlistEntryId,
         UUID userId,
         String address,
-        int chainId,
+        Chain chain,
         RiskLevel previousRiskLevel,
         int previousScore,
         RiskLevel newRiskLevel,

@@ -34,7 +34,7 @@ public class ScanGroup {
     @Column(name = "target_type", nullable = false, length = 16)
     private ScanTarget targetType;
 
-    @Column(nullable = false, length = 66)
+    @Column(nullable = false, length = 128)
     private String target;
 
     @Column(name = "requested_at", nullable = false)

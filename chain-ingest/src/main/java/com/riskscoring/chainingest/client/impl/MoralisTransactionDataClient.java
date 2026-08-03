@@ -2,9 +2,10 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.ChainDataClient;
 import com.riskscoring.chainingest.client.MoralisApi;
-import com.riskscoring.chainingest.exception.UnsupportedChainException;
+import com.riskscoring.chainingest.mapper.MoralisValues;
 import com.riskscoring.chainingest.mapper.TransactionSnapshotMapper;
-import com.riskscoring.common.model.EvmChain;
+import com.riskscoring.common.model.Chain;
+import com.riskscoring.common.model.ChainFamily;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.common.model.TransactionFacts;
 import com.riskscoring.common.model.TransactionSnapshot;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
 
 @Component
 @RequiredArgsConstructor
@@ -20,7 +20,13 @@ import java.util.Locale;
 public class MoralisTransactionDataClient implements ChainDataClient {
 
     private final MoralisApi moralisApi;
+    private final MoralisValues values;
     private final TransactionSnapshotMapper transactionSnapshotMapper;
+
+    @Override
+    public ChainFamily family() {
+        return ChainFamily.EVM;
+    }
 
     @Override
     public ScanTarget target() {
@@ -28,15 +34,14 @@ public class MoralisTransactionDataClient implements ChainDataClient {
     }
 
     @Override
-    public TransactionFacts fetch(String hash, int chainId) {
-        EvmChain chain = EvmChain.byId(chainId).orElseThrow(() -> new UnsupportedChainException(chainId));
-        String target = hash.toLowerCase(Locale.ROOT);
+    public TransactionFacts fetch(String hash, Chain chain) {
+        String target = values.address(hash);
 
-        TransactionSnapshot snapshot = transactionSnapshotMapper.fromMoralis(moralisApi.transaction(target, chainId));
+        TransactionSnapshot snapshot = transactionSnapshotMapper.fromMoralis(moralisApi.transaction(target, chain));
 
         log.info("Fetched transaction {} on {}: {} parties, {} internal, {} token transfers (success={})",
                 target, chain.displayName(), snapshot.parties().size(),
-                snapshot.internalTransferCount(), snapshot.erc20TransferCount(), snapshot.success());
+                snapshot.nestedTransferCount(), snapshot.tokenTransferCount(), snapshot.success());
 
         return new TransactionFacts(snapshot);
     }

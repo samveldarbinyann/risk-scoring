@@ -7,21 +7,21 @@ import { Card } from "@/components/ui/Card";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
 import { addToWatchlist, listWatchlist, removeFromWatchlist } from "@/lib/api";
-import { isEvmAddress } from "@/lib/address";
 import { useAuth } from "@/lib/auth/context";
-import { EVM_CHAINS } from "@/lib/chains";
+import { useChains } from "@/lib/chains/context";
+import type { Chain } from "@/lib/chains/registry";
 import { useI18n } from "@/lib/i18n/context";
 import { pollUntil } from "@/lib/poll";
 import type { WatchlistEntryView } from "@/lib/types";
 
-const DEFAULT_CHAIN_ID = EVM_CHAINS[0]?.chainId ?? 1;
-
 export function WatchlistPage() {
   const { t } = useI18n();
   const { status } = useAuth();
+  const { defaultChain } = useChains();
   const [entries, setEntries] = useState<WatchlistEntryView[]>([]);
   const [address, setAddress] = useState("");
-  const [chainId, setChainId] = useState(DEFAULT_CHAIN_ID);
+  const [selectedChain, setSelectedChain] = useState<Chain | null>(null);
+  const chain = selectedChain ?? defaultChain;
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export function WatchlistPage() {
     if (isSubmitting) return;
 
     const trimmed = address.trim();
-    if (!isEvmAddress(trimmed)) {
+    if (!trimmed || chain === null) {
       setActionError(t("watchlist.invalidAddress"));
       setStatusMessage(null);
       return;
@@ -78,13 +78,11 @@ export function WatchlistPage() {
     setStatusMessage(null);
     setIsSubmitting(true);
 
-    const normalized = trimmed.toLowerCase();
-
     try {
-      await addToWatchlist({ address: trimmed, chainId });
+      await addToWatchlist({ address: trimmed, chain });
       const { value, matched } = await pollUntil(
         loadEntries,
-        (list) => list.some((entry) => entry.address === normalized && entry.chainId === chainId),
+        (list) => list.some((entry) => entry.address.toLowerCase() === trimmed.toLowerCase() && entry.chain === chain),
       );
       setEntries(value);
       if (matched) {
@@ -135,10 +133,10 @@ export function WatchlistPage() {
       <Card>
         <WatchlistForm
           address={address}
-          chainId={chainId}
+          chain={chain}
           isSubmitting={isSubmitting}
           onAddressChange={setAddress}
-          onChainIdChange={setChainId}
+          onChainChange={setSelectedChain}
           onSubmit={() => void handleAdd()}
         />
         <div className="mt-3 flex flex-col gap-2">

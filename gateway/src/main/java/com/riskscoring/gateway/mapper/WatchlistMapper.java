@@ -2,6 +2,7 @@ package com.riskscoring.gateway.mapper;
 
 import com.riskscoring.common.event.WatchlistAddRequested;
 import com.riskscoring.common.event.WatchlistRemoveRequested;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.gateway.dto.WatchlistEntryView;
 import com.riskscoring.gateway.repository.WatchlistEntryRow;
@@ -13,8 +14,8 @@ import java.util.UUID;
 @Component
 public class WatchlistMapper {
 
-    public WatchlistAddRequested toAddRequested(UUID userId, String address, int chainId, Language language) {
-        return new WatchlistAddRequested(UUID.randomUUID(), userId, address, chainId, language, Instant.now());
+    public WatchlistAddRequested toAddRequested(UUID userId, String address, Chain chain, Language language) {
+        return new WatchlistAddRequested(UUID.randomUUID(), userId, address, chain, language, Instant.now());
     }
 
     public WatchlistRemoveRequested toRemoveRequested(UUID userId, UUID entryId) {
@@ -25,7 +26,7 @@ public class WatchlistMapper {
         return new WatchlistEntryView(
                 row.id(),
                 row.address(),
-                row.chainId(),
+                row.chain(),
                 row.lastRiskLevel(),
                 row.lastScore(),
                 row.lastScanId(),

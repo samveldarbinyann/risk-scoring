@@ -4,6 +4,7 @@ import com.riskscoring.common.event.ChainFetched;
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.event.SignalsComputed;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.enrichment.entity.Label;
 import com.riskscoring.enrichment.kafka.EnrichmentEventPublisher;
@@ -53,7 +54,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
                 event.scanId(),
                 event.targetType(),
                 event.target(),
-                event.chainId(),
+                event.chain(),
                 evidence,
                 event.language(),
                 Instant.now()
@@ -61,8 +62,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
     }
 
     private Map<String, Label> findLabels(ChainFetched event) {
-        return labelRepository.findByChainIdAndAddressIn(
-                        event.chainId(), riskSignalCalculator.addressesToLabel(event)).stream()
+        return labelRepository.findByChainAndAddressIn(event.chain(), riskSignalCalculator.addressesToLabel(event)).stream()
                 .collect(Collectors.toMap(Label::getAddress, Function.identity()));
     }
 }

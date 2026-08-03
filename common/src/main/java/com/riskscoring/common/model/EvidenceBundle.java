@@ -14,7 +14,7 @@ public sealed interface EvidenceBundle permits AddressEvidence, TransactionEvide
 
     String target();
 
-    int chainId();
+    Chain chain();
 
     Instant observedAt();
 }

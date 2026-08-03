@@ -1,7 +1,7 @@
 import { TargetChip } from "@/components/ui/TargetChip";
 import { ChainIcon } from "@/components/ui/ChainIcon";
 import { RiskBadge } from "@/components/ui/RiskBadge";
-import { chainLabel } from "@/lib/chains";
+import { useChains } from "@/lib/chains/context";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { AlertView } from "@/lib/types";
@@ -12,12 +12,13 @@ interface AlertRowProps {
 
 export function AlertRow({ alert }: AlertRowProps) {
   const { t, locale } = useI18n();
+  const { label } = useChains();
 
   return (
     <div className="flex flex-col gap-3 border-b border-border py-4 last:border-b-0">
       <div className="flex flex-wrap items-center gap-3">
-        <ChainIcon chainId={alert.chainId} className="h-5 w-5 shrink-0 text-text-dim" />
-        <span className="font-sans text-sm text-text">{chainLabel(alert.chainId)}</span>
+        <ChainIcon chain={alert.chain} className="h-5 w-5 shrink-0 text-text-dim" />
+        <span className="font-sans text-sm text-text">{label(alert.chain)}</span>
         <TargetChip value={alert.address} className="text-sm" />
         <span className="font-mono text-xs text-text-faint sm:ml-auto">
           {t("alerts.triggeredAt")}: {formatDateTime(alert.triggeredAt, locale)}

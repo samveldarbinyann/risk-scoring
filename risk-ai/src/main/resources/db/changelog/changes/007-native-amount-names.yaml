@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-native-amount-names
+      author: sam
+      changes:
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report
+              SET evidence = (evidence - 'balanceWei'::text)
+                || jsonb_build_object('balanceNative', evidence -> 'balanceWei')
+              WHERE jsonb_exists(evidence, 'balanceWei')
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report
+              SET evidence = (evidence - 'valueWei'::text - 'internalTransferCount'::text - 'erc20TransferCount'::text)
+                || jsonb_build_object(
+                     'valueNative', evidence -> 'valueWei',
+                     'nestedTransferCount', evidence -> 'internalTransferCount',
+                     'tokenTransferCount', evidence -> 'erc20TransferCount')
+              WHERE jsonb_exists(evidence, 'valueWei')
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report SET evidence = jsonb_set(evidence, '{flagged}', (
+                SELECT COALESCE(jsonb_agg(
+                  (item - 'valueWei'::text) || jsonb_build_object('valueNative', item -> 'valueWei')), '[]'::jsonb)
+                FROM jsonb_array_elements(evidence -> 'flagged') AS item))
+              WHERE jsonb_typeof(evidence -> 'flagged') = 'array'
+                AND EXISTS (
+                  SELECT 1 FROM jsonb_array_elements(evidence -> 'flagged') AS item
+                  WHERE jsonb_exists(item, 'valueWei'))
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report SET evidence = jsonb_set(evidence, '{parties}', (
+                SELECT COALESCE(jsonb_agg(
+                  (item - 'valueWei'::text) || jsonb_build_object('valueNative', item -> 'valueWei')), '[]'::jsonb)
+                FROM jsonb_array_elements(evidence -> 'parties') AS item))
+              WHERE jsonb_typeof(evidence -> 'parties') = 'array'
+                AND EXISTS (
+                  SELECT 1 FROM jsonb_array_elements(evidence -> 'parties') AS item
+                  WHERE jsonb_exists(item, 'valueWei'))
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report SET evidence = jsonb_set(evidence, '{mixerExposure}',
+                ((evidence -> 'mixerExposure') - 'valueWei'::text)
+                  || jsonb_build_object('valueNative', evidence -> 'mixerExposure' -> 'valueWei'))
+              WHERE jsonb_typeof(evidence -> 'mixerExposure') = 'object'
+                AND jsonb_exists(evidence -> 'mixerExposure', 'valueWei')

@@ -1,6 +1,7 @@
 package com.riskscoring.enrichment.mapper;
 
 import com.riskscoring.common.event.ChainFetched;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.enrichment.entity.EvidenceRecord;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class EvidenceMapper {
                 .scanId(event.scanId())
                 .targetType(event.targetType())
                 .target(evidence.target())
-                .chainId(evidence.chainId())
+                .chain(evidence.chain())
                 .payload(objectMapper.writeValueAsString(evidence))
                 .createdAt(createdAt)
                 .build();

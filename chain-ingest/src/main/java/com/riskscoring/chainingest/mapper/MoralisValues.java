@@ -1,7 +1,7 @@
 package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.client.dto.MoralisTransaction;
-import com.riskscoring.chainingest.exception.MoralisException;
+import com.riskscoring.chainingest.exception.ChainDataException;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -23,7 +23,7 @@ public class MoralisValues {
         try {
             return Instant.parse(iso.trim());
         } catch (DateTimeParseException e) {
-            throw new MoralisException("Unparsable timestamp from Moralis: " + iso, e);
+            throw new ChainDataException("Unparsable timestamp from Moralis: " + iso, e);
         }
     }
 
@@ -35,7 +35,7 @@ public class MoralisValues {
         try {
             return new BigInteger(value.trim());
         } catch (NumberFormatException e) {
-            throw new MoralisException("Unparsable wei value from Moralis: " + value, e);
+            throw new ChainDataException("Unparsable wei value from Moralis: " + value, e);
         }
     }
 

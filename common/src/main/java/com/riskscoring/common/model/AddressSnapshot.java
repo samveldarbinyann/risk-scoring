@@ -6,7 +6,7 @@ import java.util.List;
 public record AddressSnapshot(
         long txCount,
         long txCount24h,
-        String balanceWei,
+        String balanceNative,
         List<TokenBalance> tokenBalances,
         Instant firstSeenAt,
         Instant lastSeenAt,

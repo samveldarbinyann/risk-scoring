@@ -4,7 +4,7 @@ import { DocsTermList } from "@/components/docs/DocsTermList";
 import { ChainIcon } from "@/components/ui/ChainIcon";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { RiskBadge } from "@/components/ui/RiskBadge";
-import { EVM_CHAINS } from "@/lib/chains";
+import { useChains } from "@/lib/chains/context";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK_ORDER } from "@/lib/risk";
 import type { MessageKey } from "@/lib/i18n/messageKeys";
@@ -36,23 +36,24 @@ const FLAG_CATEGORIES: Array<{ titleKey: MessageKey; bodyKey: MessageKey }> = [
 const SCAN_REQUEST_SAMPLE = `curl -X POST https://api.example.com/api/v1/scans \\
   -H "X-Api-Key: rsk_your_key_here" \\
   -H "Content-Type: application/json" \\
-  -d '{"address":"0x742d35Cc6634C0532925a3b844Bc454e4438f44e","chainIds":[1,56]}'
+  -d '{"target":"0x742d35Cc6634C0532925a3b844Bc454e4438f44e","chains":["ETHEREUM","BNB_SMART_CHAIN"]}'
 
 202 Accepted
 {
   "groupId": "6f1c9b2e-...",
-  "address": "0x742d35cc6634c0532925a3b844bc454e4438f44e",
-  "chainIds": [1, 56]
+  "targetType": "ADDRESS",
+  "target": "0x742d35cc6634c0532925a3b844bc454e4438f44e",
+  "chains": ["ETHEREUM", "BNB_SMART_CHAIN"]
 }`;
 
 const REPORT_SAMPLE = `curl https://api.example.com/api/scans/groups/6f1c9b2e-.../report
 
 200 OK
 {
-  "address": "0x742d35cc...",
+  "target": "0x742d35cc...",
   "reports": [
     {
-      "chainId": 1,
+      "chain": "ETHEREUM",
       "riskLevel": "HIGH",
       "score": 78,
       "explanation": "34% of inbound funds passed through a mixer ...",
@@ -66,6 +67,7 @@ const AUTH_SAMPLE = `X-Api-Key: rsk_live_9f2c...`;
 
 export function DocsPage() {
   const { t } = useI18n();
+  const { chains } = useChains();
 
   function toTerms(items: Array<{ titleKey: MessageKey; bodyKey: MessageKey }>): DocsTerm[] {
     return items.map((item) => ({ term: t(item.titleKey), description: t(item.bodyKey) }));
@@ -131,21 +133,18 @@ export function DocsPage() {
 
       <DocsSection index={6} title={t("docs.networks.title")} body={t("docs.networks.body")}>
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {EVM_CHAINS.map((chain) => (
+          {chains.map((chain) => (
             <li
-              key={chain.chainId}
+              key={chain.chain}
               className="flex items-center gap-3 rounded-panel border border-border bg-surface px-4 py-3"
             >
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-dim">
-                <ChainIcon chainId={chain.chainId} className="h-5 w-5" />
+                <ChainIcon chain={chain.chain} className="h-5 w-5" />
               </span>
-              <span className="flex-1 font-sans text-sm text-text">{chain.label}</span>
-              {chain.testnet && (
-                <span className="rounded-base border border-border px-2 py-0.5 font-mono text-xs text-text-faint">
-                  {t("docs.networks.testnet")}
-                </span>
-              )}
-              <span className="font-mono text-xs text-text-faint">{chain.chainId}</span>
+              <span className="flex-1 font-sans text-sm text-text">{chain.displayName}</span>
+              <span className="font-mono text-xs text-text-faint">
+                {chain.support === "SUPPORTED" ? t("docs.networks.statusLive") : t("docs.networks.statusSoon")}
+              </span>
             </li>
           ))}
         </ul>

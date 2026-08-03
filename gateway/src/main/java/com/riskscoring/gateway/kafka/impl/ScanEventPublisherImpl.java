@@ -18,7 +18,7 @@ public class ScanEventPublisherImpl implements ScanEventPublisher {
     @Override
     public void publishScanRequested(ScanRequested event) {
         kafkaTemplate.send(Topics.SCAN_REQUESTED, event.scanId().toString(), event);
-        log.info("Published {} scanId={} {}={} chainId={}",
-                Topics.SCAN_REQUESTED, event.scanId(), event.targetType(), event.target(), event.chainId());
+        log.info("Published {} scanId={} {}={} chain={}",
+                Topics.SCAN_REQUESTED, event.scanId(), event.targetType(), event.target(), event.chain());
     }
 }

@@ -37,7 +37,7 @@ public class CounterpartyCache {
     @JoinColumn(name = "address_cache_id", nullable = false)
     private AddressCache addressCache;
 
-    @Column(nullable = false, length = 42)
+    @Column(nullable = false, length = 128)
     private String address;
 
     @Enumerated(EnumType.STRING)
@@ -47,8 +47,8 @@ public class CounterpartyCache {
     @Column(name = "tx_count", nullable = false)
     private long txCount;
 
-    @Column(name = "total_value_wei", nullable = false, precision = 78)
-    private BigInteger totalValueWei;
+    @Column(name = "total_value_native", nullable = false, precision = 78)
+    private BigInteger totalValueNative;
 
     @Column(nullable = false)
     private int hops;

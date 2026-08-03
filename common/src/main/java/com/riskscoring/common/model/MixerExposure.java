@@ -5,6 +5,6 @@ import java.util.List;
 public record MixerExposure(
         List<String> services,
         int percentOfVolume,
-        String valueWei
+        String valueNative
 ) {
 }

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ScanProgressMessage } from "@/lib/types";
 import { ConsoleLine } from "@/components/console/ConsoleLine";
-import { chainLabel } from "@/lib/chains";
+import { useChains } from "@/lib/chains/context";
+import type { Chain } from "@/lib/chains/registry";
 import { typewriterDurationMs } from "@/hooks/useTypewriter";
 import { useI18n } from "@/lib/i18n/context";
 
@@ -11,7 +12,7 @@ const LINE_GAP_MS = 160;
 
 interface ConsoleLogProps {
   lines: ScanProgressMessage[];
-  chainByScanId?: Map<string, number>;
+  chainByScanId?: Map<string, Chain>;
   completed: boolean;
   onPlaybackChange?: (visibleLines: ScanProgressMessage[]) => void;
   onPlaybackComplete?: () => void;
@@ -19,6 +20,7 @@ interface ConsoleLogProps {
 
 export function ConsoleLog({ lines, chainByScanId, completed, onPlaybackChange, onPlaybackComplete }: ConsoleLogProps) {
   const { t } = useI18n();
+  const { label } = useChains();
   const [visibleLineCount, setVisibleLineCount] = useState(0);
 
   useEffect(() => {
@@ -88,14 +90,14 @@ export function ConsoleLog({ lines, chainByScanId, completed, onPlaybackChange, 
         ) : (
           <AnimatePresence initial={false}>
             {visibleLines.map((line, index) => {
-              const chainId = chainByScanId?.get(line.scanId);
+              const chain = chainByScanId?.get(line.scanId);
               return (
                 <ConsoleLine
                   key={`${line.scanId}-${line.stage}-${index}`}
                   stage={line.stage}
                   message={line.message}
                   at={line.at}
-                  chain={chainId !== undefined ? chainLabel(chainId) : undefined}
+                  chain={chain !== undefined ? label(chain) : undefined}
                   msPerChar={CONSOLE_MS_PER_CHAR}
                 />
               );
