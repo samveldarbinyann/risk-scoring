@@ -60,7 +60,9 @@ public class TronTransactionDataClient implements ChainDataClient {
     private List<TronTrc20Transfer> tokenTransfers(TronTransaction transaction,
                                                    TronTransactionInfo info,
                                                    String txId) {
-        if (info.blockTimeStamp() == NO_BLOCK) {
+        long blockTime = values.blockTime(info);
+
+        if (blockTime == NO_BLOCK) {
             return List.of();
         }
 
@@ -70,7 +72,7 @@ public class TronTransactionDataClient implements ChainDataClient {
                 .map(TronContractValue::ownerAddress)
                 .map(values::address)
                 .filter(values::isRoutable)
-                .map(owner -> tronGridApi.trc20TransfersAt(owner, info.blockTimeStamp()).stream()
+                .map(owner -> tronGridApi.trc20TransfersAt(owner, blockTime).stream()
                         .filter(transfer -> txId.equalsIgnoreCase(transfer.transactionId()))
                         .toList())
                 .orElseGet(List::of);

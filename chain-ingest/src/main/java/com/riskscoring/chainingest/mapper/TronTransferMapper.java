@@ -39,7 +39,7 @@ public class TronTransferMapper {
                 .filter(contract -> TronValues.TRANSFER_CONTRACT.equals(contract.type()))
                 .flatMap(values::value)
                 .flatMap(value -> toTransfer(owner, value.ownerAddress(), value.toAddress(),
-                        BigInteger.valueOf(value.amount()), values.timestamp(transaction.blockTimestamp())));
+                        values.amount(value), values.timestamp(transaction.blockTimestamp())));
     }
 
     private Optional<Transfer> toTransfer(String owner, String from, String to, BigInteger value, Instant at) {

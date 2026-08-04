@@ -35,7 +35,7 @@ public class TronTransactionSnapshotMapper {
         Optional<TronContractValue> value = values.contract(transaction).flatMap(values::value);
 
         String sender = value.map(TronContractValue::ownerAddress).map(values::address).orElse("");
-        BigInteger nativeAmount = BigInteger.valueOf(value.map(TronContractValue::amount).orElse(0L));
+        BigInteger nativeAmount = value.map(values::amount).orElse(BigInteger.ZERO);
 
         return new TransactionSnapshot(
                 values.normalize(transaction.txID()),

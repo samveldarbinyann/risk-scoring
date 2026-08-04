@@ -6,6 +6,7 @@ import com.riskscoring.chainingest.client.dto.trongrid.TronParameter;
 import com.riskscoring.chainingest.client.dto.trongrid.TronRawData;
 import com.riskscoring.chainingest.client.dto.trongrid.TronRet;
 import com.riskscoring.chainingest.client.dto.trongrid.TronTransaction;
+import com.riskscoring.chainingest.client.dto.trongrid.TronTransactionInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -44,8 +45,16 @@ public class TronValues implements ChainAddressValues {
         return !address.isEmpty();
     }
 
-    public Instant timestamp(long epochMillis) {
-        return epochMillis == NO_TIMESTAMP ? null : Instant.ofEpochMilli(epochMillis);
+    public Instant timestamp(Long epochMillis) {
+        return epochMillis == null || epochMillis == NO_TIMESTAMP ? null : Instant.ofEpochMilli(epochMillis);
+    }
+
+    public long blockTime(TronTransactionInfo info) {
+        return Objects.requireNonNullElse(info.blockTimeStamp(), NO_TIMESTAMP);
+    }
+
+    public BigInteger amount(TronContractValue value) {
+        return BigInteger.valueOf(Objects.requireNonNullElse(value.amount(), 0L));
     }
 
     public boolean succeeded(TronTransaction transaction) {

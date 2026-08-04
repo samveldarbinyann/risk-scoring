@@ -71,6 +71,16 @@ chain-ingest:
     rate-limit-backoff: 2s
     connect-timeout: 10s
     read-timeout: 30s
+  ton-api:
+    base-url: ${TONAPI_BASE_URL:https://tonapi.io}
+    api-key: ${TONAPI_API_KEY:}
+    page-size: 100
+    max-hops: 2
+    calls-per-second: 1
+    rate-limit-retries: 4
+    rate-limit-backoff: 2s
+    connect-timeout: 10s
+    read-timeout: 30s
   helius:
     base-url: ${HELIUS_BASE_URL:https://mainnet.helius-rpc.com}
     api-key: ${HELIUS_API_KEY}

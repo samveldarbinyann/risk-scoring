@@ -107,6 +107,49 @@ public class PromptBuilderImpl implements PromptBuilder {
               chain, so a null usdValue means unknown, not zero.
             """;
 
+    private static final String ADDRESS_TON_PROMPT = """
+            Rules specific to this chain (account model, jetton-dominated):
+            - Addresses are in raw form "<workchain>:<64 hex>". The same wallet is also displayed
+              elsewhere as EQ… or UQ… — those are the same account, not different ones.
+            - Most economic activity here is jetton transfer, above all USD₮. Those counterparties
+              carry value "0" in totalValueNative because that field covers the native currency only:
+              never read a zero there as "no funds moved with this counterparty".
+            - txCount and the counterparty list come from a capped page of recent activity and are a
+              lower bound on lifetime activity.
+            - ageDays is derived from the account's first-ever event on chain, so unlike some other
+              chains it is trustworthy here. A genuinely fresh account funded and drained quickly is a
+              meaningful signal.
+            - Dust-spam events (unsolicited micro-transfers carrying advertising) are deliberately
+              excluded from the counterparty graph. A short counterparty list therefore does not mean
+              the wallet is dormant.
+            - Staking, NFT and DNS operations are excluded too: they move no value between wallets.
+            - tokenBalances are jetton holdings at observedAt.
+            - No sanctioned addresses are published for this chain, so the absence of a SANCTION label
+              here is a limitation of the data, NOT evidence that the address is clean. Say so and put
+              the sanctions check into "manualChecks".
+            """;
+
+    private static final String TRANSACTION_TON_PROMPT = """
+            Rules specific to this chain (account model, jetton-dominated):
+            - Addresses are in raw form "<workchain>:<64 hex>"; the EQ…/UQ… spellings seen elsewhere
+              denote the same accounts.
+            - A transaction here is a trace: one inbound message and every message it triggered. The
+              trace is already flattened into a list of transfers, so nestedTransferCount is always 0
+              and the fanOutInternal heuristic never fires — judge fan-out from the parties list and
+              distinctPartyCount instead.
+            - Roles are SENDER / RECIPIENT for native transfers and TOKEN_SENDER / TOKEN_RECIPIENT for
+              jetton transfers, all at hops 0. INTERNAL_* roles never appear here.
+            - This chain declares no from/to pair for a trace. fromAddress is the sender of its first
+              transfer and toAddress is the recipient of its largest one — both are our reconstruction,
+              not a declared pair. Say so instead of treating them as authoritative.
+            - If this is a jetton transfer, valueNative is small or 0 and the real movement is in
+              tokenTransfers — judge the amount from there, never conclude that nothing was transferred.
+            - success=false means part of the trace failed and that value did not move. Say so
+              explicitly rather than ignoring the attempt.
+            - No sanctioned addresses are published for this chain, so the absence of a SANCTION label
+              on a party is a limitation of the data, NOT evidence that the transfer is clean.
+            """;
+
     private static final String TRANSACTION_TRON_PROMPT = """
             Rules specific to this chain (account model, TRC20-dominated):
             - A transaction here is a single contract call. If it is a TRC20 transfer, valueNative is 0
@@ -237,7 +280,8 @@ public class PromptBuilderImpl implements PromptBuilder {
             ChainFamily.EVM, new FamilyPromptRules(ADDRESS_EVM_PROMPT, TRANSACTION_EVM_PROMPT),
             ChainFamily.BITCOIN, new FamilyPromptRules(ADDRESS_UTXO_PROMPT, TRANSACTION_UTXO_PROMPT),
             ChainFamily.SOLANA, new FamilyPromptRules(ADDRESS_SOLANA_PROMPT, TRANSACTION_SOLANA_PROMPT),
-            ChainFamily.TRON, new FamilyPromptRules(ADDRESS_TRON_PROMPT, TRANSACTION_TRON_PROMPT));
+            ChainFamily.TRON, new FamilyPromptRules(ADDRESS_TRON_PROMPT, TRANSACTION_TRON_PROMPT),
+            ChainFamily.TON, new FamilyPromptRules(ADDRESS_TON_PROMPT, TRANSACTION_TON_PROMPT));
 
     private static final Map<Language, String> LANGUAGE_NAMES = Map.of(
             Language.EN, "English",

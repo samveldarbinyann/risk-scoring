@@ -24,7 +24,7 @@ public enum Chain {
     BITCOIN(ChainFamily.BITCOIN, "Bitcoin", "BTC", 8, null, ChainSupport.SUPPORTED),
     SOLANA(ChainFamily.SOLANA, "Solana", "SOL", 9, null, ChainSupport.SUPPORTED),
     TRON(ChainFamily.TRON, "TRON", "TRX", 6, null, ChainSupport.SUPPORTED),
-    TON(ChainFamily.TON, "TON", "TON", 9, null, ChainSupport.PLANNED),
+    TON(ChainFamily.TON, "TON", "TON", 9, null, ChainSupport.SUPPORTED),
     SUI(ChainFamily.SUI, "Sui", "SUI", 9, null, ChainSupport.PLANNED);
 
     private static final Map<String, Chain> BY_NAME = Arrays.stream(values())

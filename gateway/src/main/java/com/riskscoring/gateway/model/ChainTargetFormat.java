@@ -36,9 +36,9 @@ public enum ChainTargetFormat {
             Normalization.NONE),
 
     TON(ChainFamily.TON,
-            "^(0:[a-fA-F0-9]{64}|[A-Za-z0-9_-]{48})$",
-            "^([A-Za-z0-9_-]{44}|[a-fA-F0-9]{64})$",
-            Normalization.NONE),
+            "^(-1|0):[a-f0-9]{64}$",
+            "^[a-f0-9]{64}$",
+            Normalization.TON),
 
     SUI(ChainFamily.SUI,
             "^0x[a-fA-F0-9]{64}$",
@@ -47,6 +47,7 @@ public enum ChainTargetFormat {
 
     private enum Normalization {
         LOWERCASE,
+        TON,
         NONE
     }
 
@@ -71,7 +72,12 @@ public enum ChainTargetFormat {
 
     public String normalize(String value) {
         String trimmed = value == null ? "" : value.trim();
-        return normalization == Normalization.LOWERCASE ? trimmed.toLowerCase(Locale.ROOT) : trimmed;
+
+        return switch (normalization) {
+            case LOWERCASE -> trimmed.toLowerCase(Locale.ROOT);
+            case TON -> TonTargets.normalize(trimmed);
+            case NONE -> trimmed;
+        };
     }
 
     public Optional<ScanTarget> classify(String value) {

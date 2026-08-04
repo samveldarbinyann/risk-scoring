@@ -15,7 +15,8 @@ public record ChainIngestProperties(
         Provider moralis,
         Provider mempool,
         Provider helius,
-        Provider tronGrid
+        Provider tronGrid,
+        Provider tonApi
 ) {
 
     public record Provider(
