@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-seed-tron-labels
+      author: sam
+      changes:
+        - loadData:
+            tableName: label
+            file: db/changelog/data/labels-tron.csv
+            relativeToChangelogFile: false
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+              - column:
+                  name: chain
+                  type: STRING
+              - column:
+                  name: address
+                  type: STRING
+              - column:
+                  name: category
+                  type: STRING
+              - column:
+                  name: name
+                  type: STRING
+              - column:
+                  name: source
+                  type: STRING

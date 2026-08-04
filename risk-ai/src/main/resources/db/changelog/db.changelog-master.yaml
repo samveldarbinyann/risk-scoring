@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/changes/006-chain-key.yaml
   - include:
       file: db/changelog/changes/007-native-amount-names.yaml
+  - include:
+      file: db/changelog/changes/008-remove-sepolia-scan-report.yaml

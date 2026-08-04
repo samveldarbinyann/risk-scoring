@@ -11,3 +11,9 @@ databaseChangeLog:
       file: db/changelog/changes/005-seed-bitcoin-labels.yaml
   - include:
       file: db/changelog/changes/006-evidence-payload-native-names.yaml
+  - include:
+      file: db/changelog/changes/007-remove-sepolia-data.yaml
+  - include:
+      file: db/changelog/changes/008-seed-solana-labels.yaml
+  - include:
+      file: db/changelog/changes/009-seed-tron-labels.yaml

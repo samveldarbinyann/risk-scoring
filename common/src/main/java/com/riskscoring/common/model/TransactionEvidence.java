@@ -14,6 +14,7 @@ public record TransactionEvidence(
         Instant blockTimestamp,
         int nestedTransferCount,
         int tokenTransferCount,
+        List<TokenTransfer> tokenTransfers,
         List<TransactionParty> parties,
         List<FlaggedExposure> flagged,
         MixerExposure mixerExposure,

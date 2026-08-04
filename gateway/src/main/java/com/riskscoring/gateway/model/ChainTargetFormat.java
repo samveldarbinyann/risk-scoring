@@ -26,7 +26,7 @@ public enum ChainTargetFormat {
             Normalization.NONE),
 
     SOLANA(ChainFamily.SOLANA,
-            "^[1-9A-HJ-NP-Za-km-z]{32,44}$",
+            "^[1-9A-HJ-NP-Za-km-z]{43,44}$",
             "^[1-9A-HJ-NP-Za-km-z]{86,88}$",
             Normalization.NONE),
 

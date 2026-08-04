@@ -12,8 +12,11 @@ public record ChainIngestProperties(
         int hop2ExpandTop,
         int hop2Reserve,
         int maxTokenBalances,
+        int maxTokenTransfers,
         Moralis moralis,
-        Mempool mempool
+        Mempool mempool,
+        Helius helius,
+        TronGrid tronGrid
 ) {
 
     public record Moralis(
@@ -31,6 +34,33 @@ public record ChainIngestProperties(
     public record Mempool(
             String baseUrl,
             int maxHops,
+            int callsPerSecond,
+            int rateLimitRetries,
+            Duration rateLimitBackoff,
+            Duration connectTimeout,
+            Duration readTimeout
+    ) {
+    }
+
+    public record Helius(
+            String baseUrl,
+            String apiKey,
+            int pageSize,
+            int maxHops,
+            int callsPerSecond,
+            int rateLimitRetries,
+            Duration rateLimitBackoff,
+            Duration connectTimeout,
+            Duration readTimeout
+    ) {
+    }
+
+    public record TronGrid(
+            String baseUrl,
+            String apiKey,
+            int pageSize,
+            int maxHops,
+            Duration transferWindow,
             int callsPerSecond,
             int rateLimitRetries,
             Duration rateLimitBackoff,

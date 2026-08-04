@@ -76,6 +76,51 @@ public class PromptBuilderImpl implements PromptBuilder {
               you the address is not new.
             """;
 
+    private static final String ADDRESS_SOLANA_PROMPT = """
+            Rules specific to this chain (account model, parsed transfer history):
+            - txCount and the counterparty list come from a capped page of the most recent activity.
+              Treat txCount as a lower bound on the address's real lifetime activity.
+            - totalValueNative covers native-currency transfers only. SPL token transfers are recorded
+              as a counterparty with value "0", so a zero amount is not evidence that nothing moved.
+            - Counterparty addresses are wallet owners, not the token accounts that hold the balance.
+            - Program, DEX-router and market-maker addresses routinely appear as counterparties on this
+              chain. A wallet touching many of them is ordinary DeFi usage, not by itself suspicious.
+            - The address's first-ever activity is not available from this data source, so ageDays,
+              freshWallet and fundedThenDrained are always null here. Null means UNKNOWN: never call
+              the wallet young or old on this chain.
+            - tokenBalances are the wallet's SPL token holdings at observedAt.
+            """;
+
+    private static final String ADDRESS_TRON_PROMPT = """
+            Rules specific to this chain (account model, TRC20-dominated):
+            - Most economic activity on this chain is TRC20 stablecoin transfer, above all USDT.
+              Those counterparties carry value "0" in totalValueNative because that field covers the
+              native currency only: never read a zero there as "no funds moved with this counterparty".
+            - txCount and the counterparty list come from a capped page of recent activity and are a
+              lower bound on lifetime activity.
+            - ageDays is derived from the account's real creation time on chain, so unlike some other
+              chains it is trustworthy here. A genuinely fresh account funded and drained quickly is a
+              meaningful signal.
+            - Resource operations (staking, delegating energy and bandwidth) are deliberately excluded
+              from the counterparty graph: they move no value and would only add noise.
+            - tokenBalances are TRC20 holdings at observedAt; USD values are not available on this
+              chain, so a null usdValue means unknown, not zero.
+            """;
+
+    private static final String TRANSACTION_TRON_PROMPT = """
+            Rules specific to this chain (account model, TRC20-dominated):
+            - A transaction here is a single contract call. If it is a TRC20 transfer, valueNative is 0
+              and the real movement is in tokenTransfers — judge the amount from there, never conclude
+              that nothing was transferred.
+            - Roles are SENDER / RECIPIENT for the native part and TOKEN_SENDER / TOKEN_RECIPIENT for
+              TRC20 transfers, all at hops 0. INTERNAL_* roles never appear and nestedTransferCount is
+              always 0, so the fanOutInternal heuristic never fires here.
+            - fromAddress is the account that signed the transaction. When it is a contract call,
+              toAddress is our reconstruction — the largest token recipient — not a declared field.
+            - success=false means the contract call failed and no value moved. Say so explicitly rather
+              than ignoring the attempt.
+            """;
+
     private static final String TRANSACTION_CORE_PROMPT = """
             You are a blockchain compliance analyst. You assess the risk of ONE SINGLE TRANSACTION
             based ONLY on the structured evidence provided to you.
@@ -98,6 +143,12 @@ public class PromptBuilderImpl implements PromptBuilder {
             - An EXCHANGE label is context and usually lowers suspicion: it indicates a KYC-bearing venue.
             - roundValue (a whole number of native units) is a weak laundering hint, never decisive alone.
             - selfTransfer means from and to are the same address.
+            - tokenTransfers lists the token movements inside this transaction, with the token symbol
+              and an already human-readable amount (NOT in the smallest unit — do not rescale it).
+              When tokenOnly is true, the economically meaningful amount is here, not in valueNative:
+              judge the size of the transfer from these entries. The list is capped, so it can be
+              shorter than tokenTransferCount. A null symbol means the token was not identified —
+              refer to it by its contract address and do not guess which token it is.
             - blockTimestamp is when the transaction was mined; observedAt is when we read the chain.
             """;
 
@@ -134,6 +185,25 @@ public class PromptBuilderImpl implements PromptBuilder {
               judge fan-out from the parties list and distinctPartyCount instead.
             """;
 
+    private static final String TRANSACTION_SOLANA_PROMPT = """
+            Rules specific to this chain (account model, parsed transfer history):
+            - This chain declares no from/to pair. fromAddress is the fee payer that signed and paid for
+              the transaction; toAddress is the recipient of its largest transfer. Both are our
+              reconstruction, not a declared pair — say so instead of treating them as authoritative.
+            - Roles are SENDER and RECIPIENT for native transfers and TOKEN_SENDER / TOKEN_RECIPIENT for
+              SPL token transfers. All of them are hops 0. INTERNAL_* roles never appear here.
+            - nestedTransferCount is always 0 on this chain and carries no information: nested program
+              calls are already flattened into the native transfers above. The fanOutInternal heuristic
+              therefore never fires — judge fan-out from the parties list and distinctPartyCount instead.
+            - One transaction on this chain routinely touches many accounts, and a single swap moves
+              value through several of them. A high participant count is normal and not by itself
+              suspicious.
+            - valueNative is the sum of the native transfers in this transaction. zeroValue means nothing
+              native moved AND there were no token transfers; tokenOnly means only SPL tokens moved.
+            - success=false means the transaction failed and no value moved. That lowers the realised
+              risk while still evidencing intent — say so explicitly rather than ignoring the attempt.
+            """;
+
     private static final String UNITS_TEMPLATE = """
 
             Amounts are integers in the smallest unit of %s: 1 %s equals 10^%d of them. balanceNative,
@@ -165,7 +235,9 @@ public class PromptBuilderImpl implements PromptBuilder {
 
     private static final Map<ChainFamily, FamilyPromptRules> FAMILY_RULES = Map.of(
             ChainFamily.EVM, new FamilyPromptRules(ADDRESS_EVM_PROMPT, TRANSACTION_EVM_PROMPT),
-            ChainFamily.BITCOIN, new FamilyPromptRules(ADDRESS_UTXO_PROMPT, TRANSACTION_UTXO_PROMPT));
+            ChainFamily.BITCOIN, new FamilyPromptRules(ADDRESS_UTXO_PROMPT, TRANSACTION_UTXO_PROMPT),
+            ChainFamily.SOLANA, new FamilyPromptRules(ADDRESS_SOLANA_PROMPT, TRANSACTION_SOLANA_PROMPT),
+            ChainFamily.TRON, new FamilyPromptRules(ADDRESS_TRON_PROMPT, TRANSACTION_TRON_PROMPT));
 
     private static final Map<Language, String> LANGUAGE_NAMES = Map.of(
             Language.EN, "English",

@@ -54,6 +54,7 @@ public class TransactionSignalCalculatorImpl implements TransactionSignalCalcula
                 transaction.blockTimestamp(),
                 transaction.nestedTransferCount(),
                 transaction.tokenTransferCount(),
+                transaction.tokenTransfers(),
                 transaction.parties(),
                 flaggedExposures(transaction, byAddress),
                 mixerExposure(transaction, byAddress),

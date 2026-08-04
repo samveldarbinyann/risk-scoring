@@ -47,6 +47,7 @@ public class BitcoinTransactionSnapshotMapper {
                 parties(inputs, outputs),
                 NO_NESTED_TRANSFERS,
                 NO_TOKEN_TRANSFERS,
+                List.of(),
                 Instant.now());
     }
 

@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-remove-sepolia-scans
+      author: sam
+      changes:
+        - sql:
+            sql: DELETE FROM gateway.scan WHERE chain = 'SEPOLIA'

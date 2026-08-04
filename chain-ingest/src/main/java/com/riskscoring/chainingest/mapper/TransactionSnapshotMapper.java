@@ -3,6 +3,8 @@ package com.riskscoring.chainingest.mapper;
 import com.riskscoring.chainingest.client.dto.MoralisErc20Transfer;
 import com.riskscoring.chainingest.client.dto.MoralisInternalTransfer;
 import com.riskscoring.chainingest.client.dto.MoralisTransaction;
+import com.riskscoring.chainingest.config.ChainIngestProperties;
+import com.riskscoring.common.model.TokenTransfer;
 import com.riskscoring.common.model.TransactionParty;
 import com.riskscoring.common.model.TransactionRole;
 import com.riskscoring.common.model.TransactionSnapshot;
@@ -21,6 +23,7 @@ public class TransactionSnapshotMapper {
 
     private final MoralisValues values;
     private final TransactionPartyAggregator partyAggregator;
+    private final ChainIngestProperties properties;
 
     public TransactionSnapshot fromMoralis(MoralisTransaction transaction) {
         List<MoralisInternalTransfer> internals =
@@ -38,7 +41,20 @@ public class TransactionSnapshotMapper {
                 parties(transaction, internals, tokens),
                 internals.size(),
                 tokens.size(),
+                tokenTransfers(tokens),
                 Instant.now());
+    }
+
+    private List<TokenTransfer> tokenTransfers(List<MoralisErc20Transfer> tokens) {
+        return tokens.stream()
+                .limit(properties.maxTokenTransfers())
+                .map(transfer -> new TokenTransfer(
+                        transfer.symbol(),
+                        values.address(transfer.contract()),
+                        values.address(transfer.fromAddress()),
+                        values.address(transfer.toAddress()),
+                        transfer.valueFormatted()))
+                .toList();
     }
 
     private List<TransactionParty> parties(MoralisTransaction transaction,

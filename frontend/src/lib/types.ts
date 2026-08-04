@@ -113,6 +113,14 @@ export interface TokenBalance {
   usdValue: number | null;
 }
 
+export interface TokenTransfer {
+  symbol: string | null;
+  contract: string;
+  from: string;
+  to: string;
+  amount: string;
+}
+
 export interface FlaggedExposure {
   address: string;
   category: LabelCategory;
@@ -182,6 +190,7 @@ export interface TransactionEvidence {
   blockTimestamp: string | null;
   nestedTransferCount: number;
   tokenTransferCount: number;
+  tokenTransfers: TokenTransfer[];
   parties: TransactionParty[];
   flagged: FlaggedExposure[];
   mixerExposure: MixerExposure | null;

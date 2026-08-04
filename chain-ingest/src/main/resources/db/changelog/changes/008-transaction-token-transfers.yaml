@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-transaction-token-transfers
+      author: sam
+      changes:
+        - delete:
+            tableName: transaction_cache
+        - addColumn:
+            tableName: transaction_cache
+            columns:
+              - column:
+                  name: token_transfers
+                  type: jsonb
+                  constraints:
+                    nullable: false

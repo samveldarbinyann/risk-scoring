@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-remove-sepolia-data
+      author: sam
+      changes:
+        - sql:
+            sql: DELETE FROM monitor.alert WHERE chain = 'SEPOLIA'
+        - sql:
+            sql: DELETE FROM monitor.watchlist_entry WHERE chain = 'SEPOLIA'
