@@ -2,7 +2,7 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.ChainDataClient;
 import com.riskscoring.chainingest.client.HeliusApi;
-import com.riskscoring.chainingest.client.dto.Transfer;
+import com.riskscoring.chainingest.client.dto.TransferSample;
 import com.riskscoring.chainingest.client.dto.helius.HeliusAsset;
 import com.riskscoring.chainingest.client.dto.helius.HeliusNativeBalance;
 import com.riskscoring.chainingest.client.dto.helius.HeliusPortfolio;
@@ -25,20 +25,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class SolanaAddressDataClient implements ChainDataClient {
 
-    private static final Duration WINDOW_24H = Duration.ofHours(24);
     private static final String NO_BALANCE = "0";
 
     private final HeliusApi heliusApi;
@@ -62,17 +59,12 @@ public class SolanaAddressDataClient implements ChainDataClient {
         String target = values.normalize(address);
 
         TransferSample sample = fetchTransfers(target);
-        List<Counterparty> firstHop = counterpartyAggregator.aggregate(
-                sample.transfers(), CounterpartyAggregator.FIRST_HOP);
-        List<Counterparty> secondHop = counterpartyAggregator.expandSecondHop(
-                firstHop, target, properties.helius().maxHops(), properties.hop2ExpandTop(),
+        List<Counterparty> counterparties = counterpartyAggregator.graph(
+                target, sample.transfers(), properties.helius().maxHops(),
                 counterparty -> fetchTransfers(counterparty).transfers());
 
-        List<Counterparty> counterparties = counterpartyAggregator.merge(
-                firstHop, secondHop, properties.maxCounterparties(), properties.hop2Reserve());
-
         log.info("Fetched {} on {}: {} transfers, {} counterparties (truncated={})",
-                target, chain.displayName(), sample.transfers().size(), counterparties.size(), sample.truncated());
+                target, chain.displayName(), sample.size(), counterparties.size(), sample.truncated());
 
         return new AddressFacts(snapshot(target, sample), counterparties);
     }
@@ -90,27 +82,14 @@ public class SolanaAddressDataClient implements ChainDataClient {
         HeliusPortfolio portfolio = heliusApi.portfolio(address);
 
         return new AddressSnapshot(
-                sample.transfers().size(),
-                txCount24h(sample, observedAt),
+                sample.size(),
+                sample.txCount24h(observedAt),
                 balanceLamports(portfolio),
                 tokenBalances(portfolio),
                 null,
-                transferTimes(sample).max(Comparator.naturalOrder()).orElse(null),
+                sample.lastActivityAt(),
                 sample.truncated(),
                 observedAt);
-    }
-
-    private Stream<Instant> transferTimes(TransferSample sample) {
-        return sample.transfers().stream()
-                .map(Transfer::at)
-                .filter(Objects::nonNull);
-    }
-
-    private long txCount24h(TransferSample sample, Instant observedAt) {
-        Instant windowStart = observedAt.minus(WINDOW_24H);
-        return transferTimes(sample)
-                .filter(at -> at.isAfter(windowStart))
-                .count();
     }
 
     private String balanceLamports(HeliusPortfolio portfolio) {
@@ -140,8 +119,5 @@ public class SolanaAddressDataClient implements ChainDataClient {
                 .filter(balance -> !balance.isBlank())
                 .map(balance -> new BigDecimal(balance).movePointLeft(token.decimals()).toPlainString())
                 .orElse(NO_BALANCE);
-    }
-
-    private record TransferSample(List<Transfer> transfers, boolean truncated) {
     }
 }

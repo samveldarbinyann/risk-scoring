@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 public record TronAccount(
-        String address,
         long balance,
         @JsonProperty("create_time") long createTime,
         List<Map<String, String>> trc20

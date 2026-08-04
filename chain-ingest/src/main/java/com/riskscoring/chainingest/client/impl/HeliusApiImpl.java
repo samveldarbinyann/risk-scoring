@@ -19,7 +19,7 @@ import org.springframework.web.util.UriBuilder;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Component
@@ -37,7 +37,6 @@ public class HeliusApiImpl implements HeliusApi {
     private static final String RPC_ID = "risk-scoring";
     private static final String METHOD_SEARCH_ASSETS = "searchAssets";
     private static final String TOKEN_TYPE_FUNGIBLE = "fungible";
-    private static final int ASSETS_PAGE_SIZE = 100;
     private static final int FIRST_PAGE = 1;
 
     private final HttpCallTemplate heliusCallTemplate;
@@ -47,8 +46,10 @@ public class HeliusApiImpl implements HeliusApi {
     public List<HeliusTransaction> addressTransactions(String address) {
         String path = PATH_ADDRESS_TRANSACTIONS.formatted(address);
 
-        return List.of(heliusCallTemplate.get(path, authorized(builder -> builder
-                .queryParam(PARAM_LIMIT, properties.helius().pageSize())), HeliusTransaction[].class));
+        HeliusTransaction[] transactions = heliusCallTemplate.get(path, authorized().andThen(builder -> builder
+                .queryParam(PARAM_LIMIT, properties.helius().pageSize())), HeliusTransaction[].class);
+
+        return Arrays.stream(transactions).filter(Objects::nonNull).toList();
     }
 
     @Override
@@ -56,7 +57,7 @@ public class HeliusApiImpl implements HeliusApi {
         HeliusTransaction[] parsed = heliusCallTemplate.post(PATH_PARSE_TRANSACTIONS, authorized(),
                 new HeliusParseRequest(List.of(signature)), HeliusTransaction[].class);
 
-        return Arrays.stream(parsed).findFirst()
+        return Arrays.stream(parsed).filter(Objects::nonNull).findFirst()
                 .orElseThrow(() -> new ChainDataNotFoundException(
                         "Helius has no transaction %s".formatted(signature)));
     }
@@ -66,17 +67,17 @@ public class HeliusApiImpl implements HeliusApi {
         HeliusPortfolioResponse response = heliusCallTemplate.post(PATH_RPC, authorized(),
                 searchAssets(address), HeliusPortfolioResponse.class);
 
-        Optional.ofNullable(response.error()).ifPresent(error -> {
+        if (response.error() != null) {
             throw new ChainDataException("Helius rejected %s for %s: %s"
-                    .formatted(METHOD_SEARCH_ASSETS, address, describe(error)));
-        });
+                    .formatted(METHOD_SEARCH_ASSETS, address, describe(response.error())));
+        }
 
         return heliusCallTemplate.require(response.result(), PATH_RPC);
     }
 
     private HeliusRpcRequest searchAssets(String address) {
         return new HeliusRpcRequest(JSONRPC_VERSION, RPC_ID, METHOD_SEARCH_ASSETS,
-                new HeliusSearchAssetsParams(address, TOKEN_TYPE_FUNGIBLE, ASSETS_PAGE_SIZE, FIRST_PAGE,
+                new HeliusSearchAssetsParams(address, TOKEN_TYPE_FUNGIBLE, properties.helius().pageSize(), FIRST_PAGE,
                         new HeliusDisplayOptions(true)));
     }
 
@@ -86,9 +87,5 @@ public class HeliusApiImpl implements HeliusApi {
 
     private Consumer<UriBuilder> authorized() {
         return builder -> builder.queryParam(PARAM_API_KEY, properties.helius().apiKey());
-    }
-
-    private Consumer<UriBuilder> authorized(Consumer<UriBuilder> parameters) {
-        return authorized().andThen(parameters);
     }
 }

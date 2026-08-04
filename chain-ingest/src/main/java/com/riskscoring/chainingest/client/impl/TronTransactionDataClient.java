@@ -24,6 +24,8 @@ import java.util.List;
 @Slf4j
 public class TronTransactionDataClient implements ChainDataClient {
 
+    private static final long NO_BLOCK = 0L;
+
     private final TronGridApi tronGridApi;
     private final TronTransactionSnapshotMapper tronTransactionSnapshotMapper;
     private final TronValues values;
@@ -58,26 +60,19 @@ public class TronTransactionDataClient implements ChainDataClient {
     private List<TronTrc20Transfer> tokenTransfers(TronTransaction transaction,
                                                    TronTransactionInfo info,
                                                    String txId) {
-        boolean contractCall = values.contract(transaction)
-                .filter(contract -> TronValues.TRIGGER_SMART_CONTRACT.equals(contract.type()))
-                .isPresent();
-
-        if (!contractCall || info.blockTimeStamp() == 0) {
+        if (info.blockTimeStamp() == NO_BLOCK) {
             return List.of();
         }
 
-        String owner = values.contract(transaction)
+        return values.contract(transaction)
+                .filter(contract -> TronValues.TRIGGER_SMART_CONTRACT.equals(contract.type()))
                 .flatMap(values::value)
                 .map(TronContractValue::ownerAddress)
                 .map(values::address)
-                .orElse("");
-
-        if (!values.isRoutable(owner)) {
-            return List.of();
-        }
-
-        return tronGridApi.trc20TransfersAround(owner, info.blockTimeStamp()).stream()
-                .filter(transfer -> txId.equalsIgnoreCase(transfer.transactionId()))
-                .toList();
+                .filter(values::isRoutable)
+                .map(owner -> tronGridApi.trc20TransfersAt(owner, info.blockTimeStamp()).stream()
+                        .filter(transfer -> txId.equalsIgnoreCase(transfer.transactionId()))
+                        .toList())
+                .orElseGet(List::of);
     }
 }

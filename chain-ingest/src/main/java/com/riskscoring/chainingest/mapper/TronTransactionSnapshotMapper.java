@@ -67,7 +67,7 @@ public class TronTransactionSnapshotMapper {
                     String to = values.address(transfer.to());
                     return values.isRoutable(to) && !to.equals(sender);
                 })
-                .max(Comparator.comparing(transfer -> new BigInteger(transfer.value())))
+                .max(Comparator.comparing((TronTrc20Transfer transfer) -> values.rawAmount(transfer.value())))
                 .map(transfer -> values.address(transfer.to()));
     }
 
@@ -75,25 +75,19 @@ public class TronTransactionSnapshotMapper {
                                            BigInteger nativeAmount,
                                            List<TronTrc20Transfer> tokenTransfers) {
         Stream<Optional<TransactionParty>> nativeParties = value.stream().flatMap(contract -> Stream.of(
-                party(contract.ownerAddress(), TransactionRole.SENDER, nativeAmount),
-                party(contract.toAddress(), TransactionRole.RECIPIENT, nativeAmount)));
+                partyAggregator.party(values, contract.ownerAddress(), TransactionRole.SENDER, nativeAmount),
+                partyAggregator.party(values, contract.toAddress(), TransactionRole.RECIPIENT, nativeAmount)));
 
         Stream<Optional<TransactionParty>> tokenParties = tokenTransfers.stream().flatMap(transfer -> Stream.of(
-                party(transfer.from(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
-                party(transfer.to(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
+                partyAggregator.party(values, transfer.from(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
+                partyAggregator.party(values, transfer.to(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
 
         return partyAggregator.aggregate(Stream.concat(nativeParties, tokenParties).flatMap(Optional::stream));
     }
 
-    private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger amount) {
-        String normalized = values.address(address);
-        return values.isRoutable(normalized)
-                ? Optional.of(new TransactionParty(normalized, role, amount.toString()))
-                : Optional.empty();
-    }
-
     private List<TokenTransfer> tokenTransfers(List<TronTrc20Transfer> transfers) {
         return transfers.stream()
+                .filter(transfer -> transfer.tokenInfo() != null)
                 .limit(properties.maxTokenTransfers())
                 .map(transfer -> new TokenTransfer(
                         transfer.tokenInfo().symbol(),

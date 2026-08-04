@@ -3,7 +3,6 @@ package com.riskscoring.chainingest.mapper;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.client.dto.trongrid.TronTransaction;
 import com.riskscoring.chainingest.client.dto.trongrid.TronTrc20Transfer;
-import com.riskscoring.common.model.TransferDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +16,7 @@ import java.util.Optional;
 public class TronTransferMapper {
 
     private final TronValues values;
+    private final TransferDirectionResolver transferDirectionResolver;
 
     public List<Transfer> fromNative(List<TronTransaction> transactions, String owner) {
         return transactions.stream()
@@ -43,17 +43,6 @@ public class TronTransferMapper {
     }
 
     private Optional<Transfer> toTransfer(String owner, String from, String to, BigInteger value, Instant at) {
-        String sender = values.address(from);
-        String recipient = values.address(to);
-
-        if (owner.equals(sender) && values.isRoutable(recipient) && !recipient.equals(owner)) {
-            return Optional.of(new Transfer(recipient, TransferDirection.OUT, value, at));
-        }
-
-        if (owner.equals(recipient) && values.isRoutable(sender) && !sender.equals(owner)) {
-            return Optional.of(new Transfer(sender, TransferDirection.IN, value, at));
-        }
-
-        return Optional.empty();
+        return transferDirectionResolver.resolve(values, owner, from, to, value, at);
     }
 }

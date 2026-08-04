@@ -3,6 +3,7 @@ package com.riskscoring.chainingest.client.impl;
 import com.riskscoring.chainingest.client.ChainDataClient;
 import com.riskscoring.chainingest.client.TronGridApi;
 import com.riskscoring.chainingest.client.dto.Transfer;
+import com.riskscoring.chainingest.client.dto.TransferSample;
 import com.riskscoring.chainingest.client.dto.trongrid.TronAccount;
 import com.riskscoring.chainingest.client.dto.trongrid.TronTokenInfo;
 import com.riskscoring.chainingest.client.dto.trongrid.TronTrc20Transfer;
@@ -21,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -37,7 +38,6 @@ import java.util.stream.Stream;
 @Slf4j
 public class TronAddressDataClient implements ChainDataClient {
 
-    private static final Duration WINDOW_24H = Duration.ofHours(24);
     private static final String NO_BALANCE = "0";
 
     private final TronGridApi tronGridApi;
@@ -60,61 +60,46 @@ public class TronAddressDataClient implements ChainDataClient {
     public AddressFacts fetch(String address, Chain chain) {
         String target = values.address(address);
 
-        List<TronTrc20Transfer> tokenTransfers = tronGridApi.accountTrc20Transfers(target);
-        TransferSample sample = sample(target, tokenTransfers);
+        AccountActivity activity = activity(target);
+        TransferSample sample = activity.sample();
 
-        List<Counterparty> firstHop = counterpartyAggregator.aggregate(
-                sample.transfers(), CounterpartyAggregator.FIRST_HOP);
-        List<Counterparty> secondHop = counterpartyAggregator.expandSecondHop(
-                firstHop, target, properties.tronGrid().maxHops(), properties.hop2ExpandTop(),
-                counterparty -> sample(counterparty, tronGridApi.accountTrc20Transfers(counterparty)).transfers());
-
-        List<Counterparty> counterparties = counterpartyAggregator.merge(
-                firstHop, secondHop, properties.maxCounterparties(), properties.hop2Reserve());
+        List<Counterparty> counterparties = counterpartyAggregator.graph(
+                target, sample.transfers(), properties.tronGrid().maxHops(),
+                counterparty -> activity(counterparty).sample().transfers());
 
         log.info("Fetched {} on {}: {} transfers, {} counterparties (truncated={})",
-                target, chain.displayName(), sample.transfers().size(), counterparties.size(), sample.truncated());
+                target, chain.displayName(), sample.size(), counterparties.size(), sample.truncated());
 
-        return new AddressFacts(snapshot(target, sample, tokenTransfers), counterparties);
+        return new AddressFacts(snapshot(target, activity), counterparties);
     }
 
-    private TransferSample sample(String address, List<TronTrc20Transfer> tokenTransfers) {
+    private AccountActivity activity(String address) {
+        List<TronTrc20Transfer> tokenTransfers = tronGridApi.accountTrc20Transfers(address);
+
         List<Transfer> transfers = Stream.concat(
                         tronTransferMapper.fromNative(tronGridApi.accountTransactions(address), address).stream(),
                         tronTransferMapper.fromTrc20(tokenTransfers, address).stream())
                 .toList();
 
-        return new TransferSample(transfers, tokenTransfers.size() >= properties.tronGrid().pageSize());
+        boolean truncated = tokenTransfers.size() >= properties.tronGrid().pageSize();
+
+        return new AccountActivity(new TransferSample(transfers, truncated), tokenTransfers);
     }
 
-    private AddressSnapshot snapshot(String address,
-                                     TransferSample sample,
-                                     List<TronTrc20Transfer> tokenTransfers) {
+    private AddressSnapshot snapshot(String address, AccountActivity activity) {
         Instant observedAt = Instant.now();
         Optional<TronAccount> account = tronGridApi.account(address);
+        TransferSample sample = activity.sample();
 
         return new AddressSnapshot(
-                sample.transfers().size(),
-                txCount24h(sample, observedAt),
+                sample.size(),
+                sample.txCount24h(observedAt),
                 account.map(TronAccount::balance).map(String::valueOf).orElse(NO_BALANCE),
-                tokenBalances(account, tokenTransfers),
+                tokenBalances(account, activity.tokenTransfers()),
                 account.map(TronAccount::createTime).map(values::timestamp).orElse(null),
-                transferTimes(sample).max(Comparator.naturalOrder()).orElse(null),
+                sample.lastActivityAt(),
                 sample.truncated(),
                 observedAt);
-    }
-
-    private Stream<Instant> transferTimes(TransferSample sample) {
-        return sample.transfers().stream()
-                .map(Transfer::at)
-                .filter(Objects::nonNull);
-    }
-
-    private long txCount24h(TransferSample sample, Instant observedAt) {
-        Instant windowStart = observedAt.minus(WINDOW_24H);
-        return transferTimes(sample)
-                .filter(at -> at.isAfter(windowStart))
-                .count();
     }
 
     private List<TokenBalance> tokenBalances(Optional<TronAccount> account, List<TronTrc20Transfer> tokenTransfers) {
@@ -128,6 +113,7 @@ public class TronAddressDataClient implements ChainDataClient {
                 .flatMap(holding -> holding.entrySet().stream())
                 .map(holding -> balance(knownTokens.get(values.address(holding.getKey())), holding.getValue()))
                 .flatMap(Optional::stream)
+                .sorted(Comparator.comparing((TokenBalance token) -> new BigDecimal(token.balanceFormatted())).reversed())
                 .limit(properties.maxTokenBalances())
                 .toList();
     }
@@ -138,6 +124,6 @@ public class TronAddressDataClient implements ChainDataClient {
                         known.symbol(), values.scaled(rawBalance, known.decimals()), null));
     }
 
-    private record TransferSample(List<Transfer> transfers, boolean truncated) {
+    private record AccountActivity(TransferSample sample, List<TronTrc20Transfer> tokenTransfers) {
     }
 }

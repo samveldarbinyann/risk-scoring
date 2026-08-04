@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record TronContractValue(
         @JsonProperty("owner_address") String ownerAddress,
         @JsonProperty("to_address") String toAddress,
-        @JsonProperty("contract_address") String contractAddress,
         long amount
 ) {
 }

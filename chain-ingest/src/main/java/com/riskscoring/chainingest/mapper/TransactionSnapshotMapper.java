@@ -63,25 +63,21 @@ public class TransactionSnapshotMapper {
         BigInteger value = values.wei(transaction.value());
 
         Stream<Optional<TransactionParty>> direct = Stream.of(
-                party(transaction.fromAddress(), TransactionRole.SENDER, value),
-                party(transaction.toAddress(), TransactionRole.RECIPIENT, value));
+                partyAggregator.party(values, transaction.fromAddress(), TransactionRole.SENDER, value),
+                partyAggregator.party(values, transaction.toAddress(), TransactionRole.RECIPIENT, value));
 
-        Stream<Optional<TransactionParty>> internal = internals.stream().flatMap(transfer -> Stream.of(
-                party(transfer.from(), TransactionRole.INTERNAL_SENDER, values.wei(transfer.value())),
-                party(transfer.to(), TransactionRole.INTERNAL_RECIPIENT, values.wei(transfer.value()))));
+        Stream<Optional<TransactionParty>> internal = internals.stream().flatMap(transfer -> {
+            BigInteger amount = values.wei(transfer.value());
+            return Stream.of(
+                    partyAggregator.party(values, transfer.from(), TransactionRole.INTERNAL_SENDER, amount),
+                    partyAggregator.party(values, transfer.to(), TransactionRole.INTERNAL_RECIPIENT, amount));
+        });
 
         Stream<Optional<TransactionParty>> token = tokens.stream().flatMap(transfer -> Stream.of(
-                party(transfer.fromAddress(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
-                party(transfer.toAddress(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
+                partyAggregator.party(values, transfer.fromAddress(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
+                partyAggregator.party(values, transfer.toAddress(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
 
         return partyAggregator.aggregate(
                 Stream.of(direct, internal, token).flatMap(stream -> stream.flatMap(Optional::stream)));
-    }
-
-    private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger value) {
-        String normalized = values.address(address);
-        return values.isRoutable(normalized)
-                ? Optional.of(new TransactionParty(normalized, role, value.toString()))
-                : Optional.empty();
     }
 }

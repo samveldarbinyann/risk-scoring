@@ -52,18 +52,13 @@ public class BitcoinAddressDataClient implements ChainDataClient {
 
     @Override
     public AddressFacts fetch(String address, Chain chain) {
-        String target = values.normalize(address);
+        String target = values.address(address);
 
         List<MempoolTransaction> transactions = mempoolApi.addressTransactions(target);
         List<Transfer> transfers = bitcoinTransferMapper.fromTransactions(transactions, target);
 
-        List<Counterparty> firstHop = counterpartyAggregator.aggregate(transfers, CounterpartyAggregator.FIRST_HOP);
-        List<Counterparty> secondHop = counterpartyAggregator.expandSecondHop(
-                firstHop, target, properties.mempool().maxHops(), properties.hop2ExpandTop(),
-                this::transfersOf);
-
-        List<Counterparty> counterparties = counterpartyAggregator.merge(
-                firstHop, secondHop, properties.maxCounterparties(), properties.hop2Reserve());
+        List<Counterparty> counterparties = counterpartyAggregator.graph(
+                target, transfers, properties.mempool().maxHops(), this::transfersOf);
 
         log.info("Fetched {} on {}: {} transactions, {} counterparties",
                 target, chain.displayName(), transactions.size(), counterparties.size());

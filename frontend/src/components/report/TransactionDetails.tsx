@@ -1,7 +1,14 @@
 import { NativeAmount } from "@/components/ui/NativeAmount";
 import { TargetChip } from "@/components/ui/TargetChip";
 import type { Chain } from "@/lib/chains/registry";
-import { formatCount, formatDateTime, formatTokenAmount, truncateId, UNKNOWN_VALUE } from "@/lib/format";
+import {
+  formatCount,
+  formatDateTime,
+  formatTokenAmount,
+  isDisplayableSymbol,
+  truncateId,
+  UNKNOWN_VALUE,
+} from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK } from "@/lib/risk";
 import type { FlaggedExposure, TokenTransfer, TransactionEvidence } from "@/lib/types";
@@ -99,7 +106,11 @@ function TokenTransferRow({ transfer }: TokenTransferRowProps) {
     <div className="flex items-baseline justify-between gap-4">
       <span className="shrink-0 font-mono text-sm text-text">
         {formatTokenAmount(transfer.amount, locale)}{" "}
-        <span className="text-text-dim">{transfer.symbol ?? truncateId(transfer.contract)}</span>
+        <span className="text-text-dim">
+          {transfer.symbol !== null && isDisplayableSymbol(transfer.symbol)
+            ? transfer.symbol
+            : truncateId(transfer.contract)}
+        </span>
       </span>
       <span className="flex min-w-0 items-baseline gap-2 font-mono text-xs text-text-faint">
         <TargetChip value={transfer.from} className="min-w-0" />

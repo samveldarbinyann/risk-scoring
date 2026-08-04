@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriBuilder;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -62,13 +63,11 @@ public class TronGridApiImpl implements TronGridApi {
     }
 
     @Override
-    public List<TronTrc20Transfer> trc20TransfersAround(String address, long blockTimestamp) {
-        long window = properties.tronGrid().transferWindow().toMillis();
-
+    public List<TronTrc20Transfer> trc20TransfersAt(String address, long blockTimestamp) {
         TronTrc20Response response = tronGridCallTemplate.get(PATH_ACCOUNT_TRC20.formatted(address),
                 pageSize().andThen(builder -> builder
-                        .queryParam(PARAM_MIN_TIMESTAMP, blockTimestamp - window)
-                        .queryParam(PARAM_MAX_TIMESTAMP, blockTimestamp + window)),
+                        .queryParam(PARAM_MIN_TIMESTAMP, blockTimestamp)
+                        .queryParam(PARAM_MAX_TIMESTAMP, blockTimestamp)),
                 TronTrc20Response.class);
 
         return rows(response.data());
@@ -97,6 +96,6 @@ public class TronGridApiImpl implements TronGridApi {
     }
 
     private <T> List<T> rows(List<T> data) {
-        return Optional.ofNullable(data).orElseGet(List::of);
+        return Objects.requireNonNullElse(data, List.of());
     }
 }

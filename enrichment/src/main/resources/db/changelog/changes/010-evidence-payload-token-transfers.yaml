@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-evidence-payload-token-transfers
+      author: sam
+      changes:
+        - sql:
+            sql: >
+              UPDATE enrichment.evidence_record
+              SET payload = jsonb_set(payload, '{tokenTransfers}', '[]'::jsonb)
+              WHERE payload ->> 'targetType' = 'TRANSACTION'
+                AND NOT jsonb_exists(payload, 'tokenTransfers')

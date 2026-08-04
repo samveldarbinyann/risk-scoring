@@ -11,6 +11,7 @@ import com.riskscoring.common.model.TransactionSnapshot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.Comparator;
@@ -31,7 +32,7 @@ public class SolanaTransactionSnapshotMapper {
     public TransactionSnapshot fromHelius(HeliusTransaction transaction) {
         List<HeliusNativeTransfer> nativeTransfers = values.nativeTransfers(transaction);
         List<HeliusTokenTransfer> tokenTransfers = values.tokenTransfers(transaction);
-        String feePayer = values.normalize(transaction.feePayer());
+        String feePayer = values.address(transaction.feePayer());
 
         BigInteger total = nativeTransfers.stream()
                 .map(transfer -> BigInteger.valueOf(transfer.amount()))
@@ -56,10 +57,10 @@ public class SolanaTransactionSnapshotMapper {
                 .limit(properties.maxTokenTransfers())
                 .map(transfer -> new TokenTransfer(
                         null,
-                        values.normalize(transfer.mint()),
-                        values.normalize(transfer.fromUserAccount()),
-                        values.normalize(transfer.toUserAccount()),
-                        String.valueOf(transfer.tokenAmount())))
+                        values.address(transfer.mint()),
+                        values.address(transfer.fromUserAccount()),
+                        values.address(transfer.toUserAccount()),
+                        tokenAmount(transfer).toPlainString()))
                 .toList();
     }
 
@@ -69,36 +70,36 @@ public class SolanaTransactionSnapshotMapper {
         return nativeTransfers.stream()
                 .filter(transfer -> isOther(transfer.toUserAccount(), feePayer))
                 .max(Comparator.comparingLong(HeliusNativeTransfer::amount))
-                .map(transfer -> values.normalize(transfer.toUserAccount()))
+                .map(transfer -> values.address(transfer.toUserAccount()))
                 .or(() -> tokenTransfers.stream()
                         .filter(transfer -> isOther(transfer.toUserAccount(), feePayer))
-                        .max(Comparator.comparingDouble(HeliusTokenTransfer::tokenAmount))
-                        .map(transfer -> values.normalize(transfer.toUserAccount())))
+                        .max(Comparator.comparing(this::tokenAmount))
+                        .map(transfer -> values.address(transfer.toUserAccount())))
                 .orElse(null);
     }
 
+    private BigDecimal tokenAmount(HeliusTokenTransfer transfer) {
+        return values.amount(transfer.tokenAmount());
+    }
+
     private boolean isOther(String address, String feePayer) {
-        String normalized = values.normalize(address);
+        String normalized = values.address(address);
         return values.isRoutable(normalized) && !normalized.equals(feePayer);
     }
 
     private List<TransactionParty> parties(List<HeliusNativeTransfer> nativeTransfers,
                                            List<HeliusTokenTransfer> tokenTransfers) {
-        Stream<Optional<TransactionParty>> nativeParties = nativeTransfers.stream().flatMap(transfer -> Stream.of(
-                party(transfer.fromUserAccount(), TransactionRole.SENDER, BigInteger.valueOf(transfer.amount())),
-                party(transfer.toUserAccount(), TransactionRole.RECIPIENT, BigInteger.valueOf(transfer.amount()))));
+        Stream<Optional<TransactionParty>> nativeParties = nativeTransfers.stream().flatMap(transfer -> {
+            BigInteger amount = BigInteger.valueOf(transfer.amount());
+            return Stream.of(
+                    partyAggregator.party(values, transfer.fromUserAccount(), TransactionRole.SENDER, amount),
+                    partyAggregator.party(values, transfer.toUserAccount(), TransactionRole.RECIPIENT, amount));
+        });
 
         Stream<Optional<TransactionParty>> tokenParties = tokenTransfers.stream().flatMap(transfer -> Stream.of(
-                party(transfer.fromUserAccount(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
-                party(transfer.toUserAccount(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
+                partyAggregator.party(values, transfer.fromUserAccount(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
+                partyAggregator.party(values, transfer.toUserAccount(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
 
         return partyAggregator.aggregate(Stream.concat(nativeParties, tokenParties).flatMap(Optional::stream));
-    }
-
-    private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger value) {
-        String normalized = values.normalize(address);
-        return values.isRoutable(normalized)
-                ? Optional.of(new TransactionParty(normalized, role, value.toString()))
-                : Optional.empty();
     }
 }

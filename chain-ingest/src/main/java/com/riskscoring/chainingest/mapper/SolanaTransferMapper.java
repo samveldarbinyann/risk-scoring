@@ -2,7 +2,6 @@ package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.client.dto.helius.HeliusTransaction;
-import com.riskscoring.common.model.TransferDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +16,7 @@ import java.util.stream.Stream;
 public class SolanaTransferMapper {
 
     private final SolanaValues values;
+    private final TransferDirectionResolver transferDirectionResolver;
 
     public List<Transfer> fromTransactions(List<HeliusTransaction> transactions, String owner) {
         return transactions.stream()
@@ -40,17 +40,6 @@ public class SolanaTransferMapper {
     }
 
     private Optional<Transfer> toTransfer(String owner, String from, String to, BigInteger value, Instant at) {
-        String sender = values.normalize(from);
-        String recipient = values.normalize(to);
-
-        if (owner.equals(sender) && values.isRoutable(recipient) && !recipient.equals(owner)) {
-            return Optional.of(new Transfer(recipient, TransferDirection.OUT, value, at));
-        }
-
-        if (owner.equals(recipient) && values.isRoutable(sender) && !sender.equals(owner)) {
-            return Optional.of(new Transfer(sender, TransferDirection.IN, value, at));
-        }
-
-        return Optional.empty();
+        return transferDirectionResolver.resolve(values, owner, from, to, value, at);
     }
 }

@@ -16,7 +16,7 @@ public interface TronGridApi {
 
     List<TronTrc20Transfer> accountTrc20Transfers(String address);
 
-    List<TronTrc20Transfer> trc20TransfersAround(String address, long blockTimestamp);
+    List<TronTrc20Transfer> trc20TransfersAt(String address, long blockTimestamp);
 
     TronTransaction transaction(String txId);
 

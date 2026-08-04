@@ -1,8 +1,10 @@
 package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.client.dto.Transfer;
+import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.common.model.Counterparty;
 import com.riskscoring.common.model.TransferDirection;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -16,10 +18,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
+@RequiredArgsConstructor
 public class CounterpartyAggregator {
 
-    public static final int FIRST_HOP = 1;
-    public static final int SECOND_HOP = 2;
+    private static final int FIRST_HOP = 1;
+    private static final int SECOND_HOP = 2;
 
     private static final Comparator<Counterparty> BY_RELEVANCE = Comparator
             .comparingLong(Counterparty::txCount)
@@ -30,7 +33,17 @@ public class CounterpartyAggregator {
             .comparingInt(Counterparty::hops)
             .thenComparing(BY_RELEVANCE);
 
-    public List<Counterparty> aggregate(List<Transfer> transfers, int hops) {
+    private final ChainIngestProperties properties;
+
+    public List<Counterparty> graph(String target, List<Transfer> transfers, int maxHops,
+                                    Function<String, List<Transfer>> expand) {
+        List<Counterparty> firstHop = aggregate(transfers, FIRST_HOP);
+        List<Counterparty> secondHop = expandSecondHop(firstHop, target, maxHops, expand);
+
+        return merge(firstHop, secondHop);
+    }
+
+    private List<Counterparty> aggregate(List<Transfer> transfers, int hops) {
         Map<String, List<Transfer>> byCounterparty = transfers.stream()
                 .collect(Collectors.groupingBy(Transfer::counterparty));
 
@@ -40,11 +53,10 @@ public class CounterpartyAggregator {
                 .toList();
     }
 
-    public List<Counterparty> expandSecondHop(List<Counterparty> firstHop,
-                                              String target,
-                                              int maxHops,
-                                              int expandTop,
-                                              Function<String, List<Transfer>> fetch) {
+    private List<Counterparty> expandSecondHop(List<Counterparty> firstHop,
+                                               String target,
+                                               int maxHops,
+                                               Function<String, List<Transfer>> fetch) {
         if (maxHops < SECOND_HOP || firstHop.isEmpty()) {
             return List.of();
         }
@@ -53,7 +65,7 @@ public class CounterpartyAggregator {
         known.add(target);
 
         List<Transfer> transfers = firstHop.stream()
-                .limit(expandTop)
+                .limit(properties.hop2ExpandTop())
                 .flatMap(counterparty -> fetch.apply(counterparty.address()).stream())
                 .filter(transfer -> !known.contains(transfer.counterparty()))
                 .toList();
@@ -61,9 +73,11 @@ public class CounterpartyAggregator {
         return aggregate(transfers, SECOND_HOP);
     }
 
-    public List<Counterparty> merge(List<Counterparty> nearest, List<Counterparty> farthest, int limit, int reserve) {
+    private List<Counterparty> merge(List<Counterparty> nearest, List<Counterparty> farthest) {
+        int limit = properties.maxCounterparties();
+
         List<Counterparty> near = nearest.stream()
-                .limit(limit - Math.min(farthest.size(), reserve))
+                .limit(limit - Math.min(farthest.size(), properties.hop2Reserve()))
                 .toList();
 
         List<Counterparty> far = farthest.stream()

@@ -10,13 +10,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class TronValues {
+public class TronValues implements ChainAddressValues {
 
     public static final String TRANSFER_CONTRACT = "TransferContract";
     public static final String TRIGGER_SMART_CONTRACT = "TriggerSmartContract";
@@ -24,7 +26,6 @@ public class TronValues {
     private static final String SUCCESS = "SUCCESS";
     private static final String BASE58_PREFIX = "T";
     private static final long NO_TIMESTAMP = 0L;
-    private static final String ZERO = "0";
 
     private final TronAddressCodec addressCodec;
 
@@ -32,11 +33,13 @@ public class TronValues {
         return value == null ? "" : value.trim();
     }
 
+    @Override
     public String address(String hexOrBase58) {
         String normalized = normalize(hexOrBase58);
         return normalized.startsWith(BASE58_PREFIX) ? normalized : addressCodec.toBase58(normalized);
     }
 
+    @Override
     public boolean isRoutable(String address) {
         return !address.isEmpty();
     }
@@ -46,7 +49,7 @@ public class TronValues {
     }
 
     public boolean succeeded(TronTransaction transaction) {
-        return Optional.ofNullable(transaction.ret()).orElseGet(List::of).stream()
+        return Objects.requireNonNullElse(transaction.ret(), List.<TronRet>of()).stream()
                 .map(TronRet::contractRet)
                 .allMatch(result -> result == null || SUCCESS.equals(result));
     }
@@ -63,9 +66,30 @@ public class TronValues {
     }
 
     public String scaled(String rawAmount, int decimals) {
+        return scaledAmount(rawAmount, decimals).toPlainString();
+    }
+
+    private BigDecimal scaledAmount(String rawAmount, int decimals) {
+        return decimal(rawAmount)
+                .map(amount -> amount.movePointLeft(decimals))
+                .orElse(BigDecimal.ZERO);
+    }
+
+    public BigInteger rawAmount(String rawAmount) {
+        return decimal(rawAmount)
+                .map(BigDecimal::toBigInteger)
+                .orElse(BigInteger.ZERO);
+    }
+
+    private Optional<BigDecimal> decimal(String rawAmount) {
         return Optional.ofNullable(rawAmount)
                 .filter(amount -> !amount.isBlank())
-                .map(amount -> new BigDecimal(amount).movePointLeft(decimals).toPlainString())
-                .orElse(ZERO);
+                .flatMap(amount -> {
+                    try {
+                        return Optional.of(new BigDecimal(amount));
+                    } catch (NumberFormatException e) {
+                        return Optional.empty();
+                    }
+                });
     }
 }

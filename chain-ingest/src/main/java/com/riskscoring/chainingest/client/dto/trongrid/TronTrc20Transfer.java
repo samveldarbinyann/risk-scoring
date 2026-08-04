@@ -8,7 +8,6 @@ public record TronTrc20Transfer(
         String from,
         String to,
         String value,
-        String type,
         @JsonProperty("token_info") TronTokenInfo tokenInfo
 ) {
 }

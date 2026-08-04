@@ -9,10 +9,19 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Component
 public class TransactionPartyAggregator {
+
+    public Optional<TransactionParty> party(ChainAddressValues values, String address,
+                                            TransactionRole role, BigInteger valueNative) {
+        String normalized = values.address(address);
+        return values.isRoutable(normalized)
+                ? Optional.of(new TransactionParty(normalized, role, valueNative.toString()))
+                : Optional.empty();
+    }
 
     public List<TransactionParty> aggregate(Stream<TransactionParty> parties) {
         Map<PartyKey, BigInteger> totals = new LinkedHashMap<>();
