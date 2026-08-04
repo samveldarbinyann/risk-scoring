@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-transaction-token-transfers
+      author: sam
+      changes:
+        - addColumn:
+            tableName: transaction_cache
+            columns:
+              - column:
+                  name: token_transfers
+                  type: jsonb
+                  defaultValueComputed: "'[]'::jsonb"
+                  constraints:
+                    nullable: false
+        - dropDefaultValue:
+            tableName: transaction_cache
+            columnName: token_transfers

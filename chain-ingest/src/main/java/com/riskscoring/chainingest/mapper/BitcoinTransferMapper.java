@@ -39,7 +39,7 @@ public class BitcoinTransferMapper {
     private Stream<Transfer> recipients(MempoolTransaction transaction, String address, Instant at) {
         return values.outputs(transaction).stream()
                 .map(output -> new Transfer(
-                        values.normalize(output.address()), TransferDirection.OUT, BigInteger.valueOf(output.value()), at))
+                        values.address(output.address()), TransferDirection.OUT, BigInteger.valueOf(output.value()), at))
                 .filter(transfer -> isOther(transfer, address));
     }
 

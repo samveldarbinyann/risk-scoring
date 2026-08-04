@@ -7,10 +7,8 @@ import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
-
-import java.time.Duration;
 
 @Configuration
 @RequiredArgsConstructor
@@ -18,39 +16,49 @@ public class ChainDataHttpConfig {
 
     private static final String MORALIS = "Moralis";
     private static final String MEMPOOL = "mempool.space";
+    private static final String HELIUS = "Helius";
+    private static final String TRON_GRID = "TronGrid";
+
     private static final String API_KEY_HEADER = "X-API-Key";
+    private static final String TRON_API_KEY_HEADER = "TRON-PRO-API-KEY";
+    private static final String NO_API_KEY_HEADER = null;
 
     private final ChainIngestProperties properties;
 
     @Bean
     public HttpCallTemplate moralisCallTemplate() {
-        ChainIngestProperties.Moralis moralis = properties.moralis();
-
-        RestClient restClient = RestClient.builder()
-                .baseUrl(moralis.baseUrl())
-                .defaultHeader(API_KEY_HEADER, moralis.apiKey())
-                .requestFactory(requestFactory(moralis.connectTimeout(), moralis.readTimeout()))
-                .build();
-
-        return new HttpCallTemplate(MORALIS, restClient, new SlidingWindowRateLimiter(moralis.callsPerSecond()),
-                moralis.rateLimitRetries(), moralis.rateLimitBackoff());
+        return callTemplate(MORALIS, properties.moralis(), API_KEY_HEADER);
     }
 
     @Bean
     public HttpCallTemplate mempoolCallTemplate() {
-        ChainIngestProperties.Mempool mempool = properties.mempool();
-
-        RestClient restClient = RestClient.builder()
-                .baseUrl(mempool.baseUrl())
-                .requestFactory(requestFactory(mempool.connectTimeout(), mempool.readTimeout()))
-                .build();
-
-        return new HttpCallTemplate(MEMPOOL, restClient, new SlidingWindowRateLimiter(mempool.callsPerSecond()),
-                mempool.rateLimitRetries(), mempool.rateLimitBackoff());
+        return callTemplate(MEMPOOL, properties.mempool(), NO_API_KEY_HEADER);
     }
 
-    private ClientHttpRequestFactory requestFactory(Duration connectTimeout, Duration readTimeout) {
-        return ClientHttpRequestFactoryBuilder.jdk()
-                .build(HttpClientSettings.defaults().withTimeouts(connectTimeout, readTimeout));
+    @Bean
+    public HttpCallTemplate heliusCallTemplate() {
+        return callTemplate(HELIUS, properties.helius(), NO_API_KEY_HEADER);
+    }
+
+    @Bean
+    public HttpCallTemplate tronGridCallTemplate() {
+        return callTemplate(TRON_GRID, properties.tronGrid(), TRON_API_KEY_HEADER);
+    }
+
+    private HttpCallTemplate callTemplate(String provider,
+                                          ChainIngestProperties.Provider settings,
+                                          String apiKeyHeader) {
+        RestClient.Builder restClient = RestClient.builder()
+                .baseUrl(settings.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(HttpClientSettings.defaults()
+                        .withTimeouts(settings.connectTimeout(), settings.readTimeout())));
+
+        if (apiKeyHeader != null && StringUtils.hasText(settings.apiKey())) {
+            restClient.defaultHeader(apiKeyHeader, settings.apiKey());
+        }
+
+        return new HttpCallTemplate(provider, restClient.build(),
+                new SlidingWindowRateLimiter(settings.callsPerSecond()),
+                settings.rateLimitRetries(), settings.rateLimitBackoff());
     }
 }

@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-evidence-token-transfers
+      author: sam
+      changes:
+        - sql:
+            sql: >
+              UPDATE riskai.scan_report
+              SET evidence = jsonb_set(evidence, '{tokenTransfers}', '[]'::jsonb)
+              WHERE evidence ->> 'targetType' = 'TRANSACTION'
+                AND NOT jsonb_exists(evidence, 'tokenTransfers')

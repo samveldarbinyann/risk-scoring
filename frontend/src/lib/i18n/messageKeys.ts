@@ -58,6 +58,7 @@ export type MessageKey =
   | "report.txBlockTime"
   | "report.txInternalTransfers"
   | "report.txTokenTransfers"
+  | "report.txTokensMoved"
   | "report.txParties"
   | "report.txFlagged"
   | "report.txNoFlagged"

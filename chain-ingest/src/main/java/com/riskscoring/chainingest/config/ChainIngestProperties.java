@@ -8,28 +8,20 @@ import java.time.Duration;
 public record ChainIngestProperties(
         Duration cacheTtl,
         int maxCounterparties,
-        int maxHops,
         int hop2ExpandTop,
         int hop2Reserve,
         int maxTokenBalances,
-        Moralis moralis,
-        Mempool mempool
+        int maxTokenTransfers,
+        Provider moralis,
+        Provider mempool,
+        Provider helius,
+        Provider tronGrid
 ) {
 
-    public record Moralis(
+    public record Provider(
             String baseUrl,
             String apiKey,
             int pageSize,
-            int callsPerSecond,
-            int rateLimitRetries,
-            Duration rateLimitBackoff,
-            Duration connectTimeout,
-            Duration readTimeout
-    ) {
-    }
-
-    public record Mempool(
-            String baseUrl,
             int maxHops,
             int callsPerSecond,
             int rateLimitRetries,

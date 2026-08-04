@@ -13,6 +13,7 @@ public record TransactionSnapshot(
         List<TransactionParty> parties,
         int nestedTransferCount,
         int tokenTransferCount,
+        List<TokenTransfer> tokenTransfers,
         Instant observedAt
 ) {
 }

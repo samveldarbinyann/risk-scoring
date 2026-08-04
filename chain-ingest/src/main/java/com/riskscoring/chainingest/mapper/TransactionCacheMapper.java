@@ -2,6 +2,7 @@ package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.entity.TransactionCache;
 import com.riskscoring.common.model.Chain;
+import com.riskscoring.common.model.TokenTransfer;
 import com.riskscoring.common.model.TransactionParty;
 import com.riskscoring.common.model.TransactionSnapshot;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,9 @@ public class TransactionCacheMapper {
     private static final TypeReference<List<TransactionParty>> PARTY_LIST = new TypeReference<>() {
     };
 
+    private static final TypeReference<List<TokenTransfer>> TOKEN_TRANSFER_LIST = new TypeReference<>() {
+    };
+
     private final ObjectMapper objectMapper;
 
     public TransactionSnapshot toSnapshot(TransactionCache cache) {
@@ -33,6 +37,7 @@ public class TransactionCacheMapper {
                 objectMapper.readValue(cache.getParties(), PARTY_LIST),
                 cache.getNestedTransferCount(),
                 cache.getTokenTransferCount(),
+                objectMapper.readValue(cache.getTokenTransfers(), TOKEN_TRANSFER_LIST),
                 cache.getFetchedAt());
     }
 
@@ -49,6 +54,7 @@ public class TransactionCacheMapper {
                 .parties(objectMapper.writeValueAsString(snapshot.parties()))
                 .nestedTransferCount(snapshot.nestedTransferCount())
                 .tokenTransferCount(snapshot.tokenTransferCount())
+                .tokenTransfers(objectMapper.writeValueAsString(snapshot.tokenTransfers()))
                 .fetchedAt(snapshot.observedAt())
                 .build();
     }

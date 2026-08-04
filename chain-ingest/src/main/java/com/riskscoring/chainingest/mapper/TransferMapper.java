@@ -2,7 +2,6 @@ package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.client.dto.MoralisTransaction;
 import com.riskscoring.chainingest.client.dto.Transfer;
-import com.riskscoring.common.model.TransferDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +16,7 @@ import java.util.stream.Stream;
 public class TransferMapper {
 
     private final MoralisValues values;
+    private final TransferDirectionResolver transferDirectionResolver;
 
     public List<Transfer> fromTransactions(List<MoralisTransaction> transactions, String owner) {
         return transactions.stream()
@@ -44,17 +44,6 @@ public class TransferMapper {
     }
 
     private Optional<Transfer> toTransfer(String owner, String from, String to, BigInteger value, String timeStamp) {
-        String sender = values.address(from);
-        String recipient = values.address(to);
-
-        if (owner.equals(sender) && values.isRoutable(recipient) && !recipient.equals(owner)) {
-            return Optional.of(new Transfer(recipient, TransferDirection.OUT, value, values.timestamp(timeStamp)));
-        }
-
-        if (owner.equals(recipient) && values.isRoutable(sender) && !sender.equals(owner)) {
-            return Optional.of(new Transfer(sender, TransferDirection.IN, value, values.timestamp(timeStamp)));
-        }
-
-        return Optional.empty();
+        return transferDirectionResolver.resolve(values, owner, from, to, value, values.timestamp(timeStamp));
     }
 }

@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-seed-solana-labels
+      author: sam
+      changes:
+        - loadData:
+            tableName: label
+            file: db/changelog/data/labels-solana.csv
+            relativeToChangelogFile: false
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+              - column:
+                  name: chain
+                  type: STRING
+              - column:
+                  name: address
+                  type: STRING
+              - column:
+                  name: category
+                  type: STRING
+              - column:
+                  name: name
+                  type: STRING
+              - column:
+                  name: source
+                  type: STRING

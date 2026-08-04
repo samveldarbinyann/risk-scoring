@@ -65,6 +65,10 @@ public class TransactionCache {
     @Column(name = "token_transfer_count", nullable = false)
     private int tokenTransferCount;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "token_transfers", nullable = false, columnDefinition = "jsonb")
+    private String tokenTransfers;
+
     @Column(name = "fetched_at", nullable = false)
     private Instant fetchedAt;
 

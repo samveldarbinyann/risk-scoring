@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-remove-sepolia-data
+      author: sam
+      changes:
+        - sql:
+            sql: DELETE FROM enrichment.label WHERE chain = 'SEPOLIA'
+        - sql:
+            sql: DELETE FROM enrichment.evidence_record WHERE chain = 'SEPOLIA'

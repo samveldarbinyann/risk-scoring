@@ -11,12 +11,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class BitcoinValues {
+public class BitcoinValues implements ChainAddressValues {
 
     public String normalize(String value) {
         return value == null ? "" : value.trim();
     }
 
+    @Override
+    public String address(String value) {
+        return normalize(value);
+    }
+
+    @Override
     public boolean isRoutable(String address) {
         return !address.isEmpty();
     }
@@ -37,7 +43,7 @@ public class BitcoinValues {
     }
 
     public String inputAddress(MempoolVin input) {
-        return Optional.ofNullable(input.prevout()).map(MempoolVout::address).map(this::normalize).orElse("");
+        return Optional.ofNullable(input.prevout()).map(MempoolVout::address).map(this::address).orElse("");
     }
 
     public long inputValue(MempoolVin input) {

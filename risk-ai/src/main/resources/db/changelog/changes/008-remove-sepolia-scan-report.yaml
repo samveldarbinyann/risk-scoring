@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-remove-sepolia-scan-report
+      author: sam
+      changes:
+        - sql:
+            sql: DELETE FROM riskai.scan_report WHERE chain = 'SEPOLIA'

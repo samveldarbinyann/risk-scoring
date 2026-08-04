@@ -47,6 +47,7 @@ public class BitcoinTransactionSnapshotMapper {
                 parties(inputs, outputs),
                 NO_NESTED_TRANSFERS,
                 NO_TOKEN_TRANSFERS,
+                List.of(),
                 Instant.now());
     }
 
@@ -65,28 +66,22 @@ public class BitcoinTransactionSnapshotMapper {
                 .collect(Collectors.toSet());
 
         return outputs.stream()
-                .filter(output -> !change.contains(values.normalize(output.address())))
+                .filter(output -> !change.contains(values.address(output.address())))
                 .max(Comparator.comparingLong(MempoolVout::value))
-                .map(output -> values.normalize(output.address()))
+                .map(output -> values.address(output.address()))
                 .filter(values::isRoutable)
                 .orElse(null);
     }
 
     private List<TransactionParty> parties(List<MempoolVin> inputs, List<MempoolVout> outputs) {
         Stream<Optional<TransactionParty>> senders = inputs.stream()
-                .map(input -> party(values.inputAddress(input),
+                .map(input -> partyAggregator.party(values, values.inputAddress(input),
                         TransactionRole.SENDER, BigInteger.valueOf(values.inputValue(input))));
 
         Stream<Optional<TransactionParty>> recipients = outputs.stream()
-                .map(output -> party(values.normalize(output.address()),
+                .map(output -> partyAggregator.party(values, output.address(),
                         TransactionRole.RECIPIENT, BigInteger.valueOf(output.value())));
 
         return partyAggregator.aggregate(Stream.concat(senders, recipients).flatMap(Optional::stream));
-    }
-
-    private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger value) {
-        return values.isRoutable(address)
-                ? Optional.of(new TransactionParty(address, role, value.toString()))
-                : Optional.empty();
     }
 }

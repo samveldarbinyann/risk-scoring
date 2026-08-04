@@ -1,10 +1,17 @@
 import { NativeAmount } from "@/components/ui/NativeAmount";
 import { TargetChip } from "@/components/ui/TargetChip";
 import type { Chain } from "@/lib/chains/registry";
-import { formatCount, formatDateTime, UNKNOWN_VALUE } from "@/lib/format";
+import {
+  formatCount,
+  formatDateTime,
+  formatTokenAmount,
+  isDisplayableSymbol,
+  truncateId,
+  UNKNOWN_VALUE,
+} from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import { RISK } from "@/lib/risk";
-import type { FlaggedExposure, TransactionEvidence } from "@/lib/types";
+import type { FlaggedExposure, TokenTransfer, TransactionEvidence } from "@/lib/types";
 
 interface TransactionDetailsProps {
   chain: Chain;
@@ -44,6 +51,15 @@ export function TransactionDetails({ chain, evidence }: TransactionDetailsProps)
         <StatCell label={t("report.txTokenTransfers")} value={formatCount(evidence.tokenTransferCount, locale)} />
       </div>
 
+      {evidence.tokenTransfers.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.txTokensMoved")}</p>
+          {evidence.tokenTransfers.map((transfer, index) => (
+            <TokenTransferRow key={`${transfer.contract}-${index}`} transfer={transfer} />
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
         <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("report.txFlagged")}</p>
         {evidence.flagged.length === 0 ? (
@@ -75,6 +91,32 @@ function PartyRow({ label, address }: PartyRowProps) {
       ) : (
         <TargetChip value={address} className="min-w-0 text-sm" />
       )}
+    </div>
+  );
+}
+
+interface TokenTransferRowProps {
+  transfer: TokenTransfer;
+}
+
+function TokenTransferRow({ transfer }: TokenTransferRowProps) {
+  const { locale } = useI18n();
+
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="shrink-0 font-mono text-sm text-text">
+        {formatTokenAmount(transfer.amount, locale)}{" "}
+        <span className="text-text-dim">
+          {transfer.symbol !== null && isDisplayableSymbol(transfer.symbol)
+            ? transfer.symbol
+            : truncateId(transfer.contract)}
+        </span>
+      </span>
+      <span className="flex min-w-0 items-baseline gap-2 font-mono text-xs text-text-faint">
+        <TargetChip value={transfer.from} className="min-w-0" />
+        <span aria-hidden="true">→</span>
+        <TargetChip value={transfer.to} className="min-w-0" />
+      </span>
     </div>
   );
 }

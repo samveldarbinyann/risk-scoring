@@ -39,14 +39,15 @@ spring:
 chain-ingest:
   cache-ttl: 6h
   max-counterparties: 25
-  max-hops: 2
   hop2-expand-top: 3
   hop2-reserve: 5
   max-token-balances: 10
+  max-token-transfers: 25
   moralis:
     base-url: ${MORALIS_BASE_URL:https://deep-index.moralis.io/api/v2.2}
     api-key: ${MORALIS_API_KEY}
     page-size: 100
+    max-hops: 2
     calls-per-second: 3
     rate-limit-retries: 4
     rate-limit-backoff: 1s
@@ -55,6 +56,26 @@ chain-ingest:
   mempool:
     base-url: ${MEMPOOL_BASE_URL:https://mempool.space/api}
     max-hops: 1
+    calls-per-second: 2
+    rate-limit-retries: 4
+    rate-limit-backoff: 2s
+    connect-timeout: 10s
+    read-timeout: 30s
+  tron-grid:
+    base-url: ${TRONGRID_BASE_URL:https://api.trongrid.io}
+    api-key: ${TRONGRID_API_KEY:}
+    page-size: 200
+    max-hops: 2
+    calls-per-second: 5
+    rate-limit-retries: 4
+    rate-limit-backoff: 2s
+    connect-timeout: 10s
+    read-timeout: 30s
+  helius:
+    base-url: ${HELIUS_BASE_URL:https://mainnet.helius-rpc.com}
+    api-key: ${HELIUS_API_KEY}
+    page-size: 100
+    max-hops: 2
     calls-per-second: 2
     rate-limit-retries: 4
     rate-limit-backoff: 2s

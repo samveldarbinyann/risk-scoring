@@ -3,6 +3,8 @@ package com.riskscoring.chainingest.mapper;
 import com.riskscoring.chainingest.client.dto.MoralisErc20Transfer;
 import com.riskscoring.chainingest.client.dto.MoralisInternalTransfer;
 import com.riskscoring.chainingest.client.dto.MoralisTransaction;
+import com.riskscoring.chainingest.config.ChainIngestProperties;
+import com.riskscoring.common.model.TokenTransfer;
 import com.riskscoring.common.model.TransactionParty;
 import com.riskscoring.common.model.TransactionRole;
 import com.riskscoring.common.model.TransactionSnapshot;
@@ -21,6 +23,7 @@ public class TransactionSnapshotMapper {
 
     private final MoralisValues values;
     private final TransactionPartyAggregator partyAggregator;
+    private final ChainIngestProperties properties;
 
     public TransactionSnapshot fromMoralis(MoralisTransaction transaction) {
         List<MoralisInternalTransfer> internals =
@@ -38,7 +41,20 @@ public class TransactionSnapshotMapper {
                 parties(transaction, internals, tokens),
                 internals.size(),
                 tokens.size(),
+                tokenTransfers(tokens),
                 Instant.now());
+    }
+
+    private List<TokenTransfer> tokenTransfers(List<MoralisErc20Transfer> tokens) {
+        return tokens.stream()
+                .limit(properties.maxTokenTransfers())
+                .map(transfer -> new TokenTransfer(
+                        transfer.symbol(),
+                        values.address(transfer.contract()),
+                        values.address(transfer.fromAddress()),
+                        values.address(transfer.toAddress()),
+                        transfer.valueFormatted()))
+                .toList();
     }
 
     private List<TransactionParty> parties(MoralisTransaction transaction,
@@ -47,25 +63,21 @@ public class TransactionSnapshotMapper {
         BigInteger value = values.wei(transaction.value());
 
         Stream<Optional<TransactionParty>> direct = Stream.of(
-                party(transaction.fromAddress(), TransactionRole.SENDER, value),
-                party(transaction.toAddress(), TransactionRole.RECIPIENT, value));
+                partyAggregator.party(values, transaction.fromAddress(), TransactionRole.SENDER, value),
+                partyAggregator.party(values, transaction.toAddress(), TransactionRole.RECIPIENT, value));
 
-        Stream<Optional<TransactionParty>> internal = internals.stream().flatMap(transfer -> Stream.of(
-                party(transfer.from(), TransactionRole.INTERNAL_SENDER, values.wei(transfer.value())),
-                party(transfer.to(), TransactionRole.INTERNAL_RECIPIENT, values.wei(transfer.value()))));
+        Stream<Optional<TransactionParty>> internal = internals.stream().flatMap(transfer -> {
+            BigInteger amount = values.wei(transfer.value());
+            return Stream.of(
+                    partyAggregator.party(values, transfer.from(), TransactionRole.INTERNAL_SENDER, amount),
+                    partyAggregator.party(values, transfer.to(), TransactionRole.INTERNAL_RECIPIENT, amount));
+        });
 
         Stream<Optional<TransactionParty>> token = tokens.stream().flatMap(transfer -> Stream.of(
-                party(transfer.fromAddress(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
-                party(transfer.toAddress(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
+                partyAggregator.party(values, transfer.fromAddress(), TransactionRole.TOKEN_SENDER, BigInteger.ZERO),
+                partyAggregator.party(values, transfer.toAddress(), TransactionRole.TOKEN_RECIPIENT, BigInteger.ZERO)));
 
         return partyAggregator.aggregate(
                 Stream.of(direct, internal, token).flatMap(stream -> stream.flatMap(Optional::stream)));
-    }
-
-    private Optional<TransactionParty> party(String address, TransactionRole role, BigInteger value) {
-        String normalized = values.address(address);
-        return values.isRoutable(normalized)
-                ? Optional.of(new TransactionParty(normalized, role, value.toString()))
-                : Optional.empty();
     }
 }
