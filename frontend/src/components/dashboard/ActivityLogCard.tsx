@@ -3,10 +3,9 @@ import { ActivityLogRow, type ActivityEvent } from "@/components/dashboard/Activ
 import { Sparkline } from "@/components/dashboard/Sparkline";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { ErrorMessage } from "@/components/ui/ErrorMessage";
-import { Spinner } from "@/components/ui/Spinner";
+import { CardState } from "@/components/ui/CardState";
 import { TypewriterCaret } from "@/components/ui/TypewriterCaret";
-import { bucketDailyCounts } from "@/lib/dashboardStats";
+import { bucketDailyCounts, trendWindow } from "@/lib/dashboardStats";
 import { formatShortDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { AlertView, RecentScanGroupView } from "@/lib/types";
@@ -36,9 +35,7 @@ export function ActivityLogCard({ scans, alerts, isLoading, error }: ActivityLog
     events.map((event) => event.at),
     TREND_DAYS,
   );
-  const now = new Date();
-  const windowStart = new Date(now);
-  windowStart.setDate(windowStart.getDate() - (TREND_DAYS - 1));
+  const { start: windowStart, end: now } = trendWindow(TREND_DAYS);
 
   return (
     <Card className="flex flex-col gap-4">
@@ -52,32 +49,28 @@ export function ActivityLogCard({ scans, alerts, isLoading, error }: ActivityLog
         />
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Spinner />
-        </div>
-      ) : error ? (
-        <ErrorMessage message={error} size="sm" />
-      ) : visibleEvents.length === 0 ? (
-        <p className="font-mono text-sm text-text-faint">
-          &gt; {t("dashboard.activity.waiting")}
-          <TypewriterCaret />
-        </p>
-      ) : (
-        <>
-          <div>
-            {visibleEvents.map((event) => (
-              <ActivityLogRow
-                key={event.kind === "scan" ? `scan-${event.scan.groupId}` : `alert-${event.alert.id}`}
-                event={event}
-              />
-            ))}
-          </div>
-          <Button type="button" variant="ghost" onClick={() => navigate("/alerts")} className="w-fit">
-            {t("dashboard.alerts.cta")}
-          </Button>
-        </>
-      )}
+      <CardState isLoading={isLoading} error={error}>
+        {visibleEvents.length === 0 ? (
+          <p className="font-mono text-sm text-text-faint">
+            &gt; {t("dashboard.activity.waiting")}
+            <TypewriterCaret />
+          </p>
+        ) : (
+          <>
+            <div>
+              {visibleEvents.map((event) => (
+                <ActivityLogRow
+                  key={event.kind === "scan" ? `scan-${event.scan.groupId}` : `alert-${event.alert.id}`}
+                  event={event}
+                />
+              ))}
+            </div>
+            <Button type="button" variant="ghost" onClick={() => navigate("/alerts")} className="w-fit">
+              {t("dashboard.alerts.cta")}
+            </Button>
+          </>
+        )}
+      </CardState>
     </Card>
   );
 }

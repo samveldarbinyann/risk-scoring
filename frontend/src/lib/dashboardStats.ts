@@ -11,6 +11,12 @@ function daysBetween(laterMs: number, earlierMs: number): number {
   return Math.round((laterMs - earlierMs) / DAY_MS);
 }
 
+export function trendWindow(days: number, now: Date = new Date()): { start: Date; end: Date } {
+  const start = new Date(now);
+  start.setDate(start.getDate() - (days - 1));
+  return { start, end: now };
+}
+
 export function bucketDailyCounts(timestamps: string[], days: number, now: Date = new Date()): number[] {
   const counts = new Array(days).fill(0) as number[];
   const todayMs = startOfDayMs(now);
