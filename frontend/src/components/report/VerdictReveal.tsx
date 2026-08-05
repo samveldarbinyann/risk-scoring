@@ -5,6 +5,7 @@ import { ScoreCounter } from "@/components/report/ScoreCounter";
 import { ScoreMeter } from "@/components/report/ScoreMeter";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n/context";
+import type { MessageKey } from "@/lib/i18n/messageKeys";
 
 interface VerdictRevealProps {
   level: RiskLevel;
@@ -23,7 +24,9 @@ export function VerdictReveal({ level, score }: VerdictRevealProps) {
     >
       <div>
         <p className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("report.verdict")}</p>
-        <p className={cn("font-sans text-4xl font-semibold", riskAccentClass(level))}>{level}</p>
+        <p className={cn("font-sans text-4xl font-semibold", riskAccentClass(level))}>
+          {t(`risk.level.${level}` as MessageKey)}
+        </p>
       </div>
       <div className="flex w-40 flex-col items-end gap-2">
         <p className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("report.score")}</p>

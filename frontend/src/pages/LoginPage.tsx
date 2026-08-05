@@ -58,6 +58,9 @@ export function LoginPage() {
             autoComplete="current-password"
             required
           />
+          <NavLink to="/forgot-password" className="self-end font-mono text-xs text-text-dim hover:text-accent">
+            {t("auth.forgotPasswordLink")}
+          </NavLink>
           <ErrorMessage message={error} size="sm" />
           <Button type="submit" isLoading={isSubmitting} className="w-full">
             {t("auth.loginSubmit")}

@@ -7,5 +7,7 @@ public interface EmailService {
 
     void sendVerificationCode(AppUser user, String code);
 
+    void sendPasswordResetCode(AppUser user, String code);
+
     void sendContactNotification(ContactSubmission submission);
 }

@@ -25,6 +25,7 @@ public record RegisterRequest(
 
         @NotBlank(message = "{validation.password.required}")
         @Size(min = 12, max = 128, message = "{validation.password.length}")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).*$", message = "{validation.password.weak}")
         String password
 ) {
 }

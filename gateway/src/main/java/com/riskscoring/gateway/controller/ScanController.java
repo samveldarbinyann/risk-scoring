@@ -1,17 +1,20 @@
 package com.riskscoring.gateway.controller;
 
+import com.riskscoring.gateway.dto.RecentScanGroupView;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
 import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanGroupReportView;
 import com.riskscoring.gateway.dto.ScanGroupView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
+import com.riskscoring.gateway.security.AuthenticatedUser;
 import com.riskscoring.gateway.service.ScanService;
 import com.riskscoring.gateway.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,6 +38,11 @@ public class ScanController {
     public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request,
                                                  HttpServletRequest httpRequest) {
         return scanService.requestScan(ClientIpResolver.resolve(httpRequest), request);
+    }
+
+    @GetMapping("/recent")
+    public List<RecentScanGroupView> getRecentScans(@AuthenticationPrincipal AuthenticatedUser user) {
+        return scanService.getRecentScans(user.id());
     }
 
     @GetMapping("/groups/{groupId}")

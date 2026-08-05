@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Navigate } from "react-router";
 import { ApiKeysPanel } from "@/components/settings/ApiKeysPanel";
 import { SubscriptionPanel } from "@/components/settings/SubscriptionPanel";
-import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import {
   ApiError,
@@ -198,12 +197,7 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
-      <header className="flex items-center justify-between gap-3">
-        <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("settings.title")}</h1>
-        <Button type="button" variant="ghost" onClick={() => void refresh()} className="h-10 px-4 text-sm">
-          {t("settings.refresh")}
-        </Button>
-      </header>
+      <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("settings.title")}</h1>
 
       <SubscriptionPanel
         subscription={subscription.data}

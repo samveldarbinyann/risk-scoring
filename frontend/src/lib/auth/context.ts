@@ -10,6 +10,8 @@ export interface AuthContextValue {
   register: (payload: RegisterRequest) => Promise<RegistrationResponse>;
   verifyEmail: (email: string, code: string) => Promise<void>;
   resendCode: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string, code: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 

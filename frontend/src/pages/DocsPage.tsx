@@ -80,27 +80,23 @@ export function DocsPage() {
         <p className="max-w-2xl text-sm leading-relaxed text-accent">{t("docs.subtitle")}</p>
       </header>
 
-      <DocsSection index={1} title={t("docs.pipeline.title")} body={t("docs.pipeline.body")}>
+      <DocsSection title={t("docs.pipeline.title")} body={t("docs.pipeline.body")}>
         <DocsTermList numbered items={toTerms(PIPELINE_STEPS)} />
       </DocsSection>
 
-      <DocsSection index={2} title={t("docs.risk.title")} body={t("docs.risk.body")}>
-        <dl className="flex flex-col gap-3">
+      <DocsSection title={t("docs.risk.title")} body={t("docs.risk.body")}>
+        <ul className="flex flex-col gap-3">
           {RISK_ORDER.map((level) => (
-            <div
-              key={level}
-              className="flex flex-col gap-2 rounded-panel border border-border bg-surface p-5 sm:flex-row sm:items-baseline sm:gap-5"
-            >
-              <dt className="shrink-0">
-                <RiskBadge level={level} />
-              </dt>
-              <dd className="text-sm leading-relaxed text-text-dim">{t(`docs.risk.${level}` as MessageKey)}</dd>
-            </div>
+            <li key={level} className="rounded-panel border border-border bg-surface p-5 text-sm leading-relaxed text-text-dim">
+              <RiskBadge level={level} bare className="mr-1.5" />
+              {": "}
+              {t(`docs.risk.${level}` as MessageKey)}
+            </li>
           ))}
-        </dl>
+        </ul>
       </DocsSection>
 
-      <DocsSection index={3} title={t("docs.signals.title")} body={t("docs.signals.body")}>
+      <DocsSection title={t("docs.signals.title")} body={t("docs.signals.body")}>
         <ul className="flex flex-col gap-2">
           {SIGNAL_KEYS.map((key) => (
             <li key={key} className="flex items-baseline gap-3 font-mono text-sm text-text-dim">
@@ -111,11 +107,11 @@ export function DocsPage() {
         </ul>
       </DocsSection>
 
-      <DocsSection index={4} title={t("docs.flags.title")} body={t("docs.flags.body")}>
-        <DocsTermList items={toTerms(FLAG_CATEGORIES)} />
+      <DocsSection title={t("docs.flags.title")} body={t("docs.flags.body")}>
+        <DocsTermList items={toTerms(FLAG_CATEGORIES)} columns={3} />
       </DocsSection>
 
-      <DocsSection index={5} title={t("docs.api.title")} body={t("docs.api.body")}>
+      <DocsSection title={t("docs.api.title")} body={t("docs.api.body")}>
         <div className="flex flex-col gap-8">
           <ApiEndpoint title={t("docs.api.authTitle")} description={t("docs.api.authBody")} code={AUTH_SAMPLE} />
           <ApiEndpoint
@@ -131,8 +127,8 @@ export function DocsPage() {
         </div>
       </DocsSection>
 
-      <DocsSection index={6} title={t("docs.networks.title")} body={t("docs.networks.body")}>
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <DocsSection title={t("docs.networks.title")} body={t("docs.networks.body")}>
+        <ul className="grid gap-2 sm:grid-cols-2">
           {chains.map((chain) => (
             <li
               key={chain.chain}
@@ -148,7 +144,6 @@ export function DocsPage() {
             </li>
           ))}
         </ul>
-        <p className="max-w-2xl text-sm leading-relaxed text-text-dim">{t("docs.networks.roadmap")}</p>
       </DocsSection>
 
       <section className="flex flex-col gap-4 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">

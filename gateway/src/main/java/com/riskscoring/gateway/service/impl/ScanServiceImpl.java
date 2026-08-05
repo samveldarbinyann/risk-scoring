@@ -4,6 +4,7 @@ import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.ScanTarget;
+import com.riskscoring.gateway.dto.RecentScanGroupView;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
 import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanGroupChainStatus;
@@ -27,20 +28,27 @@ import com.riskscoring.gateway.model.TargetMatch;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
+import com.riskscoring.gateway.repository.ScanRiskSummary;
+import com.riskscoring.gateway.security.AuthenticatedUser;
 import com.riskscoring.gateway.service.BillingService;
 import com.riskscoring.gateway.service.ChainService;
 import com.riskscoring.gateway.service.RateLimitService;
 import com.riskscoring.gateway.service.ScanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +67,7 @@ public class ScanServiceImpl implements ScanService {
     @Transactional
     public ScanGroupAcceptedResponse requestScan(String clientIp, ScanCreateRequest request) {
         rateLimitService.checkPublicScan(clientIp);
-        return createScanGroup(requestedChains(request), ScanSource.USER);
+        return createScanGroup(requestedChains(request), ScanSource.USER, currentUserId());
     }
 
     @Override
@@ -67,15 +75,16 @@ public class ScanServiceImpl implements ScanService {
     public ScanGroupAcceptedResponse requestApiScan(UUID userId, ScanCreateRequest request) {
         List<TargetMatch> matches = requestedChains(request);
         billingService.chargeQuota(userId, matches.size());
-        return createScanGroup(matches, ScanSource.API);
+        return createScanGroup(matches, ScanSource.API, userId);
     }
 
-    private ScanGroupAcceptedResponse createScanGroup(List<TargetMatch> matches, ScanSource source) {
+    private ScanGroupAcceptedResponse createScanGroup(List<TargetMatch> matches, ScanSource source, UUID userId) {
         TargetMatch first = matches.getFirst();
         Instant requestedAt = Instant.now();
 
         ScanGroup group = ScanGroup.builder()
                 .id(UUID.randomUUID())
+                .userId(userId)
                 .targetType(first.targetType())
                 .target(first.normalizedTarget())
                 .requestedAt(requestedAt)
@@ -144,6 +153,41 @@ public class ScanServiceImpl implements ScanService {
         }
 
         return matches;
+    }
+
+    private UUID currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser user)) {
+            return null;
+        }
+        return user.id();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RecentScanGroupView> getRecentScans(UUID userId) {
+        List<ScanGroup> groups = scanGroupRepository.findTop5ByUserIdOrderByRequestedAtDesc(userId);
+        if (groups.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> groupIds = groups.stream().map(ScanGroup::getId).toList();
+        List<Scan> scans = scanRepository.findByGroupIdIn(groupIds);
+        Map<UUID, List<Scan>> scansByGroupId = scans.stream().collect(Collectors.groupingBy(Scan::getGroupId));
+
+        List<UUID> completedScanIds = scans.stream()
+                .filter(scan -> scan.getStatus() == ScanStage.COMPLETED)
+                .map(Scan::getId)
+                .toList();
+        Map<UUID, ScanRiskSummary> riskByScanId = scanReportRepository.findRiskSummaries(completedScanIds).stream()
+                .collect(Collectors.toMap(ScanRiskSummary::scanId, Function.identity()));
+
+        return groups.stream()
+                .map(group -> scanMapper.toRecentScanView(
+                        group,
+                        scansByGroupId.getOrDefault(group.getId(), List.of()),
+                        riskByScanId))
+                .toList();
     }
 
     @Override

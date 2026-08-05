@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,32}$/;
+const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).*$/;
 const MIN_PASSWORD_LENGTH = 12;
 const RESEND_COOLDOWN_SECONDS = 30;
 const VERIFICATION_CODE_LENGTH = 6;

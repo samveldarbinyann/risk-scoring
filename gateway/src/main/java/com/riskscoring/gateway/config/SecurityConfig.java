@@ -65,7 +65,8 @@ public class SecurityConfig {
                                 "/api/watchlist/**",
                                 "/api/alerts/**",
                                 "/api/billing/**",
-                                "/api/api-keys/**")
+                                "/api/api-keys/**",
+                                "/api/scans/recent")
                         .hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
                         .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**",
                                 "/api/contact", "/ws/**")

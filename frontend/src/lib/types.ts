@@ -51,6 +51,16 @@ export interface ResendCodeRequest {
   email: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
 export interface LoginRequest {
   login: string;
   password: string;
@@ -222,6 +232,17 @@ export interface ScanGroupReportView {
   reports: ScanReportView[];
 }
 
+export interface RecentScanGroupView {
+  groupId: string;
+  targetType: ScanTarget;
+  target: string;
+  chains: Chain[];
+  completed: boolean;
+  worstRiskLevel: RiskLevel | null;
+  worstScore: number | null;
+  requestedAt: string;
+}
+
 export interface ScanProgressMessage {
   scanId: string;
   stage: ScanStage;
@@ -266,7 +287,6 @@ export interface AlertView {
 
 export interface PlanView {
   code: PlanCode;
-  name: string;
   priceCents: number;
   currency: string;
   monthlyRequestLimit: number;
@@ -275,7 +295,6 @@ export interface PlanView {
 export interface SubscriptionView {
   id: string;
   planCode: PlanCode;
-  planName: string;
   status: SubscriptionStatus;
   priceCents: number;
   currency: string;

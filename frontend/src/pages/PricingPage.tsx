@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { PlanCard, type PlanCtaKind } from "@/components/pricing/PlanCard";
+import { PlanComparisonTable } from "@/components/pricing/PlanComparisonTable";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
 import {
@@ -155,6 +156,8 @@ export function PricingPage() {
       <div className="flex justify-center">
         <ErrorMessage message={actionError} size="sm" />
       </div>
+
+      {!loadError && <PlanComparisonTable plans={orderedPlans} />}
     </div>
   );
 }

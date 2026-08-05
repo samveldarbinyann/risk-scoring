@@ -42,7 +42,7 @@ export function ContactForm({
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+    <form className="flex h-full flex-col gap-4" onSubmit={handleSubmit}>
       <Input
         type="email"
         value={email}
@@ -68,6 +68,7 @@ export function ContactForm({
         maxLength={MESSAGE_MAX_LENGTH}
         rows={8}
         required
+        className="flex-1 resize-none"
       />
 
       {scanId && (
@@ -78,12 +79,9 @@ export function ContactForm({
 
       <ErrorMessage message={error} size="sm" />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-mono text-xs text-text-faint">{t("contact.responseTime")}</p>
-        <Button type="submit" isLoading={isSubmitting} className="sm:w-auto">
-          {t("contact.submit")}
-        </Button>
-      </div>
+      <Button type="submit" isLoading={isSubmitting} className="sm:w-auto sm:self-end">
+        {t("contact.submit")}
+      </Button>
     </form>
   );
 }

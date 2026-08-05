@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { formatCount, formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
+import type { MessageKey } from "@/lib/i18n/messageKeys";
 import { PLAN_FEATURE_KEYS, POPULAR_PLAN } from "@/lib/plans";
 import type { PlanView, SubscriptionView } from "@/lib/types";
 
@@ -47,7 +48,9 @@ export function PlanCard({
       )}
 
       <header className="space-y-3">
-        <h2 className="font-sans text-xs uppercase tracking-widest text-text-dim">{plan.name}</h2>
+        <h2 className="font-sans text-xs uppercase tracking-widest text-text-dim">
+          {t(`pricing.plan.${plan.code}` as MessageKey)}
+        </h2>
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-4xl font-medium text-text">
             {formatMoney(plan.priceCents, plan.currency, locale)}

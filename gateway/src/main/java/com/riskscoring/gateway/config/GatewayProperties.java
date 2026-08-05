@@ -69,7 +69,6 @@ public record GatewayProperties(
 
     public record Plan(
             @NotNull PlanCode code,
-            @NotBlank String name,
             @PositiveOrZero int priceCents,
             @NotBlank @Size(min = 3, max = 3) String currency,
             @Positive int monthlyRequestLimit

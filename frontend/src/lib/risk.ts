@@ -1,10 +1,10 @@
 import type { RiskLevel } from "@/lib/types";
 
-export const RISK: Record<RiskLevel, { label: string; text: string; border: string; bg: string }> = {
-  LOW: { label: "LOW", text: "text-risk-low", border: "border-risk-low", bg: "bg-risk-low" },
-  MEDIUM: { label: "MEDIUM", text: "text-risk-mid", border: "border-risk-mid", bg: "bg-risk-mid" },
-  HIGH: { label: "HIGH", text: "text-risk-high", border: "border-risk-high", bg: "bg-risk-high" },
-  CRITICAL: { label: "CRITICAL", text: "text-risk-critical", border: "border-risk-critical", bg: "bg-risk-critical" },
+export const RISK: Record<RiskLevel, { text: string; border: string; bg: string }> = {
+  LOW: { text: "text-risk-low", border: "border-risk-low", bg: "bg-risk-low" },
+  MEDIUM: { text: "text-risk-mid", border: "border-risk-mid", bg: "bg-risk-mid" },
+  HIGH: { text: "text-risk-high", border: "border-risk-high", bg: "bg-risk-high" },
+  CRITICAL: { text: "text-risk-critical", border: "border-risk-critical", bg: "bg-risk-critical" },
 };
 
 export const RISK_ORDER: RiskLevel[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];

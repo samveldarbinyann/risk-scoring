@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,9 +28,9 @@ import java.util.Optional;
 @Slf4j
 public class ChainIngestServiceImpl implements ChainIngestService {
 
-    private static final String FETCH_STARTED_MESSAGE = "Fetching on-chain data";
-    private static final String FETCH_DONE_ADDRESS = "Found %d transfers across %d counterparties";
-    private static final String FETCH_DONE_TRANSACTION = "Resolved transaction: %d participants, %d internal transfers";
+    private static final String FETCH_STARTED_KEY = "console.message.fetchStarted";
+    private static final String FETCH_DONE_ADDRESS_KEY = "console.message.fetchDoneAddress";
+    private static final String FETCH_DONE_TRANSACTION_KEY = "console.message.fetchDoneTransaction";
 
     private final Map<ChainDataClientKey, ChainDataClient> chainDataClients;
     private final Map<ScanTarget, ChainFactsCacheService> chainFactsCaches;
@@ -38,13 +39,13 @@ public class ChainIngestServiceImpl implements ChainIngestService {
     @Override
     public void ingest(ScanRequested event) {
         ChainDataClient client = resolveClient(event);
-        publishProgress(event, FETCH_STARTED_MESSAGE);
+        publishProgress(event, FETCH_STARTED_KEY, List.of());
 
         ChainFactsCacheService cache = chainFactsCaches.get(event.targetType());
         ChainFacts facts = cache.findFresh(event.target(), event.chain())
                 .orElseGet(() -> fetchAndCache(event, client, cache));
 
-        publishProgress(event, progressMessage(facts));
+        publishProgress(event, progressMessageKey(facts), progressMessageArgs(facts));
 
         chainEventPublisher.publishChainFetched(new ChainFetched(
                 event.scanId(),
@@ -71,17 +72,23 @@ public class ChainIngestServiceImpl implements ChainIngestService {
         return facts;
     }
 
-    private String progressMessage(ChainFacts facts) {
+    private String progressMessageKey(ChainFacts facts) {
         return switch (facts) {
-            case AddressFacts address -> FETCH_DONE_ADDRESS.formatted(
-                    address.snapshot().txCount(), address.counterparties().size());
-            case TransactionFacts transaction -> FETCH_DONE_TRANSACTION.formatted(
-                    transaction.transaction().parties().size(), transaction.transaction().nestedTransferCount());
+            case AddressFacts address -> FETCH_DONE_ADDRESS_KEY;
+            case TransactionFacts transaction -> FETCH_DONE_TRANSACTION_KEY;
         };
     }
 
-    private void publishProgress(ScanRequested event, String message) {
+    private List<Object> progressMessageArgs(ChainFacts facts) {
+        return switch (facts) {
+            case AddressFacts address -> List.of(address.snapshot().txCount(), address.counterparties().size());
+            case TransactionFacts transaction ->
+                    List.of(transaction.transaction().parties().size(), transaction.transaction().nestedTransferCount());
+        };
+    }
+
+    private void publishProgress(ScanRequested event, String messageKey, List<Object> args) {
         chainEventPublisher.publishScanProgress(
-                new ScanProgress(event.scanId(), ScanStage.FETCHING, message, Instant.now()));
+                new ScanProgress(event.scanId(), ScanStage.FETCHING, messageKey, args, event.language(), Instant.now()));
     }
 }

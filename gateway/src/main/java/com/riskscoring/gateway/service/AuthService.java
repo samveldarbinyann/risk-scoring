@@ -4,6 +4,7 @@ import com.riskscoring.gateway.dto.IssuedSession;
 import com.riskscoring.gateway.dto.LoginRequest;
 import com.riskscoring.gateway.dto.RegisterRequest;
 import com.riskscoring.gateway.dto.RegistrationResponse;
+import com.riskscoring.gateway.dto.ResetPasswordRequest;
 import com.riskscoring.gateway.dto.UserView;
 import com.riskscoring.gateway.dto.VerifyEmailRequest;
 
@@ -16,6 +17,10 @@ public interface AuthService {
     IssuedSession verifyEmail(VerifyEmailRequest request, String userAgent, String ipAddress);
 
     void resendVerificationCode(String email);
+
+    void forgotPassword(String email);
+
+    IssuedSession resetPassword(ResetPasswordRequest request, String userAgent, String ipAddress);
 
     IssuedSession login(LoginRequest request, String userAgent, String ipAddress);
 
