@@ -63,6 +63,10 @@ export function formatTime(iso: string, locale?: string): string {
   return new Date(iso).toLocaleTimeString(locale, { timeStyle: "medium" });
 }
 
+export function formatShortDate(iso: string, locale?: string): string {
+  return new Date(iso).toLocaleDateString(locale, { month: "short", day: "numeric" });
+}
+
 export function formatMoney(cents: number, currency: string, locale?: string): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",

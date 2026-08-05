@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
+  forgotPassword as apiForgotPassword,
   login as apiLogin,
   logout as apiLogout,
   refresh as apiRefresh,
   register as apiRegister,
   resendCode as apiResendCode,
+  resetPassword as apiResetPassword,
   verifyEmail as apiVerifyEmail,
   onSessionExpired,
   setAccessToken,
@@ -68,6 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resendCode = useCallback((email: string) => apiResendCode({ email }), []);
 
+  const forgotPassword = useCallback((email: string) => apiForgotPassword({ email }), []);
+
+  const resetPassword = useCallback(async (email: string, code: string, newPassword: string) => {
+    const session = await apiResetPassword({ email, code, newPassword });
+    setAccessToken(session.accessToken);
+    setUser(session.user);
+    setStatus("authenticated");
+  }, []);
+
   const logout = useCallback(async () => {
     // Drop client state first: logout must feel instant and must not leave
     // the UI in an authenticated state even if the network call fails.
@@ -78,8 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, status, login, register, verifyEmail, resendCode, logout }),
-    [user, status, login, register, verifyEmail, resendCode, logout],
+    () => ({ user, status, login, register, verifyEmail, resendCode, forgotPassword, resetPassword, logout }),
+    [user, status, login, register, verifyEmail, resendCode, forgotPassword, resetPassword, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -82,22 +82,18 @@ gateway:
     period: 30d
     plans:
       - code: FREE
-        name: Free
         price-cents: 0
         currency: USD
         monthly-request-limit: 10
       - code: STARTER
-        name: Starter
         price-cents: 2000
         currency: USD
         monthly-request-limit: 1000
       - code: GROWTH
-        name: Growth
         price-cents: 6000
         currency: USD
         monthly-request-limit: 5000
       - code: SCALE
-        name: Scale
         price-cents: 10000
         currency: USD
         monthly-request-limit: 15000
@@ -111,6 +107,10 @@ gateway:
       requests: 10
       window: 1h
   contact:
+    rate-limit:
+      requests: 5
+      window: 1h
+  password-reset:
     rate-limit:
       requests: 5
       window: 1h

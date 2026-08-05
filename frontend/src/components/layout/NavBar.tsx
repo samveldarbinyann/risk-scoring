@@ -46,7 +46,7 @@ export function NavBar() {
           <img src="/logo.svg" alt="" className="h-9 w-auto" />
           <div className="inline-flex h-9 w-fit flex-col justify-between">
             <span className="font-mono text-lg font-bold leading-none tracking-normal text-accent">ADDRESSLENS</span>
-            <span className="font-mono text-xs leading-none text-text-dim">see risk clearly</span>
+            <span className="font-mono text-xs leading-none text-text-dim">{t("nav.tagline")}</span>
           </div>
         </motion.div>
       </NavLink>
@@ -95,7 +95,7 @@ export function NavBar() {
       </ul>
       <div className="flex items-center gap-2">
         {isAuthenticated ? (
-          <motion.div layout transition={LAYOUT_SPRING} className="mr-24">
+          <motion.div layout transition={LAYOUT_SPRING} className="mr-6">
             <AccountMenu user={user} onLogout={logout} />
           </motion.div>
         ) : (

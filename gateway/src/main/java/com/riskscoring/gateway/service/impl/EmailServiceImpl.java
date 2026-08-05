@@ -27,6 +27,7 @@ import java.util.Map;
 public class EmailServiceImpl implements EmailService {
 
     private static final String VERIFICATION_TEMPLATE = "email/verification";
+    private static final String PASSWORD_RESET_TEMPLATE = "email/password-reset";
     private static final String CONTACT_TEMPLATE = "email/contact";
     private static final Locale CONTACT_LOCALE = Locale.ENGLISH;
     private static final DateTimeFormatter SUBMITTED_AT_FORMAT =
@@ -48,6 +49,19 @@ public class EmailServiceImpl implements EmailService {
         send(user.getEmail(),
                 messageSource.getMessage("email.verification.subject", null, locale),
                 templateEngine.process(VERIFICATION_TEMPLATE, context));
+    }
+
+    @Override
+    public void sendPasswordResetCode(AppUser user, String code) {
+        Locale locale = user.getLanguage().toLocale();
+        Context context = new Context(locale, Map.of(
+                "firstName", user.getFirstName(),
+                "code", code,
+                "ttlMinutes", gatewayProperties.verification().codeTtl().toMinutes()));
+
+        send(user.getEmail(),
+                messageSource.getMessage("email.passwordReset.subject", null, locale),
+                templateEngine.process(PASSWORD_RESET_TEMPLATE, context));
     }
 
     @Override

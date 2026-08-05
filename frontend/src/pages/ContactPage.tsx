@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { ContactInfoPanel } from "@/components/contact/ContactInfoPanel";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { submitContact } from "@/lib/api";
@@ -46,38 +47,42 @@ export function ContactPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-3">
         <h1 className="font-sans text-3xl font-semibold text-text sm:text-4xl">{t("contact.title")}</h1>
         <p className="text-sm leading-relaxed text-accent">{t("contact.subtitle")}</p>
       </header>
 
-      <Card>
-        {isSent ? (
-          <div className="flex flex-col items-start gap-4">
-            <div className="flex flex-col gap-2">
-              <h2 className="font-mono text-sm uppercase tracking-widest text-risk-low">{t("contact.sentTitle")}</h2>
-              <p className="text-sm leading-relaxed text-text-dim">{t("contact.sentBody")}</p>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <Card className="flex h-full flex-col">
+          {isSent ? (
+            <div className="flex flex-col items-start gap-4">
+              <div className="flex flex-col gap-2">
+                <h2 className="font-mono text-sm uppercase tracking-widest text-risk-low">{t("contact.sentTitle")}</h2>
+                <p className="text-sm leading-relaxed text-text-dim">{t("contact.sentBody")}</p>
+              </div>
+              <Button type="button" variant="ghost" onClick={handleReset}>
+                {t("contact.sendAnother")}
+              </Button>
             </div>
-            <Button type="button" variant="ghost" onClick={handleReset}>
-              {t("contact.sendAnother")}
-            </Button>
-          </div>
-        ) : (
-          <ContactForm
-            email={email}
-            subject={subject}
-            message={message}
-            scanId={scanId}
-            error={error}
-            isSubmitting={isSubmitting}
-            onEmailChange={setEmail}
-            onSubjectChange={setSubject}
-            onMessageChange={setMessage}
-            onSubmit={() => void handleSubmit()}
-          />
-        )}
-      </Card>
+          ) : (
+            <ContactForm
+              email={email}
+              subject={subject}
+              message={message}
+              scanId={scanId}
+              error={error}
+              isSubmitting={isSubmitting}
+              onEmailChange={setEmail}
+              onSubjectChange={setSubject}
+              onMessageChange={setMessage}
+              onSubmit={() => void handleSubmit()}
+            />
+          )}
+        </Card>
+
+        <ContactInfoPanel />
+      </div>
     </div>
   );
 }

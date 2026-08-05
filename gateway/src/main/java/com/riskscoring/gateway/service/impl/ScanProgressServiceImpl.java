@@ -10,6 +10,7 @@ import com.riskscoring.gateway.service.ScanProgressService;
 import com.riskscoring.gateway.websocket.ScanNotifier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class ScanProgressServiceImpl implements ScanProgressService {
     private final ScanRepository scanRepository;
     private final ScanMapper scanMapper;
     private final ScanNotifier scanNotifier;
+    private final MessageSource messageSource;
 
     @Override
     @Transactional
@@ -42,7 +44,9 @@ public class ScanProgressServiceImpl implements ScanProgressService {
             scan.setCompletedAt(event.at());
         }
 
-        ScanProgressMessage message = scanMapper.toProgressMessage(event);
+        String resolvedMessage = messageSource.getMessage(
+                event.messageKey(), event.messageArgs().toArray(), event.language().toLocale());
+        ScanProgressMessage message = scanMapper.toProgressMessage(event, resolvedMessage);
         scanNotifier.notifyProgress(message);
         scanNotifier.notifyGroupProgress(scan.getGroupId(), message);
         log.info("Scan {} (group {}) moved to {}", scan.getId(), scan.getGroupId(), event.stage());

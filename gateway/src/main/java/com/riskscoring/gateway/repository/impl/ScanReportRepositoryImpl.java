@@ -6,8 +6,11 @@ import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanReportRow;
+import com.riskscoring.gateway.repository.ScanRiskSummary;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -27,10 +30,17 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
             WHERE scan_id = ?
             """;
 
+    private static final String FIND_RISK_SUMMARIES = """
+            SELECT scan_id, risk_level, score
+            FROM riskai.scan_report
+            WHERE scan_id IN (:scanIds)
+            """;
+
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
     };
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -50,5 +60,19 @@ public class ScanReportRepositoryImpl implements ScanReportRepository {
                 rs.getString("model"),
                 rs.getTimestamp("created_at").toInstant()
         ), scanId).stream().findFirst();
+    }
+
+    @Override
+    public List<ScanRiskSummary> findRiskSummaries(List<UUID> scanIds) {
+        if (scanIds.isEmpty()) {
+            return List.of();
+        }
+
+        var params = new MapSqlParameterSource("scanIds", scanIds);
+        return namedParameterJdbcTemplate.query(FIND_RISK_SUMMARIES, params, (rs, rowNum) -> new ScanRiskSummary(
+                UUID.fromString(rs.getString("scan_id")),
+                RiskLevel.valueOf(rs.getString("risk_level")),
+                rs.getInt("score")
+        ));
     }
 }

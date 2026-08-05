@@ -8,12 +8,15 @@ import type {
   ContactRequest,
   CreateApiKeyRequest,
   ErrorResponse,
+  ForgotPasswordRequest,
   LoginRequest,
   PlanCode,
   PlanView,
+  RecentScanGroupView,
   RegisterRequest,
   RegistrationResponse,
   ResendCodeRequest,
+  ResetPasswordRequest,
   ScanCreateRequest,
   ScanGroupAcceptedResponse,
   ScanGroupReportView,
@@ -37,6 +40,12 @@ let currentLocale: Locale = "en";
 
 export function setApiLocale(locale: Locale): void {
   currentLocale = locale;
+}
+
+let messageBundle: Record<string, string> | null = null;
+
+export function setApiMessageBundle(bundle: Record<string, string> | null): void {
+  messageBundle = bundle;
 }
 
 // Access token lives only in memory for the lifetime of the tab. It is never
@@ -94,7 +103,9 @@ function refreshSession(): Promise<boolean> {
 
 async function parseErrorMessage(response: Response): Promise<string> {
   const body = (await response.json().catch(() => null)) as ErrorResponse | null;
-  return body?.message ?? `Request failed with status ${response.status}`;
+  if (body?.message) return body.message;
+  const fallback = messageBundle?.["api.genericError"];
+  return fallback ? `${fallback} (${response.status})` : `Request failed with status ${response.status}`;
 }
 
 export class ApiError extends Error {
@@ -171,6 +182,10 @@ export function getScanGroupReport(groupId: string): Promise<ScanGroupReportView
   return apiRequest<ScanGroupReportView>(`/api/scans/groups/${groupId}/report`);
 }
 
+export function getRecentScans(): Promise<RecentScanGroupView[]> {
+  return apiRequest<RecentScanGroupView[]>("/api/scans/recent");
+}
+
 export function getMessages(locale: Locale, init?: RequestInit): Promise<Record<string, string>> {
   return apiRequest<Record<string, string>>("/api/i18n", {
     ...init,
@@ -194,6 +209,20 @@ export function verifyEmail(payload: VerifyEmailRequest): Promise<AuthResponse> 
 
 export function resendCode(payload: ResendCodeRequest): Promise<void> {
   return apiRequest<void>(`${AUTH_PATH_PREFIX}/resend-code`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function forgotPassword(payload: ForgotPasswordRequest): Promise<void> {
+  return apiRequest<void>(`${AUTH_PATH_PREFIX}/forgot-password`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function resetPassword(payload: ResetPasswordRequest): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>(`${AUTH_PATH_PREFIX}/reset-password`, {
     method: "POST",
     body: JSON.stringify(payload),
   });

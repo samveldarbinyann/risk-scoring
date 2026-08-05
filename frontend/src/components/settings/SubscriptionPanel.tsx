@@ -8,21 +8,8 @@ import { cn } from "@/lib/cn";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { MessageKey } from "@/lib/i18n/messageKeys";
-import type { SubscriptionStatus, SubscriptionView } from "@/lib/types";
-
-const STATUS_CLASS: Record<SubscriptionStatus, string> = {
-  ACTIVE: "border-accent text-accent",
-  PENDING_PAYMENT: "border-risk-mid text-risk-mid",
-  CANCELED: "border-border text-text-faint",
-  EXPIRED: "border-border text-text-faint",
-};
-
-const STATUS_KEY: Record<SubscriptionStatus, MessageKey> = {
-  ACTIVE: "settings.status.ACTIVE",
-  PENDING_PAYMENT: "settings.status.PENDING_PAYMENT",
-  CANCELED: "settings.status.CANCELED",
-  EXPIRED: "settings.status.EXPIRED",
-};
+import { SUBSCRIPTION_STATUS_CLASS, SUBSCRIPTION_STATUS_KEY } from "@/lib/subscriptionStatus";
+import type { SubscriptionView } from "@/lib/types";
 
 interface SubscriptionPanelProps {
   subscription: SubscriptionView | null;
@@ -66,7 +53,10 @@ export function SubscriptionPanel({
       ) : (
         <div className="flex flex-col gap-6">
           <div className="grid gap-4 sm:grid-cols-2">
-            <MetaRow label={t("settings.subscription.plan")} value={subscription.planName} />
+            <MetaRow
+              label={t("settings.subscription.plan")}
+              value={t(`pricing.plan.${subscription.planCode}` as MessageKey)}
+            />
             <div className="space-y-1">
               <p className="font-sans text-xs uppercase tracking-wider text-text-faint">
                 {t("settings.subscription.status")}
@@ -74,10 +64,10 @@ export function SubscriptionPanel({
               <span
                 className={cn(
                   "inline-flex items-center rounded-base border px-2.5 py-1 font-mono text-xs uppercase tracking-wider",
-                  STATUS_CLASS[subscription.status],
+                  SUBSCRIPTION_STATUS_CLASS[subscription.status],
                 )}
               >
-                {t(STATUS_KEY[subscription.status])}
+                {t(SUBSCRIPTION_STATUS_KEY[subscription.status])}
               </span>
             </div>
             <MetaRow

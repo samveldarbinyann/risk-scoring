@@ -5,4 +5,6 @@ public interface RateLimitService {
     void checkPublicScan(String clientIp);
 
     void checkContact(String clientIp);
+
+    void checkPasswordReset(String clientIp);
 }

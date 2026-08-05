@@ -23,3 +23,5 @@ databaseChangeLog:
       file: db/changelog/changes/011-chain-key.yaml
   - include:
       file: db/changelog/changes/012-remove-sepolia-scans.yaml
+  - include:
+      file: db/changelog/changes/013-scan-group-user-id.yaml

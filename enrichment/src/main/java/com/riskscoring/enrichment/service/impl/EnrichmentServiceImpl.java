@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EnrichmentServiceImpl implements EnrichmentService {
 
-    private static final String PROGRESS_MESSAGE = "Matching label lists and computing risk signals";
+    private static final String PROGRESS_MESSAGE_KEY = "console.message.enriching";
 
     private final LabelRepository labelRepository;
     private final EvidenceRecordRepository evidenceRecordRepository;
@@ -40,7 +41,7 @@ public class EnrichmentServiceImpl implements EnrichmentService {
     @Transactional
     public void enrich(ChainFetched event) {
         eventPublisher.publishScanProgress(
-                new ScanProgress(event.scanId(), ScanStage.ENRICHING, PROGRESS_MESSAGE, Instant.now()));
+                new ScanProgress(event.scanId(), ScanStage.ENRICHING, PROGRESS_MESSAGE_KEY, List.of(), event.language(), Instant.now()));
 
         Map<String, Label> labels = findLabels(event);
         EvidenceBundle evidence = riskSignalCalculator.calculate(event, labels);

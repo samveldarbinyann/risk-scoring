@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface ScanRepository extends JpaRepository<Scan, UUID> {
 
     List<Scan> findByGroupId(UUID groupId);
+
+    List<Scan> findByGroupIdIn(List<UUID> groupIds);
 }

@@ -30,6 +30,9 @@ public class ScanGroup {
     @Id
     private UUID id;
 
+    @Column(name = "user_id")
+    private UUID userId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false, length = 16)
     private ScanTarget targetType;

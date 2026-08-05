@@ -4,6 +4,7 @@ import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.model.Language;
+import com.riskscoring.gateway.dto.RecentScanGroupView;
 import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanGroupChainStatus;
 import com.riskscoring.gateway.dto.ScanGroupView;
@@ -13,9 +14,13 @@ import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.gateway.entity.ScanGroup;
 import com.riskscoring.gateway.repository.ScanReportRow;
+import com.riskscoring.gateway.repository.ScanRiskSummary;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,8 +41,8 @@ public class ScanMapper {
         );
     }
 
-    public ScanProgressMessage toProgressMessage(ScanProgress event) {
-        return new ScanProgressMessage(event.scanId(), event.stage(), event.message(), event.at());
+    public ScanProgressMessage toProgressMessage(ScanProgress event, String message) {
+        return new ScanProgressMessage(event.scanId(), event.stage(), message, event.at());
     }
 
     public ScanGroupAcceptedResponse toGroupAcceptedResponse(ScanGroup group, List<Scan> scans) {
@@ -70,6 +75,27 @@ public class ScanMapper {
                 scan.getSource(),
                 scan.getRequestedAt(),
                 scan.getCompletedAt()
+        );
+    }
+
+    public RecentScanGroupView toRecentScanView(ScanGroup group, List<Scan> scans, Map<UUID, ScanRiskSummary> riskByScanId) {
+        boolean completed = scans.stream().allMatch(scan -> TERMINAL_STAGES.contains(scan.getStatus()));
+
+        ScanRiskSummary worst = scans.stream()
+                .map(scan -> riskByScanId.get(scan.getId()))
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(ScanRiskSummary::riskLevel))
+                .orElse(null);
+
+        return new RecentScanGroupView(
+                group.getId(),
+                group.getTargetType(),
+                group.getTarget(),
+                scans.stream().map(Scan::getChain).toList(),
+                completed,
+                worst == null ? null : worst.riskLevel(),
+                worst == null ? null : worst.score(),
+                group.getRequestedAt()
         );
     }
 

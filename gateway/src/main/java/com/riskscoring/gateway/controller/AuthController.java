@@ -2,11 +2,13 @@ package com.riskscoring.gateway.controller;
 
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.AuthResponse;
+import com.riskscoring.gateway.dto.ForgotPasswordRequest;
 import com.riskscoring.gateway.dto.IssuedSession;
 import com.riskscoring.gateway.dto.LoginRequest;
 import com.riskscoring.gateway.dto.RegisterRequest;
 import com.riskscoring.gateway.dto.RegistrationResponse;
 import com.riskscoring.gateway.dto.ResendCodeRequest;
+import com.riskscoring.gateway.dto.ResetPasswordRequest;
 import com.riskscoring.gateway.dto.UserView;
 import com.riskscoring.gateway.dto.VerifyEmailRequest;
 import com.riskscoring.gateway.security.AuthenticatedUser;
@@ -58,6 +60,18 @@ public class AuthController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void resendCode(@Valid @RequestBody ResendCodeRequest request) {
         authService.resendVerificationCode(request.email());
+    }
+
+    @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
+        authService.forgotPassword(request.email(), ClientIpResolver.resolve(httpRequest));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request,
+                                                       HttpServletRequest httpRequest) {
+        return sessionResponse(authService.resetPassword(request, userAgent(httpRequest), ClientIpResolver.resolve(httpRequest)));
     }
 
     @PostMapping("/login")

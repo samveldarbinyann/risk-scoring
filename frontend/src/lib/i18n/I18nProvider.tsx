@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { getMessages, setApiLocale } from "@/lib/api";
+import { getMessages, setApiLocale, setApiMessageBundle } from "@/lib/api";
 import { LOCALES, type Locale } from "@/lib/i18n/messageKeys";
 import { I18nContext, type I18nContextValue } from "@/lib/i18n/context";
 
@@ -40,6 +40,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, locale);
     document.documentElement.lang = locale;
   }, [locale]);
+
+  useEffect(() => {
+    setApiMessageBundle(bundles?.[locale] ?? null);
+  }, [locale, bundles]);
 
   const value = useMemo<I18nContextValue>(
     () => ({

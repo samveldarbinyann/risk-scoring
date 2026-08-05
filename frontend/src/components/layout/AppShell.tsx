@@ -19,7 +19,7 @@ export function AppShell() {
       {isScanFlow && <BackgroundVideo />}
       <NavBar />
       <main className="relative flex flex-1 flex-col">
-        <LocaleMenu className="absolute right-6 top-4 z-40" />
+        <LocaleMenu className="absolute right-6 top-4 z-0" />
         <AnimatePresence mode="wait">
           {isScanFlow ? (
             <motion.div

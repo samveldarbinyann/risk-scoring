@@ -16,6 +16,7 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.time.Instant;
+import java.util.List;
 
 @Configuration
 @Slf4j
@@ -23,7 +24,7 @@ public class KafkaErrorHandlerConfig {
 
     private static final long RETRY_INTERVAL_MS = 5_000L;
     private static final long MAX_RETRIES = 2L;
-    private static final String FAILURE_MESSAGE = "Chain data fetch failed";
+    private static final String FAILURE_MESSAGE_KEY = "console.message.chainFetchFailed";
 
     @Bean
     public DefaultErrorHandler kafkaErrorHandler(ChainEventPublisher eventPublisher) {
@@ -34,7 +35,8 @@ public class KafkaErrorHandlerConfig {
 
                     if (record.value() instanceof ScanRequested event) {
                         eventPublisher.publishScanProgress(new ScanProgress(
-                                event.scanId(), ScanStage.FAILED, failureMessage(exception), Instant.now()));
+                                event.scanId(), ScanStage.FAILED, failureMessageKey(exception),
+                                failureMessageArgs(exception), event.language(), Instant.now()));
                     }
                 },
                 new FixedBackOff(RETRY_INTERVAL_MS, MAX_RETRIES));
@@ -47,9 +49,15 @@ public class KafkaErrorHandlerConfig {
         return errorHandler;
     }
 
-    private static String failureMessage(Exception exception) {
+    private static String failureMessageKey(Exception exception) {
         return NestedExceptionUtils.getMostSpecificCause(exception) instanceof UserFacingChainFailure failure
-                ? failure.progressMessage()
-                : FAILURE_MESSAGE;
+                ? failure.progressMessageKey()
+                : FAILURE_MESSAGE_KEY;
+    }
+
+    private static List<Object> failureMessageArgs(Exception exception) {
+        return NestedExceptionUtils.getMostSpecificCause(exception) instanceof UserFacingChainFailure failure
+                ? failure.progressMessageArgs()
+                : List.of();
     }
 }

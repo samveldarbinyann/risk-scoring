@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,7 +31,7 @@ import java.util.Optional;
 @Slf4j
 public class RiskAiServiceImpl implements RiskAiService {
 
-    private static final String PROGRESS_MESSAGE = "AI is reasoning over the evidence";
+    private static final String PROGRESS_MESSAGE_KEY = "console.message.analyzing";
 
     private final LlmClient llmClient;
     private final PromptBuilder promptBuilder;
@@ -51,7 +52,7 @@ public class RiskAiServiceImpl implements RiskAiService {
         }
 
         eventPublisher.publishScanProgress(
-                new ScanProgress(event.scanId(), ScanStage.ANALYZING, PROGRESS_MESSAGE, Instant.now()));
+                new ScanProgress(event.scanId(), ScanStage.ANALYZING, PROGRESS_MESSAGE_KEY, List.of(), event.language(), Instant.now()));
 
         Verdict verdict = askForVerdict(event.evidence(), event.language());
 
@@ -76,7 +77,8 @@ public class RiskAiServiceImpl implements RiskAiService {
                 completedAt
         ));
         eventPublisher.publishScanProgress(
-                new ScanProgress(event.scanId(), ScanStage.COMPLETED, verdict.riskLevel().name(), Instant.now()));
+                new ScanProgress(event.scanId(), ScanStage.COMPLETED, "risk.level." + verdict.riskLevel().name(),
+                        List.of(), event.language(), Instant.now()));
     }
 
     private Verdict askForVerdict(EvidenceBundle evidence, Language language) {

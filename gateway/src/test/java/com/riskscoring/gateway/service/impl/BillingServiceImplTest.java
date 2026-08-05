@@ -151,14 +151,15 @@ class BillingServiceImplTest {
                 new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
                         Duration.ofSeconds(60), 5),
                 new GatewayProperties.Billing(Duration.ofDays(30), List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, "Free", 0, "USD", 10),
-                        new GatewayProperties.Plan(PlanCode.STARTER, "Starter", 2_000, "USD", 1_000),
-                        new GatewayProperties.Plan(PlanCode.GROWTH, "Growth", 6_000, "USD", 5_000),
-                        new GatewayProperties.Plan(PlanCode.SCALE, "Scale", 10_000, "USD", 15_000)
+                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10),
+                        new GatewayProperties.Plan(PlanCode.STARTER, 2_000, "USD", 1_000),
+                        new GatewayProperties.Plan(PlanCode.GROWTH, 6_000, "USD", 5_000),
+                        new GatewayProperties.Plan(PlanCode.SCALE, 10_000, "USD", 15_000)
                 )),
                 new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
                 new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1))),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
+                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
+                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
         );
     }
 
@@ -166,7 +167,6 @@ class BillingServiceImplTest {
         return new SubscriptionView(
                 UUID.randomUUID(),
                 PlanCode.FREE,
-                "Free",
                 SubscriptionStatus.ACTIVE,
                 0,
                 "USD",

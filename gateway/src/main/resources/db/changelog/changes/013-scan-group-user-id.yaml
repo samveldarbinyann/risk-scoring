@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-scan-group-user-id
+      author: sam
+      changes:
+        - addColumn:
+            tableName: scan_group
+            columns:
+              - column:
+                  name: user_id
+                  type: uuid
+        - addForeignKeyConstraint:
+            baseTableName: scan_group
+            baseColumnNames: user_id
+            referencedTableName: app_user
+            referencedColumnNames: id
+            constraintName: fk_scan_group_user_id
+        - createIndex:
+            tableName: scan_group
+            indexName: idx_scan_group_user_id
+            columns:
+              - column:
+                  name: user_id

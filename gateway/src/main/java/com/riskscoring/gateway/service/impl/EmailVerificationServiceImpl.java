@@ -39,17 +39,17 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
     @Override
     @Transactional
-    public void issueAndSend(AppUser user) {
+    public void issueAndSend(AppUser user, EmailCodePurpose purpose) {
         String code = generateCode();
-        persist(user, code);
-        emailService.sendVerificationCode(user, code);
+        persist(user, code, purpose);
+        sendCode(user, code, purpose);
     }
 
     @Override
     @Transactional
-    public void resend(AppUser user) {
-        enforceCooldown(user);
-        issueAndSend(user);
+    public void resend(AppUser user, EmailCodePurpose purpose) {
+        enforceCooldown(user, purpose);
+        issueAndSend(user, purpose);
     }
 
     @Override
@@ -57,8 +57,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
             InvalidVerificationCodeException.class,
             TooManyVerificationAttemptsException.class
     })
-    public void verify(AppUser user, String code) {
-        EmailVerificationCode stored = activeCode(user)
+    public void verify(AppUser user, String code, EmailCodePurpose purpose) {
+        EmailVerificationCode stored = activeCode(user, purpose)
                 .orElseThrow(InvalidVerificationCodeException::new);
 
         if (stored.getExpiresAt().isBefore(Instant.now())) {
@@ -82,13 +82,20 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         }
     }
 
-    private Optional<EmailVerificationCode> activeCode(AppUser user) {
-        return codeRepository.findTopByUserIdAndPurposeAndUsedAtIsNullOrderByCreatedAtDesc(
-                user.getId(), EmailCodePurpose.REGISTRATION);
+    private void sendCode(AppUser user, String code, EmailCodePurpose purpose) {
+        switch (purpose) {
+            case REGISTRATION -> emailService.sendVerificationCode(user, code);
+            case PASSWORD_RESET -> emailService.sendPasswordResetCode(user, code);
+        }
     }
 
-    private void enforceCooldown(AppUser user) {
-        activeCode(user).ifPresent(code -> {
+    private Optional<EmailVerificationCode> activeCode(AppUser user, EmailCodePurpose purpose) {
+        return codeRepository.findTopByUserIdAndPurposeAndUsedAtIsNullOrderByCreatedAtDesc(
+                user.getId(), purpose);
+    }
+
+    private void enforceCooldown(AppUser user, EmailCodePurpose purpose) {
+        activeCode(user, purpose).ifPresent(code -> {
             Instant readyAt = code.getCreatedAt().plus(cooldown());
             if (readyAt.isAfter(Instant.now())) {
                 throw new ResendCooldownException(Duration.between(Instant.now(), readyAt).toSeconds() + 1);
@@ -96,15 +103,15 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         });
     }
 
-    private void persist(AppUser user, String code) {
-        activeCode(user).ifPresent(previous -> codeRepository.markUsed(previous.getId(), Instant.now()));
+    private void persist(AppUser user, String code, EmailCodePurpose purpose) {
+        activeCode(user, purpose).ifPresent(previous -> codeRepository.markUsed(previous.getId(), Instant.now()));
 
         Instant now = Instant.now();
         codeRepository.save(EmailVerificationCode.builder()
                 .id(UUID.randomUUID())
                 .userId(user.getId())
                 .codeHash(secretHasher.hash(code))
-                .purpose(EmailCodePurpose.REGISTRATION)
+                .purpose(purpose)
                 .expiresAt(now.plus(gatewayProperties.verification().codeTtl()))
                 .attempts(0)
                 .createdAt(now)
