@@ -16,6 +16,13 @@ interface ResourceState<T> {
   error: string | null;
 }
 
+function toResourceState<T>(result: PromiseSettledResult<T>, emptyValue: T, fallbackMessage: string): ResourceState<T> {
+  if (result.status === "fulfilled") {
+    return { data: result.value, error: null };
+  }
+  return { data: emptyValue, error: result.reason instanceof Error ? result.reason.message : fallbackMessage };
+}
+
 const GRID_VARIANTS: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
@@ -52,38 +59,10 @@ export function DashboardPage() {
       getRecentScans(),
     ]);
 
-    setWatchlist(
-      watchlistResult.status === "fulfilled"
-        ? { data: watchlistResult.value, error: null }
-        : { data: [], error: watchlistResult.reason instanceof Error ? watchlistResult.reason.message : t("watchlist.loadError") },
-    );
-
-    setAlerts(
-      alertsResult.status === "fulfilled"
-        ? { data: alertsResult.value, error: null }
-        : { data: [], error: alertsResult.reason instanceof Error ? alertsResult.reason.message : t("alerts.loadError") },
-    );
-
-    setSubscription(
-      subscriptionResult.status === "fulfilled"
-        ? { data: subscriptionResult.value, error: null }
-        : {
-            data: null,
-            error:
-              subscriptionResult.reason instanceof Error
-                ? subscriptionResult.reason.message
-                : t("settings.subscription.loadError"),
-          },
-    );
-
-    setRecentScans(
-      recentScansResult.status === "fulfilled"
-        ? { data: recentScansResult.value, error: null }
-        : {
-            data: [],
-            error: recentScansResult.reason instanceof Error ? recentScansResult.reason.message : t("dashboard.recentScans.loadError"),
-          },
-    );
+    setWatchlist(toResourceState(watchlistResult, [], t("watchlist.loadError")));
+    setAlerts(toResourceState(alertsResult, [], t("alerts.loadError")));
+    setSubscription(toResourceState(subscriptionResult, null, t("settings.subscription.loadError")));
+    setRecentScans(toResourceState(recentScansResult, [], t("dashboard.recentScans.loadError")));
 
     setIsLoading(false);
   }, [t]);

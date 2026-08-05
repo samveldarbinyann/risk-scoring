@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { CardState } from "@/components/ui/CardState";
 import { RiskBadge } from "@/components/ui/RiskBadge";
-import { Spinner } from "@/components/ui/Spinner";
 import { useCountUp } from "@/hooks/useCountUp";
 import { cn } from "@/lib/cn";
 import { averageScore, dominantRiskLevel } from "@/lib/dashboardStats";
@@ -36,13 +35,7 @@ export function PortfolioHeroCard({ entries, isLoading, error }: PortfolioHeroCa
 
   return (
     <Card className="flex flex-col gap-6">
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <Spinner />
-        </div>
-      ) : error ? (
-        <ErrorMessage message={error} size="sm" />
-      ) : (
+      <CardState isLoading={isLoading} error={error}>
         <>
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -96,7 +89,7 @@ export function PortfolioHeroCard({ entries, isLoading, error }: PortfolioHeroCa
             {total === 0 ? t("dashboard.hero.emptyCta") : t("dashboard.watchlist.cta")}
           </Button>
         </>
-      )}
+      </CardState>
     </Card>
   );
 }

@@ -26,8 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private static final String VERIFICATION_TEMPLATE = "email/verification";
-    private static final String PASSWORD_RESET_TEMPLATE = "email/password-reset";
+    private static final String CODE_MESSAGE_TEMPLATE = "email/code-message";
     private static final String CONTACT_TEMPLATE = "email/contact";
     private static final Locale CONTACT_LOCALE = Locale.ENGLISH;
     private static final DateTimeFormatter SUBMITTED_AT_FORMAT =
@@ -40,28 +39,29 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendVerificationCode(AppUser user, String code) {
-        Locale locale = user.getLanguage().toLocale();
-        Context context = new Context(locale, Map.of(
-                "firstName", user.getFirstName(),
-                "code", code,
-                "ttlMinutes", gatewayProperties.verification().codeTtl().toMinutes()));
-
-        send(user.getEmail(),
-                messageSource.getMessage("email.verification.subject", null, locale),
-                templateEngine.process(VERIFICATION_TEMPLATE, context));
+        sendCode(user, code, "email.verification");
     }
 
     @Override
     public void sendPasswordResetCode(AppUser user, String code) {
+        sendCode(user, code, "email.passwordReset");
+    }
+
+    private void sendCode(AppUser user, String code, String keyPrefix) {
         Locale locale = user.getLanguage().toLocale();
+        long ttlMinutes = gatewayProperties.verification().codeTtl().toMinutes();
         Context context = new Context(locale, Map.of(
-                "firstName", user.getFirstName(),
+                "title", messageSource.getMessage(keyPrefix + ".title", null, locale),
+                "greeting", messageSource.getMessage(keyPrefix + ".greeting", new Object[]{user.getFirstName()}, locale),
+                "intro", messageSource.getMessage(keyPrefix + ".intro", null, locale),
                 "code", code,
-                "ttlMinutes", gatewayProperties.verification().codeTtl().toMinutes()));
+                "expiry", messageSource.getMessage(keyPrefix + ".expiry", new Object[]{ttlMinutes}, locale),
+                "security", messageSource.getMessage(keyPrefix + ".security", null, locale),
+                "footer", messageSource.getMessage(keyPrefix + ".footer", null, locale)));
 
         send(user.getEmail(),
-                messageSource.getMessage("email.passwordReset.subject", null, locale),
-                templateEngine.process(PASSWORD_RESET_TEMPLATE, context));
+                messageSource.getMessage(keyPrefix + ".subject", null, locale),
+                templateEngine.process(CODE_MESSAGE_TEMPLATE, context));
     }
 
     @Override

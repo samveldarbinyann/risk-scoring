@@ -5,7 +5,7 @@
     <meta content="width=device-width,initial-scale=1" name="viewport"/>
     <meta content="dark" name="color-scheme"/>
     <meta content="dark" name="supported-color-schemes"/>
-    <title th:text="#{email.verification.title}">Verification code</title>
+    <title th:text="${title}">Code</title>
     <style>
         @media (max-width: 620px) {
             .card { width: 100% !important }
@@ -38,19 +38,19 @@
                             <tr>
                                 <td style="padding-bottom:10px;">
                                     <p style="margin:0;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;font-weight:500;color:#00e5c7;letter-spacing:2px;text-transform:uppercase;"
-                                       th:text="#{email.verification.title}">Verification code</p>
+                                       th:text="${title}">Code</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="padding-bottom:18px;">
                                     <h1 style="margin:0;font-size:24px;font-weight:600;color:#e6e8ee;line-height:1.3;letter-spacing:-0.4px;"
-                                        th:text="#{email.verification.greeting(${firstName})}">Hi</h1>
+                                        th:text="${greeting}">Hi</h1>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="padding-bottom:28px;">
                                     <p style="margin:0;font-size:15px;color:#8a90a2;line-height:1.7;"
-                                       th:text="#{email.verification.intro}">Enter the code below to confirm your email address.</p>
+                                       th:text="${intro}">Enter the code below.</p>
                                 </td>
                             </tr>
                             <tr>
@@ -64,13 +64,13 @@
                             <tr>
                                 <td align="center" style="padding-top:14px;">
                                     <p style="margin:0;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;color:#4c5163;letter-spacing:1px;"
-                                       th:text="#{email.verification.expiry(${ttlMinutes})}">Valid for 10 minutes</p>
+                                       th:text="${expiry}">Valid for 10 minutes</p>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="padding-top:28px;border-top:1px solid #262a36;">
                                     <p style="margin:28px 0 0;font-size:13px;color:#8a90a2;line-height:1.7;"
-                                       th:text="#{email.verification.security}">If you did not request this code, ignore this email.</p>
+                                       th:text="${security}">If you did not request this code, ignore this email.</p>
                                 </td>
                             </tr>
                         </table>
@@ -82,7 +82,7 @@
                 <tr>
                     <td align="center">
                         <p style="margin:0;font-size:12px;color:#4c5163;line-height:1.6;"
-                           th:text="#{email.verification.footer}">Automated message, please do not reply</p>
+                           th:text="${footer}">Automated message, please do not reply</p>
                     </td>
                 </tr>
             </table>
