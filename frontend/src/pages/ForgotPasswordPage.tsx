@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, PASSWORD_PATTERN } from "@/lib/validation";
 
-const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).*$/;
-const MIN_PASSWORD_LENGTH = 12;
 const RESEND_COOLDOWN_SECONDS = 30;
 const RESET_CODE_LENGTH = 6;
 
@@ -112,7 +111,7 @@ export function ForgotPasswordPage() {
               placeholder={t("auth.newPasswordField")}
               autoComplete="new-password"
               minLength={MIN_PASSWORD_LENGTH}
-              maxLength={128}
+              maxLength={MAX_PASSWORD_LENGTH}
               pattern={PASSWORD_PATTERN.source}
               required
             />
@@ -123,7 +122,7 @@ export function ForgotPasswordPage() {
               placeholder={t("auth.confirmPasswordField")}
               autoComplete="new-password"
               minLength={MIN_PASSWORD_LENGTH}
-              maxLength={128}
+              maxLength={MAX_PASSWORD_LENGTH}
               required
             />
             <ErrorMessage message={error} size="sm" />

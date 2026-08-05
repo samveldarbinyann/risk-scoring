@@ -29,6 +29,7 @@ import com.riskscoring.gateway.repository.AppUserRepository;
 import com.riskscoring.gateway.repository.RefreshTokenRepository;
 import com.riskscoring.gateway.service.AuthService;
 import com.riskscoring.gateway.service.EmailVerificationService;
+import com.riskscoring.gateway.service.RateLimitService;
 import com.riskscoring.gateway.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final GatewayProperties gatewayProperties;
+    private final RateLimitService rateLimitService;
 
     @Override
     @Transactional
@@ -129,7 +131,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void forgotPassword(String email) {
+    public void forgotPassword(String email, String clientIp) {
+        rateLimitService.checkPasswordReset(clientIp);
+
         appUserRepository.findByEmailIgnoreCase(normalizeEmail(email))
                 .filter(user -> user.getStatus() != UserStatus.BLOCKED)
                 .ifPresent(user -> {
@@ -148,14 +152,16 @@ public class AuthServiceImpl implements AuthService {
             TooManyVerificationAttemptsException.class
     })
     public IssuedSession resetPassword(ResetPasswordRequest request, String userAgent, String ipAddress) {
+        rateLimitService.checkPasswordReset(ipAddress);
+
         AppUser user = appUserRepository.findByEmailIgnoreCase(normalizeEmail(request.email()))
                 .orElseThrow(InvalidVerificationCodeException::new);
-
-        emailVerificationService.verify(user, request.code(), EmailCodePurpose.PASSWORD_RESET);
 
         if (user.getStatus() == UserStatus.BLOCKED) {
             throw new AccountNotActiveException(user.getStatus());
         }
+
+        emailVerificationService.verify(user, request.code(), EmailCodePurpose.PASSWORD_RESET);
 
         Instant now = Instant.now();
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));

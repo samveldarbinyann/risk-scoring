@@ -36,8 +36,10 @@ public class ScanController {
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request,
-                                                 HttpServletRequest httpRequest) {
-        return scanService.requestScan(ClientIpResolver.resolve(httpRequest), request);
+                                                 HttpServletRequest httpRequest,
+                                                 @AuthenticationPrincipal AuthenticatedUser user) {
+        UUID userId = user == null ? null : user.id();
+        return scanService.requestScan(ClientIpResolver.resolve(httpRequest), userId, request);
     }
 
     @GetMapping("/recent")

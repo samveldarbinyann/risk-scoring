@@ -18,7 +18,7 @@ public interface AuthService {
 
     void resendVerificationCode(String email);
 
-    void forgotPassword(String email);
+    void forgotPassword(String email, String clientIp);
 
     IssuedSession resetPassword(ResetPasswordRequest request, String userAgent, String ipAddress);
 

@@ -29,15 +29,12 @@ import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanRepository;
 import com.riskscoring.gateway.repository.ScanRiskSummary;
-import com.riskscoring.gateway.security.AuthenticatedUser;
 import com.riskscoring.gateway.service.BillingService;
 import com.riskscoring.gateway.service.ChainService;
 import com.riskscoring.gateway.service.RateLimitService;
 import com.riskscoring.gateway.service.ScanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,9 +62,9 @@ public class ScanServiceImpl implements ScanService {
 
     @Override
     @Transactional
-    public ScanGroupAcceptedResponse requestScan(String clientIp, ScanCreateRequest request) {
+    public ScanGroupAcceptedResponse requestScan(String clientIp, UUID userId, ScanCreateRequest request) {
         rateLimitService.checkPublicScan(clientIp);
-        return createScanGroup(requestedChains(request), ScanSource.USER, currentUserId());
+        return createScanGroup(requestedChains(request), ScanSource.USER, userId);
     }
 
     @Override
@@ -153,14 +150,6 @@ public class ScanServiceImpl implements ScanService {
         }
 
         return matches;
-    }
-
-    private UUID currentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser user)) {
-            return null;
-        }
-        return user.id();
     }
 
     @Override

@@ -18,6 +18,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     private static final int EVICTION_THRESHOLD = 10_000;
     private static final String PUBLIC_SCAN_BUCKET = "public-scan";
     private static final String CONTACT_BUCKET = "contact";
+    private static final String PASSWORD_RESET_BUCKET = "password-reset";
 
     private final GatewayProperties gatewayProperties;
     private final ConcurrentMap<String, Window> windows = new ConcurrentHashMap<>();
@@ -30,6 +31,11 @@ public class RateLimitServiceImpl implements RateLimitService {
     @Override
     public void checkContact(String clientIp) {
         check(CONTACT_BUCKET, clientIp, gatewayProperties.contact().rateLimit());
+    }
+
+    @Override
+    public void checkPasswordReset(String clientIp) {
+        check(PASSWORD_RESET_BUCKET, clientIp, gatewayProperties.passwordReset().rateLimit());
     }
 
     private void check(String bucket, String clientIp, GatewayProperties.RateLimit rateLimit) {

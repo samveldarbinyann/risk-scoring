@@ -110,6 +110,10 @@ gateway:
     rate-limit:
       requests: 5
       window: 1h
+  password-reset:
+    rate-limit:
+      requests: 5
+      window: 1h
 
 logging:
   level:

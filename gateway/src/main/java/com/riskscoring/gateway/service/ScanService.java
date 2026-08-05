@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public interface ScanService {
 
-    ScanGroupAcceptedResponse requestScan(String clientIp, ScanCreateRequest request);
+    ScanGroupAcceptedResponse requestScan(String clientIp, UUID userId, ScanCreateRequest request);
 
     ScanGroupAcceptedResponse requestApiScan(UUID userId, ScanCreateRequest request);
 

@@ -64,8 +64,8 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request.email());
+    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
+        authService.forgotPassword(request.email(), ClientIpResolver.resolve(httpRequest));
     }
 
     @PostMapping("/reset-password")

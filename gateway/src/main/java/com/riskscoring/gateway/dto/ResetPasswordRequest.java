@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.dto;
 
+import com.riskscoring.gateway.validation.PasswordPolicy;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -15,8 +16,8 @@ public record ResetPasswordRequest(
         String code,
 
         @NotBlank(message = "{validation.password.required}")
-        @Size(min = 12, max = 128, message = "{validation.password.length}")
-        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).*$", message = "{validation.password.weak}")
+        @Size(min = PasswordPolicy.MIN_LENGTH, max = PasswordPolicy.MAX_LENGTH, message = "{validation.password.length}")
+        @Pattern(regexp = PasswordPolicy.PATTERN, message = "{validation.password.weak}")
         String newPassword
 ) {
 }

@@ -158,7 +158,8 @@ class BillingServiceImplTest {
                 )),
                 new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
                 new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1))),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
+                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
+                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
         );
     }
 

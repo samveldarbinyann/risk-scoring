@@ -25,7 +25,8 @@ public record GatewayProperties(
         @NotNull @Valid Billing billing,
         @NotNull @Valid ApiKeys apiKeys,
         @NotNull @Valid PublicScan publicScan,
-        @NotNull @Valid Contact contact
+        @NotNull @Valid Contact contact,
+        @NotNull @Valid PasswordReset passwordReset
 ) {
 
     public record Cors(@NotEmpty List<String> allowedOrigins) {
@@ -87,6 +88,9 @@ public record GatewayProperties(
     }
 
     public record Contact(@NotNull @Valid RateLimit rateLimit) {
+    }
+
+    public record PasswordReset(@NotNull @Valid RateLimit rateLimit) {
     }
 
     public record RateLimit(
