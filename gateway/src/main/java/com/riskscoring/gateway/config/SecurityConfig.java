@@ -60,6 +60,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/billing/plans").permitAll()
                         .requestMatchers("/api/v1/**").hasRole(ApiKeyAuthenticationFilter.API_ROLE)
+                        .requestMatchers(HttpMethod.GET, "/api/scans")
+                        .hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
                         .requestMatchers(
                                 "/api/auth/me",
                                 "/api/watchlist/**",

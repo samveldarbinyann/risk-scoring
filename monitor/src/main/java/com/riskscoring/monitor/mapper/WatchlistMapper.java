@@ -30,6 +30,6 @@ public class WatchlistMapper {
     public ScanRequested toScanRequested(WatchlistEntry entry, UUID scanId, Instant requestedAt) {
         return new ScanRequested(
                 scanId, ScanTarget.ADDRESS, entry.getAddress(), entry.getChain(),
-                requestedAt, ScanSource.MONITOR, entry.getLanguage());
+                requestedAt, ScanSource.MONITOR, entry.getLanguage(), entry.getUserId());
     }
 }

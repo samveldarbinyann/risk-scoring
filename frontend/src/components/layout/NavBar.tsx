@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { NavLink, useLocation } from "react-router";
 import { AccountMenu } from "@/components/layout/AccountMenu";
+import { LocaleMenu } from "@/components/layout/LocaleMenu";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth/context";
@@ -94,6 +95,7 @@ export function NavBar() {
         })}
       </ul>
       <div className="flex items-center gap-2">
+        <LocaleMenu className="mr-2" />
         {isAuthenticated ? (
           <motion.div layout transition={LAYOUT_SPRING} className="mr-6">
             <AccountMenu user={user} onLogout={logout} />

@@ -14,6 +14,7 @@ public record ScanRequested(
         Chain chain,
         Instant requestedAt,
         ScanSource source,
-        Language language
+        Language language,
+        UUID userId
 ) {
 }

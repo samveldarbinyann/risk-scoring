@@ -21,6 +21,8 @@ import type {
   ScanGroupAcceptedResponse,
   ScanGroupReportView,
   ScanGroupView,
+  ScanHistoryPageView,
+  ScanSource,
   SubscriptionView,
   UserView,
   VerifyEmailRequest,
@@ -184,6 +186,18 @@ export function getScanGroupReport(groupId: string): Promise<ScanGroupReportView
 
 export function getRecentScans(): Promise<RecentScanGroupView[]> {
   return apiRequest<RecentScanGroupView[]>("/api/scans/recent");
+}
+
+interface GetScanHistoryParams {
+  page: number;
+  size: number;
+  source?: ScanSource;
+}
+
+export function getScanHistory({ page, size, source }: GetScanHistoryParams): Promise<ScanHistoryPageView> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (source) params.set("source", source);
+  return apiRequest<ScanHistoryPageView>(`/api/scans?${params.toString()}`);
 }
 
 export function getMessages(locale: Locale, init?: RequestInit): Promise<Record<string, string>> {

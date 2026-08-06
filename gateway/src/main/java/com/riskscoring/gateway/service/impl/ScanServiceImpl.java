@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.service.impl;
 
+import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.model.Language;
@@ -10,6 +11,7 @@ import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanGroupChainStatus;
 import com.riskscoring.gateway.dto.ScanGroupReportView;
 import com.riskscoring.gateway.dto.ScanGroupView;
+import com.riskscoring.gateway.dto.ScanHistoryPageView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
@@ -35,6 +37,9 @@ import com.riskscoring.gateway.service.RateLimitService;
 import com.riskscoring.gateway.service.ScanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,7 +108,7 @@ public class ScanServiceImpl implements ScanService {
         scanRepository.saveAll(scans);
 
         Language language = Language.fromLocale(LocaleContextHolder.getLocale());
-        scans.forEach(scan -> scanEventPublisher.publishScanRequested(scanMapper.toEvent(scan, language)));
+        scans.forEach(scan -> scanEventPublisher.publishScanRequested(scanMapper.toEvent(scan, language, userId)));
 
         return scanMapper.toGroupAcceptedResponse(group, scans);
     }
@@ -156,6 +161,56 @@ public class ScanServiceImpl implements ScanService {
     @Transactional(readOnly = true)
     public List<RecentScanGroupView> getRecentScans(UUID userId) {
         List<ScanGroup> groups = scanGroupRepository.findTop5ByUserIdOrderByRequestedAtDesc(userId);
+        return toViews(groups);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ScanHistoryPageView getScanHistory(UUID userId, ScanSource source, int page, int size) {
+        int clampedSize = Math.clamp(size, 1, 50);
+        Pageable pageable = PageRequest.of(Math.max(page, 0), clampedSize);
+        Page<ScanGroup> result = scanGroupRepository.findHistory(userId, source, pageable);
+
+        return new ScanHistoryPageView(
+                toViews(result.getContent()),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.hasNext()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void ingestMonitorScan(ScanRequested event) {
+        if (scanRepository.existsById(event.scanId())) {
+            return;
+        }
+
+        ScanGroup group = ScanGroup.builder()
+                .id(UUID.randomUUID())
+                .userId(event.userId())
+                .targetType(event.targetType())
+                .target(event.target())
+                .requestedAt(event.requestedAt())
+                .build();
+        scanGroupRepository.save(group);
+
+        Scan scan = Scan.builder()
+                .id(event.scanId())
+                .groupId(group.getId())
+                .targetType(event.targetType())
+                .target(event.target())
+                .chain(event.chain())
+                .status(ScanStage.PENDING)
+                .source(event.source())
+                .requestedAt(event.requestedAt())
+                .build();
+        scanRepository.save(scan);
+    }
+
+    private List<RecentScanGroupView> toViews(List<ScanGroup> groups) {
         if (groups.isEmpty()) {
             return List.of();
         }

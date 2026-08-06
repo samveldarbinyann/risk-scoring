@@ -1,7 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useLocation, useOutlet } from "react-router";
 import { NavBar } from "@/components/layout/NavBar";
-import { LocaleMenu } from "@/components/layout/LocaleMenu";
 import { BackgroundVideo } from "@/components/layout/BackgroundVideo";
 import { SCAN_FLOW_HIDDEN, SCAN_FLOW_TRANSITION, SCAN_FLOW_VISIBLE } from "@/lib/scanFlowMotion";
 
@@ -19,7 +18,6 @@ export function AppShell() {
       {isScanFlow && <BackgroundVideo />}
       <NavBar />
       <main className="relative flex flex-1 flex-col">
-        <LocaleMenu className="absolute right-6 top-4 z-0" />
         <AnimatePresence mode="wait">
           {isScanFlow ? (
             <motion.div

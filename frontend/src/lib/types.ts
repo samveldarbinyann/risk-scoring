@@ -241,6 +241,16 @@ export interface RecentScanGroupView {
   worstRiskLevel: RiskLevel | null;
   worstScore: number | null;
   requestedAt: string;
+  source: ScanSource;
+}
+
+export interface ScanHistoryPageView {
+  content: RecentScanGroupView[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
 }
 
 export interface ScanProgressMessage {

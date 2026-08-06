@@ -4,12 +4,31 @@ import { Navigate } from "react-router";
 import { ActivityLogCard } from "@/components/dashboard/ActivityLogCard";
 import { PortfolioHeroCard } from "@/components/dashboard/PortfolioHeroCard";
 import { QuotaSummaryCard } from "@/components/dashboard/QuotaSummaryCard";
+import { ScanHistoryCard } from "@/components/dashboard/ScanHistoryCard";
 import { WatchlistSummaryCard } from "@/components/dashboard/WatchlistSummaryCard";
 import { Spinner } from "@/components/ui/Spinner";
-import { ApiError, getRecentScans, getSubscription, listAlerts, listWatchlist } from "@/lib/api";
+import { ApiError, getRecentScans, getScanHistory, getSubscription, listAlerts, listWatchlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
-import type { AlertView, RecentScanGroupView, SubscriptionView, WatchlistEntryView } from "@/lib/types";
+import type {
+  AlertView,
+  RecentScanGroupView,
+  ScanHistoryPageView,
+  ScanSource,
+  SubscriptionView,
+  WatchlistEntryView,
+} from "@/lib/types";
+
+const HISTORY_PAGE_SIZE = 20;
+
+const EMPTY_HISTORY: ScanHistoryPageView = {
+  content: [],
+  page: 0,
+  size: HISTORY_PAGE_SIZE,
+  totalElements: 0,
+  totalPages: 0,
+  hasNext: false,
+};
 
 interface ResourceState<T> {
   data: T;
@@ -46,6 +65,27 @@ export function DashboardPage() {
   const [recentScans, setRecentScans] = useState<ResourceState<RecentScanGroupView[]>>({ data: [], error: null });
   const [isLoading, setIsLoading] = useState(true);
 
+  const [historyPage, setHistoryPage] = useState(0);
+  const [historySource, setHistorySource] = useState<ScanSource | undefined>(undefined);
+  const [history, setHistory] = useState<ResourceState<ScanHistoryPageView>>({ data: EMPTY_HISTORY, error: null });
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+
+  const loadHistory = useCallback(async () => {
+    setIsHistoryLoading(true);
+    try {
+      const page = await getScanHistory({ page: historyPage, size: HISTORY_PAGE_SIZE, source: historySource });
+      setHistory({ data: page, error: null });
+    } catch (err) {
+      setHistory({ data: EMPTY_HISTORY, error: err instanceof Error ? err.message : t("dashboard.history.loadError") });
+    }
+    setIsHistoryLoading(false);
+  }, [historyPage, historySource, t]);
+
+  const handleHistorySourceChange = useCallback((source: ScanSource | undefined) => {
+    setHistorySource(source);
+    setHistoryPage(0);
+  }, []);
+
   const load = useCallback(async () => {
     setIsLoading(true);
 
@@ -71,6 +111,11 @@ export function DashboardPage() {
     if (status !== "authenticated") return;
     void load();
   }, [status, load]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    void loadHistory();
+  }, [status, loadHistory]);
 
   if (status === "loading") {
     return (
@@ -104,6 +149,20 @@ export function DashboardPage() {
             alerts={alerts.data}
             isLoading={isLoading}
             error={recentScans.error ?? alerts.error}
+          />
+        </motion.div>
+
+        <motion.div variants={SECTION_VARIANTS}>
+          <ScanHistoryCard
+            scans={history.data.content}
+            page={history.data.page}
+            totalPages={history.data.totalPages}
+            hasNext={history.data.hasNext}
+            sourceFilter={historySource}
+            isLoading={isHistoryLoading}
+            error={history.error}
+            onSourceChange={handleHistorySourceChange}
+            onPageChange={setHistoryPage}
           />
         </motion.div>
       </motion.div>
