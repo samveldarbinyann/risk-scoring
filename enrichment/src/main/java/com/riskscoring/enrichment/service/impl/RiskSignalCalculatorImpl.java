@@ -1,11 +1,7 @@
 package com.riskscoring.enrichment.service.impl;
 
 import com.riskscoring.common.event.ChainFetched;
-import com.riskscoring.common.model.AddressFacts;
-import com.riskscoring.common.model.Counterparty;
-import com.riskscoring.common.model.EvidenceBundle;
-import com.riskscoring.common.model.TransactionFacts;
-import com.riskscoring.common.model.TransactionParty;
+import com.riskscoring.common.model.*;
 import com.riskscoring.enrichment.entity.Label;
 import com.riskscoring.enrichment.service.AddressSignalCalculator;
 import com.riskscoring.enrichment.service.RiskSignalCalculator;

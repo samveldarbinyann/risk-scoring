@@ -1,16 +1,7 @@
 package com.riskscoring.enrichment.service.impl;
 
 import com.riskscoring.common.event.ChainFetched;
-import com.riskscoring.common.model.AddressEvidence;
-import com.riskscoring.common.model.AddressFacts;
-import com.riskscoring.common.model.AddressSnapshot;
-import com.riskscoring.common.model.Chain;
-import com.riskscoring.common.model.Counterparty;
-import com.riskscoring.common.model.FlaggedExposure;
-import com.riskscoring.common.model.Heuristics;
-import com.riskscoring.common.model.LabelCategory;
-import com.riskscoring.common.model.MixerExposure;
-import com.riskscoring.common.model.TransferDirection;
+import com.riskscoring.common.model.*;
 import com.riskscoring.enrichment.config.EnrichmentProperties;
 import com.riskscoring.enrichment.entity.Label;
 import com.riskscoring.enrichment.service.AddressSignalCalculator;

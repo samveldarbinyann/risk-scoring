@@ -40,6 +40,11 @@ enrichment:
   fresh-wallet-days: 30
   round-amounts-percent-threshold: 50
   internal-fan-out-threshold: 5
+  ofac:
+    base-url: ${OFAC_SDN_BASE_URL:https://www.treasury.gov/ofac/downloads/sanctions/1.0/sdn_advanced.xml}
+    sync-cron: ${OFAC_SDN_SYNC_CRON:0 0 3 * * *}
+    connect-timeout: 10s
+    read-timeout: 2m
 
 logging:
   level:

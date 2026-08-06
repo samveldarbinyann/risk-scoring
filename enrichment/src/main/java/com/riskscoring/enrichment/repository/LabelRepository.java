@@ -1,6 +1,7 @@
 package com.riskscoring.enrichment.repository;
 
 import com.riskscoring.common.model.Chain;
+import com.riskscoring.common.model.LabelCategory;
 import com.riskscoring.enrichment.entity.Label;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,4 +12,6 @@ import java.util.UUID;
 public interface LabelRepository extends JpaRepository<Label, UUID> {
 
     List<Label> findByChainAndAddressIn(Chain chain, Collection<String> addresses);
+
+    List<Label> findByCategoryAndSource(LabelCategory category, String source);
 }

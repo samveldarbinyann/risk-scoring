@@ -4,7 +4,6 @@ import com.riskscoring.common.event.ChainFetched;
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.event.SignalsComputed;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.enrichment.entity.Label;
 import com.riskscoring.enrichment.kafka.EnrichmentEventPublisher;

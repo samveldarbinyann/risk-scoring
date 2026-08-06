@@ -30,7 +30,7 @@ class TransactionSignalCalculatorImplTest {
     private static final Chain CHAIN = Chain.ETHEREUM;
     private static final String TARGET = "0xhash";
     private static final Instant NOW = Instant.parse("2024-06-01T00:00:00Z");
-    private static final EnrichmentProperties PROPERTIES = new EnrichmentProperties(30, 50, 5);
+    private static final EnrichmentProperties PROPERTIES = new EnrichmentProperties(30, 50, 5, null);
 
     private TransactionSignalCalculatorImpl calculator;
 
