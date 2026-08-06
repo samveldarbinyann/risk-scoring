@@ -3,7 +3,6 @@ package com.riskscoring.monitor.mapper;
 import com.riskscoring.common.event.ScanRequested;
 import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.event.WatchlistAddRequested;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.ScanTarget;
 import com.riskscoring.monitor.entity.WatchlistEntry;
 import org.springframework.stereotype.Component;

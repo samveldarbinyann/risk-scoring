@@ -17,7 +17,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DeepSeekLlmClient implements LlmClient {
+public class  DeepSeekLlmClient implements LlmClient {
 
     private static final String COMPLETIONS_PATH = "/chat/completions";
 

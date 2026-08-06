@@ -2,7 +2,6 @@ package com.riskscoring.monitor.kafka;
 
 import com.riskscoring.common.Topics;
 import com.riskscoring.common.event.WatchlistAddRequested;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.monitor.service.WatchlistService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

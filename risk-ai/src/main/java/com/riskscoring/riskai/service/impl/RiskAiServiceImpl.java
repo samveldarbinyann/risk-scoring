@@ -4,7 +4,6 @@ import com.riskscoring.common.event.ScanCompleted;
 import com.riskscoring.common.event.ScanProgress;
 import com.riskscoring.common.event.ScanStage;
 import com.riskscoring.common.event.SignalsComputed;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.EvidenceBundle;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.Verdict;

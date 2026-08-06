@@ -3,7 +3,6 @@ package com.riskscoring.monitor.kafka.impl;
 import com.riskscoring.common.Topics;
 import com.riskscoring.common.event.AlertTriggered;
 import com.riskscoring.common.event.ScanRequested;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.monitor.kafka.MonitorEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

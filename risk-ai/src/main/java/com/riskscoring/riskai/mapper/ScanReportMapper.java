@@ -1,7 +1,6 @@
 package com.riskscoring.riskai.mapper;
 
 import com.riskscoring.common.event.SignalsComputed;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.Verdict;
 import com.riskscoring.riskai.entity.ScanReport;
 import lombok.RequiredArgsConstructor;

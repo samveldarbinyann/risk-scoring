@@ -1,7 +1,6 @@
 package com.riskscoring.monitor.service.impl;
 
 import com.riskscoring.common.event.ScanCompleted;
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.monitor.config.MonitorProperties;
 import com.riskscoring.monitor.entity.Alert;
