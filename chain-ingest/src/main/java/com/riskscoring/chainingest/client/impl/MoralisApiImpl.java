@@ -2,13 +2,7 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.HttpCallTemplate;
 import com.riskscoring.chainingest.client.MoralisApi;
-import com.riskscoring.chainingest.client.dto.MoralisActiveChain;
-import com.riskscoring.chainingest.client.dto.MoralisBalance;
-import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
-import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
-import com.riskscoring.chainingest.client.dto.MoralisTokenBalancesEnvelope;
-import com.riskscoring.chainingest.client.dto.MoralisTransaction;
-import com.riskscoring.chainingest.client.dto.MoralisWalletChainsEnvelope;
+import com.riskscoring.chainingest.client.dto.moralis.*;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.exception.ChainDataException;
 import com.riskscoring.chainingest.exception.ChainDataNotFoundException;

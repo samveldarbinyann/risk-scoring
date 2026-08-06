@@ -1,8 +1,8 @@
 package com.riskscoring.chainingest.mapper;
 
-import com.riskscoring.chainingest.client.dto.MoralisErc20Transfer;
-import com.riskscoring.chainingest.client.dto.MoralisInternalTransfer;
-import com.riskscoring.chainingest.client.dto.MoralisTransaction;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisErc20Transfer;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisInternalTransfer;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTransaction;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.common.model.TransferDirection;
 import org.junit.jupiter.api.Test;

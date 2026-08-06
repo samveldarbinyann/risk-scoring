@@ -1,4 +1,4 @@
-package com.riskscoring.chainingest.client.dto;
+package com.riskscoring.chainingest.client.dto.moralis;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

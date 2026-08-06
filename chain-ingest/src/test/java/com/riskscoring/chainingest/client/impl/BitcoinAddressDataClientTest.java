@@ -10,11 +10,7 @@ import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.mapper.BitcoinTransferMapper;
 import com.riskscoring.chainingest.mapper.BitcoinValues;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;
-import com.riskscoring.common.model.AddressFacts;
-import com.riskscoring.common.model.Chain;
-import com.riskscoring.common.model.ChainFamily;
-import com.riskscoring.common.model.ScanTarget;
-import com.riskscoring.common.model.TransferDirection;
+import com.riskscoring.common.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,12 +24,8 @@ import java.util.List;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BitcoinAddressDataClientTest {

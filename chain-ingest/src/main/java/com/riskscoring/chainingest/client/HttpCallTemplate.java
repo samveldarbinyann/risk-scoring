@@ -28,7 +28,7 @@ public class HttpCallTemplate {
     private static final Set<Integer> NO_DATA_STATUSES =
             Set.of(HttpStatus.BAD_REQUEST.value(), HttpStatus.NOT_FOUND.value());
 
-    private static final Consumer<UriBuilder> NO_PARAMETERS = builder -> {
+    private static final Consumer<UriBuilder> NO_PARAMETERS = ignored -> {
     };
 
     private final String provider;

@@ -1,10 +1,10 @@
 package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.MoralisApi;
-import com.riskscoring.chainingest.client.dto.MoralisActiveChain;
-import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
-import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
-import com.riskscoring.chainingest.client.dto.MoralisTxRef;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisActiveChain;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisHistoryEnvelope;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTokenBalance;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTxRef;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;

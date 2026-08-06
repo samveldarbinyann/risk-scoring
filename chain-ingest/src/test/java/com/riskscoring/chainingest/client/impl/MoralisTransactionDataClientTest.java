@@ -1,7 +1,7 @@
 package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.MoralisApi;
-import com.riskscoring.chainingest.client.dto.MoralisTransaction;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTransaction;
 import com.riskscoring.chainingest.mapper.MoralisValues;
 import com.riskscoring.chainingest.mapper.TransactionSnapshotMapper;
 import com.riskscoring.common.model.Chain;

@@ -2,14 +2,7 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.HttpCallTemplate;
 import com.riskscoring.chainingest.client.TronGridApi;
-import com.riskscoring.chainingest.client.dto.trongrid.TronAccount;
-import com.riskscoring.chainingest.client.dto.trongrid.TronAccountResponse;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTransaction;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTransactionInfo;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTransactionRequest;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTransactionsResponse;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTrc20Response;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTrc20Transfer;
+import com.riskscoring.chainingest.client.dto.trongrid.*;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import com.riskscoring.chainingest.exception.ChainDataNotFoundException;
 import lombok.RequiredArgsConstructor;

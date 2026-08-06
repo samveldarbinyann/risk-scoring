@@ -2,11 +2,7 @@ package com.riskscoring.chainingest.mapper;
 
 import com.riskscoring.chainingest.entity.AddressCache;
 import com.riskscoring.chainingest.entity.CounterpartyCache;
-import com.riskscoring.common.model.AddressFacts;
-import com.riskscoring.common.model.AddressSnapshot;
-import com.riskscoring.common.model.Chain;
-import com.riskscoring.common.model.Counterparty;
-import com.riskscoring.common.model.TokenBalance;
+import com.riskscoring.common.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.type.TypeReference;

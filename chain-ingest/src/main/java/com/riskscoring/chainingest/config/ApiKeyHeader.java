@@ -23,7 +23,7 @@ public record ApiKeyHeader(String name, String valueFormat) {
 
     public Optional<String> value(String apiKey) {
         return Optional.ofNullable(name)
-                .filter(header -> apiKey != null && !apiKey.isBlank())
-                .map(header -> valueFormat.formatted(apiKey));
+                .filter(ignored -> apiKey != null && !apiKey.isBlank())
+                .map(ignored -> valueFormat.formatted(apiKey));
     }
 }

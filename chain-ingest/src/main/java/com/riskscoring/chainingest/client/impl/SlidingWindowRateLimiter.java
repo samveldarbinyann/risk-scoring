@@ -23,7 +23,12 @@ public class SlidingWindowRateLimiter implements RateLimiter {
         long now = System.nanoTime();
 
         while (issuedAt.size() >= permits) {
-            long waitNanos = WINDOW_NANOS - (now - issuedAt.peekFirst());
+            Long first = issuedAt.peekFirst();
+            if (first == null) {
+                break;
+            }
+
+            long waitNanos = WINDOW_NANOS - (now - first);
 
             if (waitNanos <= 0) {
                 issuedAt.pollFirst();

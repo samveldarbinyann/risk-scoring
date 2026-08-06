@@ -1,6 +1,6 @@
 package com.riskscoring.chainingest.mapper;
 
-import com.riskscoring.chainingest.client.dto.MoralisTransaction;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTransaction;
 import com.riskscoring.chainingest.exception.ChainDataException;
 import org.junit.jupiter.api.Test;
 

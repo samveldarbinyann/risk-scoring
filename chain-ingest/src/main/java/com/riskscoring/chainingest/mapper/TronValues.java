@@ -1,12 +1,6 @@
 package com.riskscoring.chainingest.mapper;
 
-import com.riskscoring.chainingest.client.dto.trongrid.TronContract;
-import com.riskscoring.chainingest.client.dto.trongrid.TronContractValue;
-import com.riskscoring.chainingest.client.dto.trongrid.TronParameter;
-import com.riskscoring.chainingest.client.dto.trongrid.TronRawData;
-import com.riskscoring.chainingest.client.dto.trongrid.TronRet;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTransaction;
-import com.riskscoring.chainingest.client.dto.trongrid.TronTransactionInfo;
+import com.riskscoring.chainingest.client.dto.trongrid.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

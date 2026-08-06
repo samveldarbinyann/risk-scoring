@@ -1,10 +1,6 @@
 package com.riskscoring.chainingest.mapper;
 
-import com.riskscoring.chainingest.client.dto.tonapi.TonAccountAddress;
-import com.riskscoring.chainingest.client.dto.tonapi.TonAction;
-import com.riskscoring.chainingest.client.dto.tonapi.TonEvent;
-import com.riskscoring.chainingest.client.dto.tonapi.TonJettonTransferAction;
-import com.riskscoring.chainingest.client.dto.tonapi.TonTransferAction;
+import com.riskscoring.chainingest.client.dto.tonapi.*;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

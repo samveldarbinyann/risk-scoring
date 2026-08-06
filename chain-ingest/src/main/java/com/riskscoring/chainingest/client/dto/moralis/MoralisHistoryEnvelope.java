@@ -1,4 +1,4 @@
-package com.riskscoring.chainingest.client.dto;
+package com.riskscoring.chainingest.client.dto.moralis;
 
 import java.util.List;
 

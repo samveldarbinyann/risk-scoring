@@ -1,9 +1,9 @@
 package com.riskscoring.chainingest.client;
 
-import com.riskscoring.chainingest.client.dto.MoralisActiveChain;
-import com.riskscoring.chainingest.client.dto.MoralisHistoryEnvelope;
-import com.riskscoring.chainingest.client.dto.MoralisTokenBalance;
-import com.riskscoring.chainingest.client.dto.MoralisTransaction;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisActiveChain;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisHistoryEnvelope;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTokenBalance;
+import com.riskscoring.chainingest.client.dto.moralis.MoralisTransaction;
 import com.riskscoring.common.model.Chain;
 
 import java.util.List;

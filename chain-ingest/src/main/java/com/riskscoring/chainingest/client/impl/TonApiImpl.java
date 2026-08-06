@@ -2,11 +2,7 @@ package com.riskscoring.chainingest.client.impl;
 
 import com.riskscoring.chainingest.client.HttpCallTemplate;
 import com.riskscoring.chainingest.client.TonApi;
-import com.riskscoring.chainingest.client.dto.tonapi.TonAccount;
-import com.riskscoring.chainingest.client.dto.tonapi.TonEvent;
-import com.riskscoring.chainingest.client.dto.tonapi.TonEvents;
-import com.riskscoring.chainingest.client.dto.tonapi.TonJettonBalance;
-import com.riskscoring.chainingest.client.dto.tonapi.TonJettonsBalances;
+import com.riskscoring.chainingest.client.dto.tonapi.*;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

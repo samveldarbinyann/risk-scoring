@@ -74,8 +74,8 @@ public class ChainIngestServiceImpl implements ChainIngestService {
 
     private String progressMessageKey(ChainFacts facts) {
         return switch (facts) {
-            case AddressFacts address -> FETCH_DONE_ADDRESS_KEY;
-            case TransactionFacts transaction -> FETCH_DONE_TRANSACTION_KEY;
+            case AddressFacts _ -> FETCH_DONE_ADDRESS_KEY;
+            case TransactionFacts _ -> FETCH_DONE_TRANSACTION_KEY;
         };
     }
 
