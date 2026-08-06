@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { motion, type Variants } from "motion/react";
 import { Navigate } from "react-router";
-import { WatchlistEntryRow } from "@/components/watchlist/WatchlistEntryRow";
+import { WatchlistEntryList } from "@/components/watchlist/WatchlistEntryList";
 import { WatchlistForm } from "@/components/watchlist/WatchlistForm";
+import { WatchlistHeroCard } from "@/components/watchlist/WatchlistHeroCard";
 import { Card } from "@/components/ui/Card";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
@@ -12,6 +14,16 @@ import type { Chain } from "@/lib/chains/registry";
 import { useI18n } from "@/lib/i18n/context";
 import { pollUntil } from "@/lib/poll";
 import type { WatchlistEntryView } from "@/lib/types";
+
+const GRID_VARIANTS: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } },
+};
+
+const SECTION_VARIANTS: Variants = {
+  hidden: { opacity: 0, y: 4 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
+};
 
 export function WatchlistPage() {
   const { t } = useI18n();
@@ -27,6 +39,7 @@ export function WatchlistPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
   const loadEntries = useCallback(async () => {
     const data = await listWatchlist();
@@ -53,7 +66,7 @@ export function WatchlistPage() {
 
   if (status === "loading") {
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-10">
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-6 py-10">
         <Spinner />
       </div>
     );
@@ -84,6 +97,7 @@ export function WatchlistPage() {
         (list) => list.some((entry) => entry.address.toLowerCase() === trimmed.toLowerCase() && entry.chain === chain),
       );
       setEntries(value);
+      setPage(0);
       if (matched) {
         setAddress("");
       } else {
@@ -110,6 +124,7 @@ export function WatchlistPage() {
         (list) => list.every((entry) => entry.id !== id),
       );
       setEntries(value);
+      setPage(0);
       if (!matched) {
         setStatusMessage(t("watchlist.acceptedPending"));
       }
@@ -121,46 +136,43 @@ export function WatchlistPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-10">
       <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("watchlist.title")}</h1>
 
-      <Card>
-        <WatchlistForm
-          address={address}
-          chain={chain}
-          isSubmitting={isSubmitting}
-          onAddressChange={setAddress}
-          onChainChange={setSelectedChain}
-          onSubmit={() => void handleAdd()}
-        />
-        <div className="mt-3 flex flex-col gap-2">
-          <ErrorMessage message={actionError} size="sm" />
-          {statusMessage && <p className="font-mono text-sm text-text-dim">{statusMessage}</p>}
-        </div>
-      </Card>
+      <motion.div variants={GRID_VARIANTS} initial="hidden" animate="show" className="flex flex-col gap-6">
+        <motion.div variants={SECTION_VARIANTS}>
+          <WatchlistHeroCard entries={entries} isLoading={isLoading} error={loadError} />
+        </motion.div>
 
-      <Card>
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
-        ) : loadError ? (
-          <ErrorMessage message={loadError} size="sm" />
-        ) : entries.length === 0 ? (
-          <p className="font-mono text-sm text-text-faint">{t("watchlist.empty")}</p>
-        ) : (
-          <div>
-            {entries.map((entry) => (
-              <WatchlistEntryRow
-                key={entry.id}
-                entry={entry}
-                isRemoving={removingId === entry.id}
-                onRemove={(id) => void handleRemove(id)}
-              />
-            ))}
-          </div>
-        )}
-      </Card>
+        <motion.div variants={SECTION_VARIANTS}>
+          <Card title={t("watchlist.addTitle")}>
+            <WatchlistForm
+              address={address}
+              chain={chain}
+              isSubmitting={isSubmitting}
+              onAddressChange={setAddress}
+              onChainChange={setSelectedChain}
+              onSubmit={() => void handleAdd()}
+            />
+            <div className="mt-3 flex flex-col gap-2">
+              <ErrorMessage message={actionError} size="sm" />
+              {statusMessage && <p className="font-mono text-sm text-text-dim">{statusMessage}</p>}
+            </div>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={SECTION_VARIANTS}>
+          <WatchlistEntryList
+            entries={entries}
+            page={page}
+            isLoading={isLoading}
+            error={loadError}
+            removingId={removingId}
+            onPageChange={setPage}
+            onRemove={(id) => void handleRemove(id)}
+          />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

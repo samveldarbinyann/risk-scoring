@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { NavLink } from "react-router";
 import type { UserView } from "@/lib/types";
+import { useDismissableMenu } from "@/hooks/useDismissableMenu";
 import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/cn";
 
@@ -20,29 +21,8 @@ const ACCOUNT_LINKS = [
 export function AccountMenu({ user, onLogout }: AccountMenuProps) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useDismissableMenu<HTMLDivElement>(isOpen, () => setIsOpen(false));
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase() || user.username.slice(0, 2).toUpperCase();
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function closeMenu(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setIsOpen(false);
-    }
-
-    document.addEventListener("mousedown", closeMenu);
-    document.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.removeEventListener("mousedown", closeMenu);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [isOpen]);
 
   return (
     <div ref={containerRef} className="relative">

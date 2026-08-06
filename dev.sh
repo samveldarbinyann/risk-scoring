@@ -11,11 +11,9 @@ JAVA_CANDIDATE="/home/sam/.jdks/ms-25.0.4"
 JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai monitor)
 
 ensure_java() {
-  if ! java -version 2>&1 | grep -q '"25'; then
-    if [ -x "$JAVA_CANDIDATE/bin/java" ]; then
-      export JAVA_HOME="$JAVA_CANDIDATE"
-      export PATH="$JAVA_HOME/bin:$PATH"
-    fi
+  if [ -x "$JAVA_CANDIDATE/bin/java" ]; then
+    export JAVA_HOME="$JAVA_CANDIDATE"
+    export PATH="$JAVA_HOME/bin:$PATH"
   fi
   if ! java -version 2>&1 | grep -q '"25'; then
     echo "Нужен JDK 25 в PATH/JAVA_HOME (проект требует Java 25 LTS). Сейчас:" >&2

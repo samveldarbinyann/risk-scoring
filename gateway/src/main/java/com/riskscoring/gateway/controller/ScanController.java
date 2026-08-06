@@ -1,10 +1,12 @@
 package com.riskscoring.gateway.controller;
 
+import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.gateway.dto.RecentScanGroupView;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
 import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
 import com.riskscoring.gateway.dto.ScanGroupReportView;
 import com.riskscoring.gateway.dto.ScanGroupView;
+import com.riskscoring.gateway.dto.ScanHistoryPageView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.security.AuthenticatedUser;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -45,6 +48,14 @@ public class ScanController {
     @GetMapping("/recent")
     public List<RecentScanGroupView> getRecentScans(@AuthenticationPrincipal AuthenticatedUser user) {
         return scanService.getRecentScans(user.id());
+    }
+
+    @GetMapping
+    public ScanHistoryPageView getScanHistory(@AuthenticationPrincipal AuthenticatedUser user,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "20") int size,
+                                               @RequestParam(required = false) ScanSource source) {
+        return scanService.getScanHistory(user.id(), source, page, size);
     }
 
     @GetMapping("/groups/{groupId}")

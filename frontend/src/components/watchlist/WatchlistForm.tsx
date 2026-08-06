@@ -42,7 +42,7 @@ export function WatchlistForm({
   }
 
   return (
-    <form className="flex flex-col gap-3 sm:flex-row sm:items-center" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-3 sm:flex-row sm:items-stretch" onSubmit={handleSubmit}>
       <Input
         value={address}
         onChange={(event) => onAddressChange(event.target.value)}
@@ -51,15 +51,15 @@ export function WatchlistForm({
         autoCorrect="off"
         spellCheck={false}
         disabled={isSubmitting}
-        className="sm:flex-1"
+        className="h-12 sm:flex-1"
       />
       <Select
         value={chain ?? ""}
-        onChange={(event) => onChainChange(event.target.value as Chain)}
+        onChange={(value) => onChainChange(value as Chain)}
         options={options}
         disabled={isSubmitting || !ready}
         aria-label={t("watchlist.chain")}
-        className="sm:w-56"
+        className="h-12 sm:w-56"
       />
       <Button type="submit" isLoading={isSubmitting} disabled={!ready} className="sm:w-auto">
         {t("watchlist.add")}

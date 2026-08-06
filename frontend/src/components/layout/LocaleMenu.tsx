@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { LocaleSwitch } from "@/components/layout/LocaleSwitch";
+import { useDismissableMenu } from "@/hooks/useDismissableMenu";
 import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/cn";
 
@@ -11,18 +12,7 @@ interface LocaleMenuProps {
 export function LocaleMenu({ className }: LocaleMenuProps) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  const containerRef = useDismissableMenu<HTMLDivElement>(isOpen, () => setIsOpen(false));
 
   return (
     <div className={className}>
@@ -32,12 +22,9 @@ export function LocaleMenu({ className }: LocaleMenuProps) {
           onClick={() => setIsOpen((open) => !open)}
           aria-label={t("nav.language")}
           aria-expanded={isOpen}
-          className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-base border border-border bg-surface text-text-dim transition-colors hover:border-accent hover:text-text",
-            isOpen && "border-accent text-text",
-          )}
+          className={cn("flex items-center justify-center text-text-dim transition-colors hover:text-text", isOpen && "text-accent")}
         >
-          <GlobeIcon className="h-6 w-6" />
+          <GlobeIcon className="h-5 w-5" />
         </button>
         <AnimatePresence>
           {isOpen && (

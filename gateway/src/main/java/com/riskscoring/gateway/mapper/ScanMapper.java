@@ -29,7 +29,7 @@ public class ScanMapper {
 
     private static final Set<ScanStage> TERMINAL_STAGES = Set.of(ScanStage.COMPLETED, ScanStage.FAILED);
 
-    public ScanRequested toEvent(Scan scan, Language language) {
+    public ScanRequested toEvent(Scan scan, Language language, UUID userId) {
         return new ScanRequested(
                 scan.getId(),
                 scan.getTargetType(),
@@ -37,7 +37,8 @@ public class ScanMapper {
                 scan.getChain(),
                 scan.getRequestedAt(),
                 scan.getSource(),
-                language
+                language,
+                userId
         );
     }
 
@@ -95,7 +96,8 @@ public class ScanMapper {
                 completed,
                 worst == null ? null : worst.riskLevel(),
                 worst == null ? null : worst.score(),
-                group.getRequestedAt()
+                group.getRequestedAt(),
+                scans.getFirst().getSource()
         );
     }
 

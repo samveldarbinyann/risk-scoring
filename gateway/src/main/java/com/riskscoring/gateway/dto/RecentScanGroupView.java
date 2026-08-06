@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.dto;
 
+import com.riskscoring.common.event.ScanSource;
 import com.riskscoring.common.model.Chain;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.common.model.ScanTarget;
@@ -16,6 +17,7 @@ public record RecentScanGroupView(
         boolean completed,
         RiskLevel worstRiskLevel,
         Integer worstScore,
-        Instant requestedAt
+        Instant requestedAt,
+        ScanSource source
 ) {
 }
