@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 014-subscription-payment-columns
+      author: sam
+      changes:
+        - addColumn:
+            tableName: subscription
+            columns:
+              - column:
+                  name: payment_address
+                  type: varchar(64)
+              - column:
+                  name: payment_amount
+                  type: numeric(24,6)
+              - column:
+                  name: payment_expires_at
+                  type: timestamptz
+              - column:
+                  name: paid_tx_hash
+                  type: varchar(80)

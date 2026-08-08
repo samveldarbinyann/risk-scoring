@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.config;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.model.PlanCode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -58,7 +59,8 @@ public record GatewayProperties(
 
     public record Billing(
             @NotNull Duration period,
-            @NotEmpty @Valid List<Plan> plans
+            @NotEmpty @Valid List<Plan> plans,
+            @NotNull @Valid Payment payment
     ) {
         public Plan requirePlan(PlanCode code) {
             return plans.stream()
@@ -73,6 +75,18 @@ public record GatewayProperties(
             @PositiveOrZero int priceCents,
             @NotBlank @Size(min = 3, max = 3) String currency,
             @Positive int monthlyRequestLimit
+    ) {
+    }
+
+    public record Payment(
+            String address,
+            @NotNull Chain chain,
+            @NotBlank String tokenContractAddress,
+            @Positive int tokenDecimals,
+            @NotNull Duration window,
+            @Positive int tailMinMicroUsdt,
+            @Positive int tailMaxMicroUsdt,
+            @NotNull Duration reaperFixedDelay
     ) {
     }
 

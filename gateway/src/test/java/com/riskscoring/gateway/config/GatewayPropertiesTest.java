@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.config;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.model.PlanCode;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,9 @@ class GatewayPropertiesTest {
     }
 
     private static GatewayProperties.Billing billing(GatewayProperties.Plan... plans) {
-        return new GatewayProperties.Billing(Duration.ofDays(30), List.of(plans));
+        GatewayProperties.Payment payment = new GatewayProperties.Payment(
+                "0xTestPaymentAddress", Chain.BNB_SMART_CHAIN, "0xTestUsdtContract", 18,
+                Duration.ofMinutes(45), 1, 9999, Duration.ofMinutes(5));
+        return new GatewayProperties.Billing(Duration.ofDays(30), List.of(plans), payment);
     }
 }

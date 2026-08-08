@@ -30,6 +30,7 @@
         <module>enrichment</module>
         <module>risk-ai</module>
         <module>monitor</module>
+        <module>payment-watch</module>
     </modules>
 
     <build>

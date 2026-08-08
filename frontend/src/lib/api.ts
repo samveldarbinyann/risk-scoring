@@ -297,12 +297,6 @@ export function activateSubscription(planCode: PlanCode): Promise<SubscriptionVi
   });
 }
 
-export function confirmSubscriptionPayment(id: string): Promise<SubscriptionView> {
-  return apiRequest<SubscriptionView>(`/api/billing/subscription/${id}/confirm`, {
-    method: "POST",
-  });
-}
-
 export function cancelSubscription(): Promise<SubscriptionView> {
   return apiRequest<SubscriptionView>("/api/billing/subscription/cancel", {
     method: "POST",

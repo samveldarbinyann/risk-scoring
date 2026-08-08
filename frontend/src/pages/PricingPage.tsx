@@ -4,13 +4,7 @@ import { PlanCard, type PlanCtaKind } from "@/components/pricing/PlanCard";
 import { PlanComparisonTable } from "@/components/pricing/PlanComparisonTable";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
-import {
-  activateSubscription,
-  ApiError,
-  confirmSubscriptionPayment,
-  getSubscription,
-  listPlans,
-} from "@/lib/api";
+import { activateSubscription, ApiError, getSubscription, listPlans } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
 import { PLAN_ORDER } from "@/lib/plans";
@@ -31,7 +25,7 @@ function resolveCtaKind(
   }
 
   if (subscription.status === "PENDING_PAYMENT") {
-    return samePlan ? "confirm" : "select";
+    return samePlan ? "pending" : "select";
   }
 
   return "select";
@@ -94,26 +88,9 @@ export function PricingPage() {
     try {
       const next = await activateSubscription(plan.code);
       setSubscription(next);
-      if (next.status === "ACTIVE") {
-        navigate("/settings");
-      }
+      navigate(next.status === "ACTIVE" ? "/settings" : "/pricing/pay");
     } catch (err) {
       setActionError(err instanceof Error ? err.message : t("pricing.activateError"));
-    } finally {
-      setBusyPlan(null);
-    }
-  }
-
-  async function handleConfirm(subscriptionId: string) {
-    if (busyPlan || !subscription) return;
-    setActionError(null);
-    setBusyPlan(subscription.planCode);
-    try {
-      const active = await confirmSubscriptionPayment(subscriptionId);
-      setSubscription(active);
-      navigate("/settings");
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : t("pricing.confirmError"));
     } finally {
       setBusyPlan(null);
     }
@@ -146,7 +123,7 @@ export function PricingPage() {
               ctaKind={resolveCtaKind(plan.code, isAuthenticated, subscription)}
               isBusy={busyPlan === plan.code}
               onSelect={(selected) => void handleSelect(selected)}
-              onConfirm={(id) => void handleConfirm(id)}
+              onResumePayment={() => navigate("/pricing/pay")}
               onSignIn={() => navigate("/auth")}
             />
           ))}

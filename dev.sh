@@ -8,7 +8,7 @@ LOG_DIR="$ROOT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
 JAVA_CANDIDATE="/home/sam/.jdks/ms-25.0.4"
-JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai monitor)
+JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai monitor payment-watch)
 declare -A SERVICE_JVM_ARGS=(
   [risk-ai]="-XX:+UseParallelGC"
 )
@@ -127,6 +127,7 @@ cmd_start() {
   wait_for_service enrichment "Started EnrichmentApplication"
   wait_for_service risk-ai "Started RiskAiApplication"
   wait_for_service monitor "Started MonitorApplication"
+  wait_for_service payment-watch "Started PaymentWatchApplication"
 
   echo "Запускаю frontend..."
   start_frontend

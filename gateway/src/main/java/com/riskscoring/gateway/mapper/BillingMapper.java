@@ -9,6 +9,8 @@ import com.riskscoring.gateway.model.SubscriptionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -51,7 +53,24 @@ public class BillingMapper {
                 periodStart,
                 periodEnd,
                 subscription.getCreatedAt(),
-                subscription.getCanceledAt()
+                subscription.getCanceledAt(),
+                subscription.getPaymentAddress(),
+                subscription.getPaymentAmount(),
+                subscription.getPaymentExpiresAt(),
+                paymentUri(subscription.getPaymentAddress(), subscription.getPaymentAmount())
         );
+    }
+
+    private String paymentUri(String paymentAddress, BigDecimal paymentAmount) {
+        if (paymentAddress == null || paymentAmount == null) {
+            return null;
+        }
+
+        GatewayProperties.Payment paymentConfig = gatewayProperties.billing().payment();
+        int chainId = paymentConfig.chain().evmChainId().orElseThrow();
+        BigInteger baseUnits = paymentAmount.multiply(BigDecimal.TEN.pow(paymentConfig.tokenDecimals())).toBigIntegerExact();
+
+        return "ethereum:%s@%d/transfer?address=%s&uint256=%s".formatted(
+                paymentConfig.tokenContractAddress(), chainId, paymentAddress, baseUnits);
     }
 }

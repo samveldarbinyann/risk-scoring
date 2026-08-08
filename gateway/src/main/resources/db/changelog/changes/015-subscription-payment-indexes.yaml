@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-subscription-payment-indexes
+      author: sam
+      changes:
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uq_subscription_pending_payment_amount
+              ON subscription (payment_amount)
+              WHERE status = 'PENDING_PAYMENT';
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uq_subscription_paid_tx_hash
+              ON subscription (paid_tx_hash)
+              WHERE paid_tx_hash IS NOT NULL;
+      rollback:
+        - sql:
+            sql: >
+              DROP INDEX IF EXISTS uq_subscription_paid_tx_hash;
+        - sql:
+            sql: >
+              DROP INDEX IF EXISTS uq_subscription_pending_payment_amount;

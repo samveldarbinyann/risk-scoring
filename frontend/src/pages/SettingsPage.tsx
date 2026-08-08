@@ -5,15 +5,7 @@ import { ApiKeysPanel } from "@/components/settings/ApiKeysPanel";
 import { PlanFeaturesPanel } from "@/components/settings/PlanFeaturesPanel";
 import { SubscriptionPanel } from "@/components/settings/SubscriptionPanel";
 import { Spinner } from "@/components/ui/Spinner";
-import {
-  ApiError,
-  cancelSubscription,
-  confirmSubscriptionPayment,
-  createApiKey,
-  getSubscription,
-  listApiKeys,
-  revokeApiKey,
-} from "@/lib/api";
+import { ApiError, cancelSubscription, createApiKey, getSubscription, listApiKeys, revokeApiKey } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
 import { GRID_VARIANTS, SECTION_VARIANTS } from "@/lib/pageMotion";
@@ -27,7 +19,6 @@ type ResourceState<T> = {
 
 type BusyState = {
   loading: boolean;
-  confirming: boolean;
   canceling: boolean;
   creatingKey: boolean;
   revokingId: string | null;
@@ -35,7 +26,6 @@ type BusyState = {
 
 const INITIAL_BUSY: BusyState = {
   loading: true,
-  confirming: false,
   canceling: false,
   creatingKey: false,
   revokingId: null,
@@ -117,23 +107,6 @@ export function SettingsPage() {
     return <Navigate to="/auth" replace />;
   }
 
-  async function handleConfirm() {
-    if (!subscription.data || busy.confirming) return;
-    setSubscription((prev) => ({ ...prev, actionError: null }));
-    setBusy((prev) => ({ ...prev, confirming: true }));
-    try {
-      const next = await confirmSubscriptionPayment(subscription.data.id);
-      setSubscription((prev) => ({ ...prev, data: next }));
-    } catch (err) {
-      setSubscription((prev) => ({
-        ...prev,
-        actionError: err instanceof Error ? err.message : t("settings.subscription.actionError"),
-      }));
-    } finally {
-      setBusy((prev) => ({ ...prev, confirming: false }));
-    }
-  }
-
   async function handleCancel() {
     if (busy.canceling) return;
     if (!window.confirm(t("settings.subscription.cancelConfirm"))) return;
@@ -209,9 +182,7 @@ export function SettingsPage() {
             isLoading={busy.loading}
             error={subscription.loadError}
             actionError={subscription.actionError}
-            isConfirming={busy.confirming}
             isCanceling={busy.canceling}
-            onConfirm={() => void handleConfirm()}
             onCancel={() => void handleCancel()}
           />
         </motion.div>

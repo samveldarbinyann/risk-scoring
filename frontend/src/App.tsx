@@ -9,6 +9,7 @@ import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { WatchlistPage } from "@/pages/WatchlistPage";
 import { AlertsPage } from "@/pages/AlertsPage";
 import { PricingPage } from "@/pages/PricingPage";
+import { PaymentPage } from "@/pages/PaymentPage";
 import { DocsPage } from "@/pages/DocsPage";
 import { ContactPage } from "@/pages/ContactPage";
 import { SettingsPage } from "@/pages/SettingsPage";
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/scan/:groupId" element={<ScanConsolePage />} />
           <Route path="/scan/:groupId/report" element={<ReportPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/pricing/pay" element={<PaymentPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />

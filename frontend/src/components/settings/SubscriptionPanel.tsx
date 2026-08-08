@@ -17,9 +17,7 @@ interface SubscriptionPanelProps {
   isLoading: boolean;
   error: string | null;
   actionError: string | null;
-  isConfirming: boolean;
   isCanceling: boolean;
-  onConfirm: () => void;
   onCancel: () => void;
 }
 
@@ -28,9 +26,7 @@ export function SubscriptionPanel({
   isLoading,
   error,
   actionError,
-  isConfirming,
   isCanceling,
-  onConfirm,
   onCancel,
 }: SubscriptionPanelProps) {
   const { t, locale } = useI18n();
@@ -91,7 +87,7 @@ export function SubscriptionPanel({
 
             <div className="flex flex-wrap gap-3">
               {subscription.status === "PENDING_PAYMENT" && (
-                <Button type="button" isLoading={isConfirming} onClick={onConfirm}>
+                <Button type="button" onClick={() => navigate("/pricing/pay")}>
                   {t("settings.subscription.confirm")}
                 </Button>
               )}

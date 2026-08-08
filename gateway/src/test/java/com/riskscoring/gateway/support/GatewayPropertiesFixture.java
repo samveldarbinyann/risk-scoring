@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.support;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.model.PlanCode;
 
@@ -26,6 +27,9 @@ public final class GatewayPropertiesFixture {
             "1234567890123456", Duration.ofMinutes(10), Duration.ofSeconds(60), 5);
     private static final GatewayProperties.ApiKeys API_KEYS = new GatewayProperties.ApiKeys(
             "1234567890123456", "rsk_", 5, Duration.ofMinutes(5));
+    private static final GatewayProperties.Payment PAYMENT = new GatewayProperties.Payment(
+            "0xTestPaymentAddress", Chain.BNB_SMART_CHAIN, "0xTestUsdtContract", 18,
+            Duration.ofMinutes(45), 1, 9999, Duration.ofMinutes(5));
 
     private GatewayPropertiesFixture() {
     }
@@ -44,6 +48,7 @@ public final class GatewayPropertiesFixture {
         private String contactRecipient = "contact@example.com";
         private Duration billingPeriod = Duration.ofDays(30);
         private List<GatewayProperties.Plan> plans = List.of(FREE_PLAN);
+        private GatewayProperties.Payment payment = PAYMENT;
         private int maxChains = 1;
         private GatewayProperties.RateLimit publicScanLimit = new GatewayProperties.RateLimit(10, Duration.ofHours(1));
         private GatewayProperties.RateLimit contactLimit = new GatewayProperties.RateLimit(5, Duration.ofHours(1));
@@ -67,6 +72,11 @@ public final class GatewayPropertiesFixture {
 
         public Builder plans(GatewayProperties.Plan... plans) {
             this.plans = List.of(plans);
+            return this;
+        }
+
+        public Builder payment(GatewayProperties.Payment payment) {
+            this.payment = payment;
             return this;
         }
 
@@ -96,7 +106,7 @@ public final class GatewayPropertiesFixture {
                     AUTH,
                     new GatewayProperties.Mail(mailFrom, contactRecipient),
                     VERIFICATION,
-                    new GatewayProperties.Billing(billingPeriod, plans),
+                    new GatewayProperties.Billing(billingPeriod, plans, payment),
                     API_KEYS,
                     new GatewayProperties.PublicScan(publicScanLimit, maxChains),
                     new GatewayProperties.Contact(contactLimit),
