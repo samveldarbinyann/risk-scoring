@@ -1,6 +1,5 @@
 package com.riskscoring.gateway.mapper;
 
-import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.PlanView;
 import com.riskscoring.gateway.dto.SubscriptionView;
@@ -18,9 +17,6 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 public class BillingMapper {
-
-    // Binance-Peg BSC-USD uses 18 decimals, unlike USDT on Ethereum mainnet (6).
-    private static final int USDT_BSC_DECIMALS = 18;
 
     private final GatewayProperties gatewayProperties;
 
@@ -70,10 +66,11 @@ public class BillingMapper {
             return null;
         }
 
-        int chainId = Chain.BNB_SMART_CHAIN.evmChainId().orElseThrow();
-        BigInteger baseUnits = paymentAmount.multiply(BigDecimal.TEN.pow(USDT_BSC_DECIMALS)).toBigIntegerExact();
+        GatewayProperties.Payment paymentConfig = gatewayProperties.billing().payment();
+        int chainId = paymentConfig.chain().evmChainId().orElseThrow();
+        BigInteger baseUnits = paymentAmount.multiply(BigDecimal.TEN.pow(paymentConfig.tokenDecimals())).toBigIntegerExact();
 
         return "ethereum:%s@%d/transfer?address=%s&uint256=%s".formatted(
-                gatewayProperties.billing().payment().tokenContractAddress(), chainId, paymentAddress, baseUnits);
+                paymentConfig.tokenContractAddress(), chainId, paymentAddress, baseUnits);
     }
 }

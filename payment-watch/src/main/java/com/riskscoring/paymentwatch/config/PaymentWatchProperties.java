@@ -13,8 +13,6 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "payment-watch")
 @Validated
 public record PaymentWatchProperties(
-        // Left unvalidated on purpose: an unconfigured address must not block service startup,
-        // only make pollForPayments() skip its work (see PaymentWatchServiceImpl).
         String targetAddress,
         @NotNull Chain chain,
         @NotBlank String usdtContractAddress,

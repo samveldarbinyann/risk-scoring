@@ -280,8 +280,8 @@ class BillingServiceImplTest {
         Subscription pending = pendingSubscription(USER_ID);
         pending.setPaymentAmount(new BigDecimal("20.004137"));
         pending.setPaymentExpiresAt(Instant.now().plus(Duration.ofMinutes(30)));
-        when(subscriptionRepository.findByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, new BigDecimal("20.004137")))
-                .thenReturn(Optional.of(pending));
+        when(subscriptionRepository.findByStatusInAndPaymentAmount(any(), eq(new BigDecimal("20.004137"))))
+                .thenReturn(List.of(pending));
 
         billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
                 "0xabc", "0xTestPaymentAddress", new BigDecimal("20.004137"), Chain.BNB_SMART_CHAIN,
@@ -294,9 +294,27 @@ class BillingServiceImplTest {
     }
 
     @Test
+    void confirmPaymentFromChainReactivatesASubscriptionExpiredByTheReaperIfThePaymentClearedBeforeItsDeadline() {
+        Subscription expired = pendingSubscription(USER_ID);
+        expired.setStatus(SubscriptionStatus.EXPIRED);
+        expired.setPaymentAmount(new BigDecimal("20.004137"));
+        Instant paymentDeadline = Instant.now().minus(Duration.ofMinutes(1));
+        expired.setPaymentExpiresAt(paymentDeadline);
+        when(subscriptionRepository.findByStatusInAndPaymentAmount(any(), eq(new BigDecimal("20.004137"))))
+                .thenReturn(List.of(expired));
+
+        billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
+                "0xabc", "0xTestPaymentAddress", new BigDecimal("20.004137"), Chain.BNB_SMART_CHAIN,
+                1L, paymentDeadline.minus(Duration.ofSeconds(5)), Instant.now()));
+
+        assertThat(expired.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+        assertThat(expired.getPaidTxHash()).isEqualTo("0xabc");
+    }
+
+    @Test
     void confirmPaymentFromChainIgnoresEventWhenNoSubscriptionMatchesTheAmount() {
-        when(subscriptionRepository.findByStatusAndPaymentAmount(eq(SubscriptionStatus.PENDING_PAYMENT), any()))
-                .thenReturn(Optional.empty());
+        when(subscriptionRepository.findByStatusInAndPaymentAmount(any(), any()))
+                .thenReturn(List.of());
 
         billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
                 "0xabc", "0xTestPaymentAddress", new BigDecimal("1.230000"), Chain.BNB_SMART_CHAIN,
@@ -310,8 +328,8 @@ class BillingServiceImplTest {
         Subscription pending = pendingSubscription(USER_ID);
         pending.setPaymentAmount(new BigDecimal("20.004137"));
         pending.setPaymentExpiresAt(Instant.now().minus(Duration.ofMinutes(1)));
-        when(subscriptionRepository.findByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, new BigDecimal("20.004137")))
-                .thenReturn(Optional.of(pending));
+        when(subscriptionRepository.findByStatusInAndPaymentAmount(any(), eq(new BigDecimal("20.004137"))))
+                .thenReturn(List.of(pending));
 
         billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
                 "0xabc", "0xTestPaymentAddress", new BigDecimal("20.004137"), Chain.BNB_SMART_CHAIN,

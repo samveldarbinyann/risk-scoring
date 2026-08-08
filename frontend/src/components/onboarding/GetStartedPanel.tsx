@@ -55,7 +55,6 @@ export function GetStartedPanel({ ctaTo = "/" }: GetStartedPanelProps) {
       transition={{ duration: 0.4 }}
       className="flex flex-col gap-8"
     >
-      {/* Header */}
       <div className="flex flex-col gap-3">
         <h2 className="font-sans text-xl font-semibold text-text">
           {t("onboarding.title")}
@@ -65,7 +64,6 @@ export function GetStartedPanel({ ctaTo = "/" }: GetStartedPanelProps) {
         </p>
       </div>
 
-      {/* Example Card */}
       <div className="rounded-panel border border-border bg-surface-2 p-5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -96,7 +94,6 @@ export function GetStartedPanel({ ctaTo = "/" }: GetStartedPanelProps) {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex flex-col gap-3">
         <LinkButton to={ctaTo} variant="primary" className="w-full">
           {t("onboarding.scanNow")}
@@ -106,7 +103,6 @@ export function GetStartedPanel({ ctaTo = "/" }: GetStartedPanelProps) {
         </LinkButton>
       </div>
 
-      {/* Footer hint */}
       <p className="text-xs text-text-faint leading-relaxed">
         {t("onboarding.hint")}
       </p>

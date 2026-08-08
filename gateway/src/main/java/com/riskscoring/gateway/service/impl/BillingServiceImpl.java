@@ -7,6 +7,8 @@ import com.riskscoring.gateway.dto.SubscriptionView;
 import com.riskscoring.gateway.entity.Subscription;
 import com.riskscoring.gateway.exception.ApiException;
 import com.riskscoring.gateway.exception.NoActiveSubscriptionException;
+import com.riskscoring.gateway.exception.PaymentAmountConflictException;
+import com.riskscoring.gateway.exception.PaymentNotConfiguredException;
 import com.riskscoring.gateway.exception.QuotaExceededException;
 import com.riskscoring.gateway.exception.SubscriptionAlreadyActiveException;
 import com.riskscoring.gateway.exception.SubscriptionNotFoundException;
@@ -20,6 +22,7 @@ import com.riskscoring.gateway.service.BillingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,8 @@ public class BillingServiceImpl implements BillingService {
 
     private static final Set<SubscriptionStatus> LIVE_STATUSES =
             EnumSet.of(SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING_PAYMENT);
+    private static final Set<SubscriptionStatus> CONFIRMABLE_STATUSES =
+            EnumSet.of(SubscriptionStatus.PENDING_PAYMENT, SubscriptionStatus.EXPIRED);
     private static final int MAX_AMOUNT_GENERATION_ATTEMPTS = 20;
 
     private final SubscriptionRepository subscriptionRepository;
@@ -83,12 +88,13 @@ public class BillingServiceImpl implements BillingService {
     @Transactional
     public void confirmPaymentFromChain(UsdtPaymentDetected event) {
         BigDecimal amount = event.amount().setScale(6, RoundingMode.HALF_UP);
-        subscriptionRepository.findByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, amount)
+        subscriptionRepository.findByStatusInAndPaymentAmount(CONFIRMABLE_STATUSES, amount).stream()
                 .filter(subscription -> subscription.getPaymentExpiresAt() != null
                         && event.blockTimestamp().isBefore(subscription.getPaymentExpiresAt()))
+                .findFirst()
                 .ifPresentOrElse(
                         subscription -> activateFromChainPayment(subscription, event),
-                        () -> log.info("No PENDING_PAYMENT subscription matched on-chain USDT payment amount={} txHash={}",
+                        () -> log.info("No PENDING_PAYMENT/EXPIRED subscription matched on-chain USDT payment amount={} txHash={}",
                                 amount, event.txHash()));
     }
 
@@ -252,12 +258,21 @@ public class BillingServiceImpl implements BillingService {
 
     private void applyPaymentRequest(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
         GatewayProperties.Payment paymentConfig = gatewayProperties.billing().payment();
-        // 1 USD cent = 0.01 USDT: the product treats USDT as a 1:1 USD-pegged stablecoin.
+        if (paymentConfig.address() == null || paymentConfig.address().isBlank()) {
+            throw new PaymentNotConfiguredException();
+        }
+
         BigDecimal basePrice = BigDecimal.valueOf(plan.priceCents(), 2);
         subscription.setPaymentAddress(paymentConfig.address());
         subscription.setPaymentAmount(generateUniquePaymentAmount(basePrice, paymentConfig));
         subscription.setPaymentExpiresAt(now.plus(paymentConfig.window()));
         subscription.setPaidTxHash(null);
+
+        try {
+            subscriptionRepository.saveAndFlush(subscription);
+        } catch (DataIntegrityViolationException e) {
+            throw new PaymentAmountConflictException(e);
+        }
     }
 
     private BigDecimal generateUniquePaymentAmount(BigDecimal basePrice, GatewayProperties.Payment paymentConfig) {

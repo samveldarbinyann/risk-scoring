@@ -22,7 +22,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
 
     Optional<Subscription> findFirstByUserIdOrderByCreatedAtDesc(UUID userId);
 
-    Optional<Subscription> findByStatusAndPaymentAmount(SubscriptionStatus status, BigDecimal paymentAmount);
+    List<Subscription> findByStatusInAndPaymentAmount(Collection<SubscriptionStatus> statuses, BigDecimal paymentAmount);
 
     boolean existsByStatusAndPaymentAmount(SubscriptionStatus status, BigDecimal paymentAmount);
 

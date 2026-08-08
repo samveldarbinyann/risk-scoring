@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -30,7 +29,6 @@ public class PaymentWatchServiceImpl implements PaymentWatchService {
 
     @Override
     @Scheduled(fixedDelayString = "${payment-watch.poll-interval}")
-    @Transactional
     public void pollForPayments() {
         if (properties.targetAddress() == null || properties.targetAddress().isBlank()) {
             log.debug("payment-watch.target-address is not configured, skipping poll");
@@ -43,29 +41,31 @@ public class PaymentWatchServiceImpl implements PaymentWatchService {
 
         List<MoralisTokenTransfer> transfers = moralisPaymentClient.incomingUsdtTransfers(since);
         for (MoralisTokenTransfer transfer : transfers) {
-            processTransfer(transfer, confirmationCutoff);
+            try {
+                processTransfer(transfer, confirmationCutoff);
+            } catch (Exception e) {
+                log.error("Failed to process transfer txHash={}", transfer.transactionHash(), e);
+            }
         }
     }
 
     private void processTransfer(MoralisTokenTransfer transfer, Instant confirmationCutoff) {
+        if (!properties.usdtContractAddress().equalsIgnoreCase(transfer.contract())) {
+            return;
+        }
+
         if (!properties.targetAddress().equalsIgnoreCase(transfer.toAddress())) {
             return;
         }
 
         Instant blockTimestamp = Instant.parse(transfer.blockTimestamp());
         if (blockTimestamp.isAfter(confirmationCutoff)) {
-            // Not enough confirmations yet — a later tick will pick it up once it clears the window.
             return;
         }
 
         if (emittedTransferRepository.existsById(transfer.transactionHash())) {
             return;
         }
-
-        emittedTransferRepository.save(EmittedTransfer.builder()
-                .txHash(transfer.transactionHash())
-                .emittedAt(Instant.now())
-                .build());
 
         UsdtPaymentDetected event = new UsdtPaymentDetected(
                 transfer.transactionHash(),
@@ -77,6 +77,12 @@ public class PaymentWatchServiceImpl implements PaymentWatchService {
                 Instant.now());
 
         paymentEventPublisher.publishUsdtPaymentDetected(event);
+
+        emittedTransferRepository.save(EmittedTransfer.builder()
+                .txHash(transfer.transactionHash())
+                .emittedAt(Instant.now())
+                .build());
+
         log.info("Detected incoming USDT payment txHash={} amount={}", transfer.transactionHash(), event.amount());
     }
 }

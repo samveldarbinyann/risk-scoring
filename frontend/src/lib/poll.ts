@@ -24,8 +24,27 @@ export async function pollUntil<T>(
   return { value, matched: false };
 }
 
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => {
+async function wait(ms: number): Promise<void> {
+  await new Promise<void>((resolve) => {
     window.setTimeout(resolve, ms);
+  });
+  await waitUntilVisible();
+}
+
+function waitUntilVisible(): Promise<void> {
+  if (typeof document === "undefined" || document.visibilityState !== "hidden") {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    document.addEventListener(
+      "visibilitychange",
+      function onVisible() {
+        if (document.visibilityState !== "hidden") {
+          document.removeEventListener("visibilitychange", onVisible);
+          resolve();
+        }
+      },
+    );
   });
 }

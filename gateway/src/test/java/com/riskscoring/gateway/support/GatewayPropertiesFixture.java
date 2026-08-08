@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.support;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.model.PlanCode;
 
@@ -27,7 +28,8 @@ public final class GatewayPropertiesFixture {
     private static final GatewayProperties.ApiKeys API_KEYS = new GatewayProperties.ApiKeys(
             "1234567890123456", "rsk_", 5, Duration.ofMinutes(5));
     private static final GatewayProperties.Payment PAYMENT = new GatewayProperties.Payment(
-            "0xTestPaymentAddress", "0xTestUsdtContract", Duration.ofMinutes(45), 1, 9999, Duration.ofMinutes(5));
+            "0xTestPaymentAddress", Chain.BNB_SMART_CHAIN, "0xTestUsdtContract", 18,
+            Duration.ofMinutes(45), 1, 9999, Duration.ofMinutes(5));
 
     private GatewayPropertiesFixture() {
     }

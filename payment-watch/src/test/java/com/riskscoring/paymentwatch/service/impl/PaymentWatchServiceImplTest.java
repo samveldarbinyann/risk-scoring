@@ -23,7 +23,10 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -111,6 +114,49 @@ class PaymentWatchServiceImplTest {
 
         verify(paymentEventPublisher, never()).publishUsdtPaymentDetected(any());
         verify(emittedTransferRepository, never()).save(any());
+    }
+
+    @Test
+    void pollForPaymentsIgnoresTransfersFromAnUnexpectedTokenContract() {
+        MoralisTokenTransfer transfer = new MoralisTokenTransfer(
+                "0xtx1", "1", Instant.now().minus(Duration.ofSeconds(60)).toString(),
+                "0xSomeOtherToken", "0xpayer", TARGET_ADDRESS, "20.000000");
+        when(moralisPaymentClient.incomingUsdtTransfers(any())).thenReturn(List.of(transfer));
+
+        service.pollForPayments();
+
+        verify(paymentEventPublisher, never()).publishUsdtPaymentDetected(any());
+        verify(emittedTransferRepository, never()).save(any());
+    }
+
+    @Test
+    void pollForPaymentsDoesNotSaveWhenPublishingFails() {
+        MoralisTokenTransfer transfer = transfer(
+                "0xtx1", TARGET_ADDRESS, "5.000000", Instant.now().minus(Duration.ofSeconds(60)), 1L);
+        when(moralisPaymentClient.incomingUsdtTransfers(any())).thenReturn(List.of(transfer));
+        when(emittedTransferRepository.existsById("0xtx1")).thenReturn(false);
+        doThrow(new RuntimeException("kafka unavailable"))
+                .when(paymentEventPublisher).publishUsdtPaymentDetected(any());
+
+        service.pollForPayments();
+
+        verify(emittedTransferRepository, never()).save(any());
+    }
+
+    @Test
+    void pollForPaymentsContinuesWithRemainingTransfersWhenOneFailsToProcess() {
+        MoralisTokenTransfer broken = new MoralisTokenTransfer(
+                "0xbroken", "1", "not-a-timestamp", USDT_CONTRACT, "0xpayer", TARGET_ADDRESS, "5.000000");
+        MoralisTokenTransfer ok = transfer(
+                "0xtx2", TARGET_ADDRESS, "5.000000", Instant.now().minus(Duration.ofSeconds(60)), 2L);
+        when(moralisPaymentClient.incomingUsdtTransfers(any())).thenReturn(List.of(broken, ok));
+        when(emittedTransferRepository.existsById("0xtx2")).thenReturn(false);
+
+        service.pollForPayments();
+
+        verify(paymentEventPublisher, times(1)).publishUsdtPaymentDetected(any());
+        verify(emittedTransferRepository).save(emittedCaptor.capture());
+        assertThat(emittedCaptor.getValue().getTxHash()).isEqualTo("0xtx2");
     }
 
     @Test

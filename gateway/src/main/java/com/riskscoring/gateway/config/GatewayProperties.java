@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.config;
 
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.model.PlanCode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -77,11 +78,11 @@ public record GatewayProperties(
     ) {
     }
 
-    // address left unvalidated on purpose: an unconfigured payment address must not block
-    // gateway startup, only the activation of a paid plan (see BillingServiceImpl.applyPaymentRequest).
     public record Payment(
             String address,
+            @NotNull Chain chain,
             @NotBlank String tokenContractAddress,
+            @Positive int tokenDecimals,
             @NotNull Duration window,
             @Positive int tailMinMicroUsdt,
             @Positive int tailMaxMicroUsdt,
