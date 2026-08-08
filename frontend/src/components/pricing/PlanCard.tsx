@@ -1,9 +1,10 @@
+import { PlanFeatureList } from "@/components/pricing/PlanFeatureList";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { formatCount, formatMoney } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { MessageKey } from "@/lib/i18n/messageKeys";
-import { PLAN_FEATURE_KEYS, POPULAR_PLAN } from "@/lib/plans";
+import { POPULAR_PLAN } from "@/lib/plans";
 import type { PlanView, SubscriptionView } from "@/lib/types";
 
 export type PlanCtaKind = "signIn" | "select" | "confirm" | "current" | "cancelFirst";
@@ -62,14 +63,7 @@ export function PlanCard({
         </p>
       </header>
 
-      <ul className="flex flex-1 flex-col gap-3">
-        {PLAN_FEATURE_KEYS.map((key) => (
-          <li key={key} className="flex gap-3 text-sm text-text-dim">
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-base bg-accent" aria-hidden />
-            <span>{t(key)}</span>
-          </li>
-        ))}
-      </ul>
+      <PlanFeatureList className="flex-1" />
 
       <PlanCta
         kind={ctaKind}

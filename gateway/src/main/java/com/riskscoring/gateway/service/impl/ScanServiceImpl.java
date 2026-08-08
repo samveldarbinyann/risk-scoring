@@ -27,7 +27,6 @@ import com.riskscoring.gateway.exception.SingleChainRequiredException;
 import com.riskscoring.gateway.exception.TargetChainMismatchException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
-import com.riskscoring.gateway.model.ScanOwnership;
 import com.riskscoring.gateway.model.ScanTargets;
 import com.riskscoring.gateway.model.TargetMatch;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
@@ -120,36 +119,30 @@ public class ScanServiceImpl implements ScanService {
     private List<TargetMatch> requestedChains(ScanCreateRequest request, UUID userId) {
         List<TargetMatch> candidates = ScanTargets.classify(request.target());
         List<TargetMatch> explicit = explicitChains(request, candidates);
+        int allowed = allowedChains(userId);
 
         if (!explicit.isEmpty()) {
-            return singleTargetType(requireWithinPublicLimit(explicit, userId));
+            if (explicit.size() > allowed) {
+                throw new PublicScanChainLimitException(explicit.size(), allowed);
+            }
+
+            return singleTargetType(explicit);
         }
 
         List<TargetMatch> fanOut = candidates.stream()
                 .filter(match -> match.chain().scannable())
+                .limit(allowed)
                 .toList();
 
         if (fanOut.isEmpty()) {
             throw new ChainNotSupportedYetException(candidates.getFirst().chain());
         }
 
-        return singleTargetType(trimToPublicLimit(fanOut, userId));
+        return singleTargetType(fanOut);
     }
 
-    private List<TargetMatch> requireWithinPublicLimit(List<TargetMatch> matches, UUID userId) {
-        int allowed = gatewayProperties.publicScan().maxChains();
-
-        if (userId == null && matches.size() > allowed) {
-            throw new PublicScanChainLimitException(matches.size(), allowed);
-        }
-
-        return matches;
-    }
-
-    private List<TargetMatch> trimToPublicLimit(List<TargetMatch> matches, UUID userId) {
-        int allowed = gatewayProperties.publicScan().maxChains();
-
-        return userId == null ? matches.subList(0, Math.min(matches.size(), allowed)) : matches;
+    private int allowedChains(UUID userId) {
+        return userId == null ? gatewayProperties.publicScan().maxChains() : Integer.MAX_VALUE;
     }
 
     private List<TargetMatch> explicitChains(ScanCreateRequest request, List<TargetMatch> candidates) {
@@ -258,15 +251,19 @@ public class ScanServiceImpl implements ScanService {
     @Transactional(readOnly = true)
     public ScanGroupView getScanGroup(UUID groupId, UUID requesterId) {
         requireGroupAccess(groupId, requesterId);
-        return groupView(groupId);
+
+        List<Scan> scans = scanRepository.findByGroupId(groupId);
+        if (scans.isEmpty()) {
+            throw new ScanGroupNotFoundException(groupId);
+        }
+
+        return scanMapper.toGroupView(groupId, scans);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ScanGroupReportView getScanGroupReport(UUID groupId, UUID requesterId) {
-        requireGroupAccess(groupId, requesterId);
-
-        ScanGroupView group = groupView(groupId);
+        ScanGroupView group = getScanGroup(groupId, requesterId);
         if (!group.completed()) {
             throw new ScanGroupReportNotReadyException(groupId);
         }
@@ -305,42 +302,32 @@ public class ScanServiceImpl implements ScanService {
     @Override
     @Transactional(readOnly = true)
     public boolean canAccessGroup(UUID groupId, UUID requesterId) {
-        return accessibleGroup(groupId, requesterId).isPresent();
+        return scanGroupRepository.findById(groupId)
+                .filter(group -> accessible(group, requesterId))
+                .isPresent();
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean canAccessScan(UUID scanId, UUID requesterId) {
         return scanRepository.findById(scanId)
-                .flatMap(scan -> accessibleGroup(scan.getGroupId(), requesterId))
+                .filter(scan -> canAccessGroup(scan.getGroupId(), requesterId))
                 .isPresent();
     }
 
-    private ScanGroupView groupView(UUID groupId) {
-        List<Scan> scans = scanRepository.findByGroupId(groupId);
-        if (scans.isEmpty()) {
-            throw new ScanGroupNotFoundException(groupId);
-        }
-
-        return scanMapper.toGroupView(groupId, scans);
-    }
-
-    private Optional<ScanGroup> accessibleGroup(UUID groupId, UUID requesterId) {
-        return scanGroupRepository.findById(groupId)
-                .filter(group -> ScanOwnership.isAccessible(group.getUserId(), requesterId));
+    private static boolean accessible(ScanGroup group, UUID requesterId) {
+        return group.getUserId() == null || group.getUserId().equals(requesterId);
     }
 
     private void requireGroupAccess(UUID groupId, UUID requesterId) {
-        accessibleGroup(groupId, requesterId)
-                .orElseThrow(() -> new ScanGroupNotFoundException(groupId));
+        if (!canAccessGroup(groupId, requesterId)) {
+            throw new ScanGroupNotFoundException(groupId);
+        }
     }
 
     private Scan requireScanAccess(UUID scanId, UUID requesterId) {
-        Scan scan = scanRepository.findById(scanId)
-                .orElseThrow(() -> new ScanNotFoundException(scanId));
-
-        return accessibleGroup(scan.getGroupId(), requesterId)
-                .map(group -> scan)
+        return scanRepository.findById(scanId)
+                .filter(scan -> canAccessGroup(scan.getGroupId(), requesterId))
                 .orElseThrow(() -> new ScanNotFoundException(scanId));
     }
 }

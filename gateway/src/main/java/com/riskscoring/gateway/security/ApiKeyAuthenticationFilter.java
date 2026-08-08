@@ -7,14 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -23,8 +20,6 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String API_KEY_HEADER = "X-Api-Key";
     public static final String API_ROLE = "API";
-
-    private static final String ROLE_PREFIX = "ROLE_";
 
     private final ApiKeyService apiKeyService;
 
@@ -48,8 +43,6 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private static void authenticate(ApiKeyPrincipal principal) {
-        var authority = new SimpleGrantedAuthority(ROLE_PREFIX + API_ROLE);
-        var authentication = new UsernamePasswordAuthenticationToken(principal, null, List.of(authority));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext().setAuthentication(Principals.authentication(principal, API_ROLE));
     }
 }

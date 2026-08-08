@@ -45,8 +45,6 @@ class ScanControllerTest extends AbstractControllerTest {
     @MockitoBean
     private ScanService scanService;
 
-    private static final String PEER_IP = "127.0.0.1";
-
     private final AuthenticatedUser user = new AuthenticatedUser(UUID.randomUUID(), "alice", UserRole.USER);
 
     @Test

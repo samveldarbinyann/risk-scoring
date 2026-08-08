@@ -53,6 +53,6 @@ class ContactControllerTest extends AbstractControllerTest {
                                 """))
                 .andExpect(status().isAccepted());
 
-        verify(contactService).submit(eq("127.0.0.1"), any());
+        verify(contactService).submit(eq(PEER_IP), any());
     }
 }

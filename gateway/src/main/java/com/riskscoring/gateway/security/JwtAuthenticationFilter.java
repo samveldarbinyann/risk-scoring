@@ -8,22 +8,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String ROLE_PREFIX = "ROLE_";
 
     private final TokenService tokenService;
 
@@ -31,26 +24,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        bearerToken(request)
+        Principals.bearerToken(request.getHeader(HttpHeaders.AUTHORIZATION))
                 .flatMap(tokenService::resolveAccessToken)
                 .ifPresent(JwtAuthenticationFilter::authenticate);
 
         filterChain.doFilter(request, response);
     }
 
-    private Optional<String> bearerToken(HttpServletRequest request) {
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header == null || !header.startsWith(BEARER_PREFIX)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(header.substring(BEARER_PREFIX.length()))
-                .filter(token -> !token.isBlank());
-    }
-
     private static void authenticate(AuthenticatedUser user) {
-        var authority = new SimpleGrantedAuthority(ROLE_PREFIX + user.role().name());
-        var authentication = new UsernamePasswordAuthenticationToken(user, null, List.of(authority));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext()
+                .setAuthentication(Principals.authentication(user, user.role().name()));
     }
 }

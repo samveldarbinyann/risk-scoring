@@ -11,14 +11,10 @@ import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
 
-import java.security.Principal;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,8 +22,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class StompAuthChannelInterceptor implements ChannelInterceptor {
 
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String ROLE_PREFIX = "ROLE_";
     private static final PathMatcher PATH_MATCHER = new AntPathMatcher();
 
     private final TokenService tokenService;
@@ -52,13 +46,9 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     }
 
     private void authenticate(StompHeaderAccessor accessor) {
-        Optional.ofNullable(accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION))
-                .filter(header -> header.startsWith(BEARER_PREFIX))
-                .map(header -> header.substring(BEARER_PREFIX.length()))
-                .filter(token -> !token.isBlank())
+        Principals.bearerToken(accessor.getFirstNativeHeader(HttpHeaders.AUTHORIZATION))
                 .flatMap(tokenService::resolveAccessToken)
-                .ifPresent(user -> accessor.setUser(new UsernamePasswordAuthenticationToken(
-                        user, null, List.of(new SimpleGrantedAuthority(ROLE_PREFIX + user.role().name())))));
+                .ifPresent(user -> accessor.setUser(Principals.authentication(user, user.role().name())));
     }
 
     private void authorizeSubscription(Message<?> message, StompHeaderAccessor accessor) {
@@ -68,7 +58,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             throw new MessageDeliveryException(message, "Subscription destination must be a single scan topic");
         }
 
-        if (!accessible(destination, requesterId(accessor.getUser()))) {
+        if (!accessible(destination, Principals.requesterId(accessor.getUser()))) {
             throw new MessageDeliveryException(message, "Subscription to %s is not allowed".formatted(destination));
         }
     }
@@ -91,12 +81,5 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         } catch (IllegalArgumentException exception) {
             return Optional.empty();
         }
-    }
-
-    private static UUID requesterId(Principal principal) {
-        return principal instanceof UsernamePasswordAuthenticationToken token
-                && token.getPrincipal() instanceof AuthenticatedUser user
-                ? user.id()
-                : null;
     }
 }

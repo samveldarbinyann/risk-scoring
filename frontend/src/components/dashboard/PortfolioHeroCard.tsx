@@ -42,11 +42,6 @@ export function PortfolioHeroCard({ entries, isLoading, error, showCta = true }:
           <>
             <p className="font-sans text-xs uppercase tracking-wider text-text-dim">{t("dashboard.hero.eyebrow")}</p>
             <EmptyState message={t("dashboard.hero.empty")} />
-            {showCta && (
-              <Button type="button" variant="ghost" onClick={() => navigate("/watchlist")} className="w-fit">
-                {t("dashboard.hero.emptyCta")}
-              </Button>
-            )}
           </>
         ) : (
           <>
@@ -108,12 +103,13 @@ export function PortfolioHeroCard({ entries, isLoading, error, showCta = true }:
               </div>
             </div>
 
-            {showCta && (
-              <Button type="button" variant="ghost" onClick={() => navigate("/watchlist")} className="w-fit">
-                {t("dashboard.watchlist.cta")}
-              </Button>
-            )}
           </>
+        )}
+
+        {showCta && (
+          <Button type="button" variant="ghost" onClick={() => navigate("/watchlist")} className="w-fit">
+            {total === 0 ? t("dashboard.hero.emptyCta") : t("dashboard.watchlist.cta")}
+          </Button>
         )}
       </CardState>
     </Card>

@@ -123,7 +123,7 @@ class AuthControllerTest extends AbstractControllerTest {
                                 """))
                 .andExpect(status().isAccepted());
 
-        verify(authService).forgotPassword("alice@example.com", "127.0.0.1");
+        verify(authService).forgotPassword("alice@example.com", PEER_IP);
     }
 
     @Test

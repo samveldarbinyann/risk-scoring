@@ -8,6 +8,10 @@ import type { ScanProgressMessage, ScanStage, ScanTarget } from "@/lib/types";
 
 const TERMINAL_STAGES: ScanStage[] = ["COMPLETED", "FAILED"];
 
+interface Failure {
+  reason: string | null;
+}
+
 interface ScanGroupStreamState {
   lines: ScanProgressMessage[];
   chainByScanId: Map<string, Chain>;
@@ -26,7 +30,7 @@ export function useScanGroupStream(groupId: string): ScanGroupStreamState {
   const [initiallyCompleted, setInitiallyCompleted] = useState(false);
   const [targetType, setTargetType] = useState<ScanTarget | null>(null);
   const [target, setTarget] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<Failure | null>(null);
 
   useEffect(() => {
     setLines([]);
@@ -35,7 +39,7 @@ export function useScanGroupStream(groupId: string): ScanGroupStreamState {
     setInitiallyCompleted(false);
     setTargetType(null);
     setTarget("");
-    setError(null);
+    setFailure(null);
     if (!groupId || status === "loading") return;
 
     let cancelled = false;
@@ -50,14 +54,14 @@ export function useScanGroupStream(groupId: string): ScanGroupStreamState {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : t("console.loadError"));
+        setFailure({ reason: err instanceof Error ? err.message : null });
       });
 
     const unsubscribe = subscribeScanGroupProgress(
       groupId,
       (message) => setLines((prev) => [...prev, message]),
       (reason) => {
-        if (!cancelled) setError(reason ?? t("console.loadError"));
+        if (!cancelled) setFailure({ reason: reason ?? null });
       },
     );
 
@@ -65,7 +69,7 @@ export function useScanGroupStream(groupId: string): ScanGroupStreamState {
       cancelled = true;
       unsubscribe();
     };
-  }, [groupId, status, t]);
+  }, [groupId, status]);
 
   const latestStageByScanId = new Map<string, ScanStage>();
   for (const line of lines) {
@@ -85,6 +89,6 @@ export function useScanGroupStream(groupId: string): ScanGroupStreamState {
     completed: initiallyCompleted || streamCompleted,
     targetType,
     target,
-    error,
+    error: failure && (failure.reason ?? t("console.loadError")),
   };
 }

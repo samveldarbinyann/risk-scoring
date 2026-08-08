@@ -112,7 +112,6 @@ class ScanServiceImplTest {
                 GatewayPropertiesFixture.builder().maxChains(ANONYMOUS_MAX_CHAINS).build());
     }
 
-
     @Test
     void getScanHistoryFiltersBySourceAndPaginates() {
         ScanGroup group = ScanGroup.builder()

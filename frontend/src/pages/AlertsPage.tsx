@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { motion, type Variants } from "motion/react";
+import { motion } from "motion/react";
 import { Navigate } from "react-router";
 import { AlertRow } from "@/components/alerts/AlertRow";
 import { AlertsAboutPanel } from "@/components/alerts/AlertsAboutPanel";
@@ -10,17 +10,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { listAlerts } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
+import { GRID_VARIANTS, SECTION_VARIANTS } from "@/lib/pageMotion";
 import type { AlertView } from "@/lib/types";
-
-const GRID_VARIANTS: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const SECTION_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 4 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-};
 
 export function AlertsPage() {
   const { t } = useI18n();

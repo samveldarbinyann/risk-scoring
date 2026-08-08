@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { motion, type Variants } from "motion/react";
+import { motion } from "motion/react";
 import { Navigate } from "react-router";
 import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
 import { PortfolioHeroCard } from "@/components/dashboard/PortfolioHeroCard";
@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { ApiError, getRecentScans, getScanHistory, getSubscription, listWatchlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
+import { GRID_VARIANTS, SECTION_VARIANTS } from "@/lib/pageMotion";
 import type {
   RecentScanGroupView,
   ScanHistoryPageView,
@@ -40,16 +41,6 @@ function toResourceState<T>(result: PromiseSettledResult<T>, emptyValue: T, fall
   }
   return { data: emptyValue, error: result.reason instanceof Error ? result.reason.message : fallbackMessage };
 }
-
-const GRID_VARIANTS: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const SECTION_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 4 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-};
 
 export function DashboardPage() {
   const { t } = useI18n();
