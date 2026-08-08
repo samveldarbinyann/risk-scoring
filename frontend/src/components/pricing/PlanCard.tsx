@@ -125,7 +125,7 @@ function PlanCta({ kind, isBusy, onSelect, onConfirm, onSignIn }: PlanCtaProps) 
       );
     case "cancelFirst":
       return (
-        <Button type="button" variant="ghost" disabled className="w-full text-sm">
+        <Button type="button" variant="ghost" disabled className="w-full whitespace-nowrap text-sm">
           {t("pricing.cta.cancelFirst")}
         </Button>
       );

@@ -87,7 +87,7 @@ class RateLimitServiceImplTest {
                 new GatewayProperties.Billing(Duration.ofDays(30), List.of(
                         new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10))),
                 new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(publicScanLimit),
+                new GatewayProperties.PublicScan(publicScanLimit, 1),
                 new GatewayProperties.Contact(contactLimit),
                 new GatewayProperties.PasswordReset(passwordResetLimit)
         );

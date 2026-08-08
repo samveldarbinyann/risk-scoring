@@ -1,8 +1,8 @@
 import { WatchlistEntryRow } from "@/components/watchlist/WatchlistEntryRow";
 import { Card } from "@/components/ui/Card";
 import { CardState } from "@/components/ui/CardState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Pagination } from "@/components/ui/Pagination";
-import { TypewriterCaret } from "@/components/ui/TypewriterCaret";
 import { formatCount } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
 import type { WatchlistEntryView } from "@/lib/types";
@@ -45,10 +45,7 @@ export function WatchlistEntryList({
 
       <CardState isLoading={isLoading} error={error}>
         {entries.length === 0 ? (
-          <p className="font-mono text-sm text-text-faint">
-            &gt; {t("watchlist.empty")}
-            <TypewriterCaret />
-          </p>
+          <EmptyState message={t("watchlist.empty")} hint={t("watchlist.empty.hint")} />
         ) : (
           <>
             <div>

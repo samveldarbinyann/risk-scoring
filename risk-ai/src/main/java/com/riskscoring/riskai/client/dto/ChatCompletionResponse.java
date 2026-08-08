@@ -9,16 +9,16 @@ public record ChatCompletionResponse(
         Usage usage
 ) {
     public record Choice(
-            int index,
+            Integer index,
             ChatMessage message,
             String finishReason
     ) {
     }
 
     public record Usage(
-            int promptTokens,
-            int completionTokens,
-            int totalTokens
+            Integer promptTokens,
+            Integer completionTokens,
+            Integer totalTokens
     ) {
     }
 }

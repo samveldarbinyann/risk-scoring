@@ -26,11 +26,15 @@ public interface ScanService {
 
     void ingestMonitorScan(ScanRequested event);
 
-    ScanGroupView getScanGroup(UUID groupId);
+    ScanGroupView getScanGroup(UUID groupId, UUID requesterId);
 
-    ScanGroupReportView getScanGroupReport(UUID groupId);
+    ScanGroupReportView getScanGroupReport(UUID groupId, UUID requesterId);
 
-    ScanView getScan(UUID scanId);
+    ScanView getScan(UUID scanId, UUID requesterId);
 
-    ScanReportView getScanReport(UUID scanId);
+    ScanReportView getScanReport(UUID scanId, UUID requesterId);
+
+    boolean canAccessGroup(UUID groupId, UUID requesterId);
+
+    boolean canAccessScan(UUID scanId, UUID requesterId);
 }

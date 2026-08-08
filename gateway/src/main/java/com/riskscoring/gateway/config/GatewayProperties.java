@@ -84,7 +84,10 @@ public record GatewayProperties(
     ) {
     }
 
-    public record PublicScan(@NotNull @Valid RateLimit rateLimit) {
+    public record PublicScan(
+            @NotNull @Valid RateLimit rateLimit,
+            @Positive int maxChains
+    ) {
     }
 
     public record Contact(@NotNull @Valid RateLimit rateLimit) {

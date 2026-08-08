@@ -21,44 +21,46 @@ export function QuotaSummaryCard({ subscription, isLoading, error }: QuotaSummar
   const navigate = useNavigate();
 
   return (
-    <Card title={t("dashboard.quota.title")}>
+    <Card title={t("dashboard.quota.title")} className="flex h-full flex-col">
       <CardState isLoading={isLoading} error={error}>
         {!subscription ? (
-          <div className="flex flex-col gap-4">
-            <p className="font-mono text-sm text-text-faint">{t("dashboard.quota.empty")}</p>
+          <div className="flex flex-1 flex-col gap-4">
+            <p className="flex-1 font-mono text-sm text-text-faint">{t("dashboard.quota.empty")}</p>
             <Button type="button" variant="ghost" onClick={() => navigate("/pricing")} className="w-fit">
               {t("dashboard.quota.cta")}
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-sans text-sm text-text">
-                {t(`pricing.plan.${subscription.planCode}` as MessageKey)}
-              </span>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-base border px-2.5 py-1 font-mono text-xs uppercase tracking-wider",
-                  SUBSCRIPTION_STATUS_CLASS[subscription.status],
-                )}
-              >
-                {t(SUBSCRIPTION_STATUS_KEY[subscription.status])}
-              </span>
+          <div className="flex flex-1 flex-col gap-4">
+            <div className="flex flex-1 flex-col gap-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-sans text-sm text-text">
+                  {t(`pricing.plan.${subscription.planCode}` as MessageKey)}
+                </span>
+                <span
+                  className={cn(
+                    "inline-flex items-center rounded-base border px-2.5 py-1 font-mono text-xs uppercase tracking-wider",
+                    SUBSCRIPTION_STATUS_CLASS[subscription.status],
+                  )}
+                >
+                  {t(SUBSCRIPTION_STATUS_KEY[subscription.status])}
+                </span>
+              </div>
+
+              {subscription.status === "ACTIVE" && (
+                <QuotaBar
+                  used={subscription.requestsUsed}
+                  limit={subscription.monthlyRequestLimit}
+                  remaining={subscription.requestsRemaining}
+                />
+              )}
+
+              {subscription.currentPeriodEnd && (
+                <p className="font-mono text-xs text-text-faint">
+                  {t("dashboard.quota.resets")}: {formatDateTime(subscription.currentPeriodEnd, locale)}
+                </p>
+              )}
             </div>
-
-            {subscription.status === "ACTIVE" && (
-              <QuotaBar
-                used={subscription.requestsUsed}
-                limit={subscription.monthlyRequestLimit}
-                remaining={subscription.requestsRemaining}
-              />
-            )}
-
-            {subscription.currentPeriodEnd && (
-              <p className="font-mono text-xs text-text-faint">
-                {t("dashboard.quota.resets")}: {formatDateTime(subscription.currentPeriodEnd, locale)}
-              </p>
-            )}
 
             <Button type="button" variant="ghost" onClick={() => navigate("/settings")} className="w-fit">
               {t("settings.title")}

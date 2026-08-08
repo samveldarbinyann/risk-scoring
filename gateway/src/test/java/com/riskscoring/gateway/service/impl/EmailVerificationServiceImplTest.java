@@ -269,7 +269,7 @@ class EmailVerificationServiceImplTest {
                 new GatewayProperties.Billing(Duration.ofDays(30), List.of(
                         new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10))),
                 new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1))),
+                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1)), 1),
                 new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
                 new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
         );

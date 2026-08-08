@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion, type Variants } from "motion/react";
 import { Navigate } from "react-router";
+import { PortfolioHeroCard } from "@/components/dashboard/PortfolioHeroCard";
 import { WatchlistEntryList } from "@/components/watchlist/WatchlistEntryList";
 import { WatchlistForm } from "@/components/watchlist/WatchlistForm";
-import { WatchlistHeroCard } from "@/components/watchlist/WatchlistHeroCard";
 import { Card } from "@/components/ui/Card";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
@@ -141,7 +141,7 @@ export function WatchlistPage() {
 
       <motion.div variants={GRID_VARIANTS} initial="hidden" animate="show" className="flex flex-col gap-6">
         <motion.div variants={SECTION_VARIANTS}>
-          <WatchlistHeroCard entries={entries} isLoading={isLoading} error={loadError} />
+          <PortfolioHeroCard entries={entries} isLoading={isLoading} error={loadError} showCta={false} />
         </motion.div>
 
         <motion.div variants={SECTION_VARIANTS}>

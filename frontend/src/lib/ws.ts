@@ -1,4 +1,5 @@
 import { Client, type IMessage } from "@stomp/stompjs";
+import { getAccessToken } from "@/lib/api";
 import type { ScanProgressMessage } from "@/lib/types";
 
 const WS_URL: string = import.meta.env.VITE_WS_URL ?? "ws://localhost:8081/ws";
@@ -11,6 +12,11 @@ export function subscribeScanGroupProgress(
     brokerURL: WS_URL,
     reconnectDelay: 3000,
   });
+
+  client.beforeConnect = () => {
+    const token = getAccessToken();
+    client.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   client.onConnect = () => {
     client.subscribe(`/topic/scan-groups/${groupId}`, (frame: IMessage) => {

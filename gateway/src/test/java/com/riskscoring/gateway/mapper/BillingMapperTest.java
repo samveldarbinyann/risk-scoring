@@ -114,7 +114,7 @@ class BillingMapperTest {
                         new GatewayProperties.Plan(PlanCode.STARTER, 2_000, "USD", 1_000)
                 )),
                 new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1))),
+                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1)), 1),
                 new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
                 new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
         );

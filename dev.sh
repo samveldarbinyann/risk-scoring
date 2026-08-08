@@ -75,7 +75,16 @@ start_process() {
 
 start_java_service() {
   local module="$1"
-  start_process "$module" "$ROOT_DIR" "./mvnw -pl $module spring-boot:run"
+  local java_opts=""
+  if [ "$module" = "risk-ai" ]; then
+    java_opts="-XX:+UseParallelGC"
+  fi
+
+  if [ -n "$java_opts" ]; then
+    start_process "$module" "$ROOT_DIR" "JAVA_TOOL_OPTIONS=\"${JAVA_TOOL_OPTIONS:-} ${java_opts}\" ./mvnw -pl $module spring-boot:run"
+  else
+    start_process "$module" "$ROOT_DIR" "./mvnw -pl $module spring-boot:run"
+  fi
 }
 
 start_frontend() {

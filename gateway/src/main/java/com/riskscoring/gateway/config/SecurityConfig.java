@@ -70,7 +70,14 @@ public class SecurityConfig {
                                 "/api/api-keys/**",
                                 "/api/scans/recent")
                         .hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
-                        .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**", "/api/scans/**",
+                        .requestMatchers(HttpMethod.POST, "/api/scans").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/scans/{scanId}",
+                                "/api/scans/{scanId}/report",
+                                "/api/scans/groups/{groupId}",
+                                "/api/scans/groups/{groupId}/report")
+                        .permitAll()
+                        .requestMatchers("/api/auth/**", "/api/i18n", "/api/chains/**",
                                 "/api/contact", "/ws/**")
                         .permitAll()
                         .anyRequest().denyAll())

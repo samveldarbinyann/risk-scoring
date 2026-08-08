@@ -1,5 +1,9 @@
 server:
   port: 8081
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+  tomcat:
+    remoteip:
+      internal-proxies: ${TRUSTED_PROXIES:127.0.0.1/32}
 
 spring:
   application:
@@ -103,6 +107,7 @@ gateway:
     max-per-user: 5
     last-used-throttle: 5m
   public-scan:
+    max-chains: 1
     rate-limit:
       requests: 10
       window: 1h
