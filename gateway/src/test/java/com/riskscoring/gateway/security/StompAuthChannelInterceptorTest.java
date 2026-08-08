@@ -167,6 +167,17 @@ class StompAuthChannelInterceptorTest {
         verifyNoInteractions(tokenService, scanService);
     }
 
+    @Test
+    void clientSendFrameIsRejectedSoNobodyCanPublishIntoAnotherUsersConsole() {
+        StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SEND);
+        accessor.setDestination("/topic/scan-groups/" + UUID.randomUUID());
+        Message<byte[]> message = message(accessor);
+
+        assertThatThrownBy(() -> interceptor.preSend(message, channel))
+                .isInstanceOf(MessageDeliveryException.class);
+        verifyNoInteractions(tokenService, scanService);
+    }
+
     private Message<byte[]> subscribeMessage(String destination, Principal user) {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
         accessor.setDestination(destination);

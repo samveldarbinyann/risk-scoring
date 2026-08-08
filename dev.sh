@@ -9,6 +9,9 @@ mkdir -p "$LOG_DIR"
 
 JAVA_CANDIDATE="/home/sam/.jdks/ms-25.0.4"
 JAVA_SERVICES=(gateway chain-ingest enrichment risk-ai monitor)
+declare -A SERVICE_JVM_ARGS=(
+  [risk-ai]="-XX:+UseParallelGC"
+)
 
 ensure_java() {
   if [ -x "$JAVA_CANDIDATE/bin/java" ]; then
@@ -75,16 +78,13 @@ start_process() {
 
 start_java_service() {
   local module="$1"
-  local java_opts=""
-  if [ "$module" = "risk-ai" ]; then
-    java_opts="-XX:+UseParallelGC"
+  local jvm_args="${SERVICE_JVM_ARGS[$module]:-}"
+  local run_args=""
+  if [ -n "$jvm_args" ]; then
+    run_args=" -Dspring-boot.run.jvmArguments=\"$jvm_args\""
   fi
 
-  if [ -n "$java_opts" ]; then
-    start_process "$module" "$ROOT_DIR" "JAVA_TOOL_OPTIONS=\"${JAVA_TOOL_OPTIONS:-} ${java_opts}\" ./mvnw -pl $module spring-boot:run"
-  else
-    start_process "$module" "$ROOT_DIR" "./mvnw -pl $module spring-boot:run"
-  fi
+  start_process "$module" "$ROOT_DIR" "./mvnw -pl $module spring-boot:run$run_args"
 }
 
 start_frontend() {

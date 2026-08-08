@@ -14,6 +14,7 @@ import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.SubscriptionStatus;
 import com.riskscoring.gateway.repository.SubscriptionRepository;
 import com.riskscoring.gateway.service.ApiKeyService;
+import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +63,7 @@ class BillingServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        billingService = new BillingServiceImpl(subscriptionRepository, billingMapper, gatewayProperties(), apiKeyService);
+        billingService = new BillingServiceImpl(subscriptionRepository, billingMapper, allPlans(), apiKeyService);
     }
 
     @Test
@@ -438,26 +439,6 @@ class BillingServiceImplTest {
                 .build();
     }
 
-    private static GatewayProperties gatewayProperties() {
-        return new GatewayProperties(
-                new GatewayProperties.Cors(List.of("http://localhost:5173")),
-                new GatewayProperties.Auth("12345678901234567890123456789012", Duration.ofMinutes(15),
-                        Duration.ofDays(30), 5, Duration.ofMinutes(15), false),
-                new GatewayProperties.Mail("test@example.com", "contact@example.com"),
-                new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
-                        Duration.ofSeconds(60), 5),
-                new GatewayProperties.Billing(Duration.ofDays(30), List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10),
-                        new GatewayProperties.Plan(PlanCode.STARTER, 2_000, "USD", 1_000),
-                        new GatewayProperties.Plan(PlanCode.GROWTH, 6_000, "USD", 5_000),
-                        new GatewayProperties.Plan(PlanCode.SCALE, 10_000, "USD", 15_000)
-                )),
-                new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1)), 1),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
-                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
-        );
-    }
 
     private static SubscriptionView mockSubscriptionView() {
         return new SubscriptionView(
@@ -478,5 +459,12 @@ class BillingServiceImplTest {
 
     private void stubSubscriptionView() {
         when(billingMapper.toView(any())).thenReturn(mockSubscriptionView());
+    }
+
+    private static GatewayProperties allPlans() {
+        return GatewayPropertiesFixture.builder()
+                .plans(GatewayPropertiesFixture.FREE_PLAN, GatewayPropertiesFixture.STARTER_PLAN,
+                        GatewayPropertiesFixture.GROWTH_PLAN, GatewayPropertiesFixture.SCALE_PLAN)
+                .build();
     }
 }

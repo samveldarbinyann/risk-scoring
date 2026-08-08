@@ -8,7 +8,6 @@ import com.riskscoring.chainingest.client.dto.moralis.MoralisActiveChain;
 import com.riskscoring.chainingest.client.dto.moralis.MoralisHistoryEnvelope;
 import com.riskscoring.chainingest.client.dto.moralis.MoralisTokenBalance;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
-import com.riskscoring.chainingest.exception.ChainDataException;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;
 import com.riskscoring.chainingest.mapper.MoralisValues;
 import com.riskscoring.chainingest.mapper.TransferMapper;
@@ -86,16 +85,11 @@ public class MoralisAddressDataClient implements ChainDataClient {
     }
 
     private List<TokenBalance> tokenBalances(String address, Chain chain) {
-        try {
-            return moralisApi.tokenBalances(address, chain).stream()
-                    .sorted(Comparator.comparing(
-                            (MoralisTokenBalance token) -> Optional.ofNullable(token.usdValue()).orElse(0.0)).reversed())
-                    .limit(properties.maxTokenBalances())
-                    .map(token -> new TokenBalance(token.symbol(), token.balanceFormatted(), token.usdValue()))
-                    .toList();
-        } catch (ChainDataException e) {
-            log.error("Error fetching token balances for address {}: {}", address, e.getMessage());
-            return List.of();
-        }
+        return moralisApi.tokenBalances(address, chain).stream()
+                .sorted(Comparator.comparing(
+                        (MoralisTokenBalance token) -> Optional.ofNullable(token.usdValue()).orElse(0.0)).reversed())
+                .limit(properties.maxTokenBalances())
+                .map(token -> new TokenBalance(token.symbol(), token.balanceFormatted(), token.usdValue()))
+                .toList();
     }
 }

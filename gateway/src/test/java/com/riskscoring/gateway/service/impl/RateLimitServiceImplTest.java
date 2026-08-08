@@ -2,11 +2,10 @@ package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.exception.RateLimitExceededException;
-import com.riskscoring.gateway.model.PlanCode;
+import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -67,29 +66,18 @@ class RateLimitServiceImplTest {
 
     private static GatewayProperties gatewayProperties(GatewayProperties.RateLimit publicScanLimit) {
         GatewayProperties.RateLimit relaxed = new GatewayProperties.RateLimit(1000, Duration.ofMinutes(1));
-        return build(publicScanLimit, relaxed, relaxed);
+        return GatewayPropertiesFixture.builder()
+                .publicScanLimit(publicScanLimit)
+                .contactLimit(relaxed)
+                .passwordResetLimit(relaxed)
+                .build();
     }
 
     private static GatewayProperties gatewayPropertiesWithAllLimits(GatewayProperties.RateLimit limit) {
-        return build(limit, limit, limit);
-    }
-
-    private static GatewayProperties build(GatewayProperties.RateLimit publicScanLimit,
-                                           GatewayProperties.RateLimit contactLimit,
-                                           GatewayProperties.RateLimit passwordResetLimit) {
-        return new GatewayProperties(
-                new GatewayProperties.Cors(List.of("http://localhost:5173")),
-                new GatewayProperties.Auth("12345678901234567890123456789012", Duration.ofMinutes(15),
-                        Duration.ofDays(30), 5, Duration.ofMinutes(15), false),
-                new GatewayProperties.Mail("test@example.com", "contact@example.com"),
-                new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
-                        Duration.ofSeconds(60), 5),
-                new GatewayProperties.Billing(Duration.ofDays(30), List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10))),
-                new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(publicScanLimit, 1),
-                new GatewayProperties.Contact(contactLimit),
-                new GatewayProperties.PasswordReset(passwordResetLimit)
-        );
+        return GatewayPropertiesFixture.builder()
+                .publicScanLimit(limit)
+                .contactLimit(limit)
+                .passwordResetLimit(limit)
+                .build();
     }
 }

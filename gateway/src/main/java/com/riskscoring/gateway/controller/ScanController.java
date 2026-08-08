@@ -10,6 +10,7 @@ import com.riskscoring.gateway.dto.ScanHistoryPageView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.security.AuthenticatedUser;
+import com.riskscoring.gateway.security.ScanRequester;
 import com.riskscoring.gateway.service.ScanService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -58,29 +59,29 @@ public class ScanController {
 
     @GetMapping("/groups/{groupId}")
     public ScanGroupView getScanGroup(@PathVariable UUID groupId,
-                                      @AuthenticationPrincipal AuthenticatedUser user) {
-        return scanService.getScanGroup(groupId, requesterId(user));
+                                      @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScanGroup(groupId, requesterId(requester));
     }
 
     @GetMapping("/groups/{groupId}/report")
     public ScanGroupReportView getScanGroupReport(@PathVariable UUID groupId,
-                                                  @AuthenticationPrincipal AuthenticatedUser user) {
-        return scanService.getScanGroupReport(groupId, requesterId(user));
+                                                  @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScanGroupReport(groupId, requesterId(requester));
     }
 
     @GetMapping("/{scanId}")
     public ScanView getScan(@PathVariable UUID scanId,
-                            @AuthenticationPrincipal AuthenticatedUser user) {
-        return scanService.getScan(scanId, requesterId(user));
+                            @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScan(scanId, requesterId(requester));
     }
 
     @GetMapping("/{scanId}/report")
     public ScanReportView getScanReport(@PathVariable UUID scanId,
-                                        @AuthenticationPrincipal AuthenticatedUser user) {
-        return scanService.getScanReport(scanId, requesterId(user));
+                                        @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScanReport(scanId, requesterId(requester));
     }
 
-    private static UUID requesterId(AuthenticatedUser user) {
-        return user == null ? null : user.id();
+    private static UUID requesterId(ScanRequester requester) {
+        return requester == null ? null : requester.userId();
     }
 }

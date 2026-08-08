@@ -23,16 +23,10 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String API_KEY_HEADER = "X-Api-Key";
     public static final String API_ROLE = "API";
-    public static final String API_PATH_PREFIX = "/api/v1/";
 
     private static final String ROLE_PREFIX = "ROLE_";
 
     private final ApiKeyService apiKeyService;
-
-    @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(API_PATH_PREFIX);
-    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,

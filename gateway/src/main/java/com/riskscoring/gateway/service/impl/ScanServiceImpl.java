@@ -18,6 +18,7 @@ import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.gateway.entity.ScanGroup;
 import com.riskscoring.gateway.exception.ChainNotSupportedYetException;
+import com.riskscoring.gateway.exception.PublicScanChainLimitException;
 import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanGroupReportNotReadyException;
 import com.riskscoring.gateway.exception.ScanNotFoundException;
@@ -72,19 +73,13 @@ public class ScanServiceImpl implements ScanService {
     @Transactional
     public ScanGroupAcceptedResponse requestScan(String clientIp, UUID userId, ScanCreateRequest request) {
         rateLimitService.checkPublicScan(clientIp);
-
-        List<TargetMatch> matches = requestedChains(request);
-        if (userId == null) {
-            matches = matches.subList(0, Math.min(matches.size(), gatewayProperties.publicScan().maxChains()));
-        }
-
-        return createScanGroup(matches, ScanSource.USER, userId);
+        return createScanGroup(requestedChains(request, userId), ScanSource.USER, userId);
     }
 
     @Override
     @Transactional
     public ScanGroupAcceptedResponse requestApiScan(UUID userId, ScanCreateRequest request) {
-        List<TargetMatch> matches = requestedChains(request);
+        List<TargetMatch> matches = requestedChains(request, userId);
         billingService.chargeQuota(userId, matches.size());
         return createScanGroup(matches, ScanSource.API, userId);
     }
@@ -122,12 +117,12 @@ public class ScanServiceImpl implements ScanService {
         return scanMapper.toGroupAcceptedResponse(group, scans);
     }
 
-    private List<TargetMatch> requestedChains(ScanCreateRequest request) {
+    private List<TargetMatch> requestedChains(ScanCreateRequest request, UUID userId) {
         List<TargetMatch> candidates = ScanTargets.classify(request.target());
         List<TargetMatch> explicit = explicitChains(request, candidates);
 
         if (!explicit.isEmpty()) {
-            return singleTargetType(explicit);
+            return singleTargetType(requireWithinPublicLimit(explicit, userId));
         }
 
         List<TargetMatch> fanOut = candidates.stream()
@@ -138,7 +133,23 @@ public class ScanServiceImpl implements ScanService {
             throw new ChainNotSupportedYetException(candidates.getFirst().chain());
         }
 
-        return singleTargetType(fanOut);
+        return singleTargetType(trimToPublicLimit(fanOut, userId));
+    }
+
+    private List<TargetMatch> requireWithinPublicLimit(List<TargetMatch> matches, UUID userId) {
+        int allowed = gatewayProperties.publicScan().maxChains();
+
+        if (userId == null && matches.size() > allowed) {
+            throw new PublicScanChainLimitException(matches.size(), allowed);
+        }
+
+        return matches;
+    }
+
+    private List<TargetMatch> trimToPublicLimit(List<TargetMatch> matches, UUID userId) {
+        int allowed = gatewayProperties.publicScan().maxChains();
+
+        return userId == null ? matches.subList(0, Math.min(matches.size(), allowed)) : matches;
     }
 
     private List<TargetMatch> explicitChains(ScanCreateRequest request, List<TargetMatch> candidates) {
@@ -247,18 +258,15 @@ public class ScanServiceImpl implements ScanService {
     @Transactional(readOnly = true)
     public ScanGroupView getScanGroup(UUID groupId, UUID requesterId) {
         requireGroupAccess(groupId, requesterId);
-
-        List<Scan> scans = scanRepository.findByGroupId(groupId);
-        if (scans.isEmpty()) {
-            throw new ScanGroupNotFoundException(groupId);
-        }
-        return scanMapper.toGroupView(groupId, scans);
+        return groupView(groupId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ScanGroupReportView getScanGroupReport(UUID groupId, UUID requesterId) {
-        ScanGroupView group = getScanGroup(groupId, requesterId);
+        requireGroupAccess(groupId, requesterId);
+
+        ScanGroupView group = groupView(groupId);
         if (!group.completed()) {
             throw new ScanGroupReportNotReadyException(groupId);
         }
@@ -297,36 +305,42 @@ public class ScanServiceImpl implements ScanService {
     @Override
     @Transactional(readOnly = true)
     public boolean canAccessGroup(UUID groupId, UUID requesterId) {
-        return scanGroupRepository.findById(groupId)
-                .filter(group -> ScanOwnership.isAccessible(group.getUserId(), requesterId))
-                .isPresent();
+        return accessibleGroup(groupId, requesterId).isPresent();
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean canAccessScan(UUID scanId, UUID requesterId) {
         return scanRepository.findById(scanId)
-                .map(scan -> canAccessGroup(scan.getGroupId(), requesterId))
-                .orElse(false);
+                .flatMap(scan -> accessibleGroup(scan.getGroupId(), requesterId))
+                .isPresent();
+    }
+
+    private ScanGroupView groupView(UUID groupId) {
+        List<Scan> scans = scanRepository.findByGroupId(groupId);
+        if (scans.isEmpty()) {
+            throw new ScanGroupNotFoundException(groupId);
+        }
+
+        return scanMapper.toGroupView(groupId, scans);
+    }
+
+    private Optional<ScanGroup> accessibleGroup(UUID groupId, UUID requesterId) {
+        return scanGroupRepository.findById(groupId)
+                .filter(group -> ScanOwnership.isAccessible(group.getUserId(), requesterId));
     }
 
     private void requireGroupAccess(UUID groupId, UUID requesterId) {
-        ScanGroup group = scanGroupRepository.findById(groupId)
+        accessibleGroup(groupId, requesterId)
                 .orElseThrow(() -> new ScanGroupNotFoundException(groupId));
-
-        if (!ScanOwnership.isAccessible(group.getUserId(), requesterId)) {
-            throw new ScanGroupNotFoundException(groupId);
-        }
     }
 
     private Scan requireScanAccess(UUID scanId, UUID requesterId) {
         Scan scan = scanRepository.findById(scanId)
                 .orElseThrow(() -> new ScanNotFoundException(scanId));
 
-        if (!canAccessGroup(scan.getGroupId(), requesterId)) {
-            throw new ScanNotFoundException(scanId);
-        }
-
-        return scan;
+        return accessibleGroup(scan.getGroupId(), requesterId)
+                .map(group -> scan)
+                .orElseThrow(() -> new ScanNotFoundException(scanId));
     }
 }

@@ -130,7 +130,8 @@ export function DashboardPage() {
       <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("dashboard.title")}</h1>
 
       <motion.div variants={GRID_VARIANTS} initial="hidden" animate="show" className="flex flex-col gap-6">
-        {!isLoading && watchlist.data.length === 0 && recentScans.data.length === 0 && (
+        {!isLoading && !watchlist.error && !recentScans.error &&
+          watchlist.data.length === 0 && recentScans.data.length === 0 && (
           <motion.div variants={SECTION_VARIANTS}>
             <OnboardingChecklistCard />
           </motion.div>

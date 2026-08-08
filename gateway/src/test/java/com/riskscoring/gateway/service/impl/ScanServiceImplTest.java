@@ -10,7 +10,6 @@ import com.riskscoring.common.model.Heuristics;
 import com.riskscoring.common.model.Language;
 import com.riskscoring.common.model.RiskLevel;
 import com.riskscoring.common.model.ScanTarget;
-import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.RecentScanGroupView;
 import com.riskscoring.gateway.dto.ScanCreateRequest;
 import com.riskscoring.gateway.dto.ScanGroupAcceptedResponse;
@@ -21,6 +20,7 @@ import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.gateway.entity.ScanGroup;
+import com.riskscoring.gateway.exception.PublicScanChainLimitException;
 import com.riskscoring.gateway.exception.QuotaExceededException;
 import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanGroupReportNotReadyException;
@@ -30,7 +30,6 @@ import com.riskscoring.gateway.exception.SingleChainRequiredException;
 import com.riskscoring.gateway.exception.TargetChainMismatchException;
 import com.riskscoring.gateway.kafka.ScanEventPublisher;
 import com.riskscoring.gateway.mapper.ScanMapper;
-import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.repository.ScanGroupRepository;
 import com.riskscoring.gateway.repository.ScanReportRepository;
 import com.riskscoring.gateway.repository.ScanReportRow;
@@ -39,6 +38,7 @@ import com.riskscoring.gateway.repository.ScanRiskSummary;
 import com.riskscoring.gateway.service.BillingService;
 import com.riskscoring.gateway.service.ChainService;
 import com.riskscoring.gateway.service.RateLimitService;
+import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,12 +46,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -111,25 +109,9 @@ class ScanServiceImplTest {
     void setUp() {
         scanService = new ScanServiceImpl(scanGroupRepository, scanRepository, scanReportRepository,
                 new ScanMapper(), scanEventPublisher, billingService, rateLimitService, chainService,
-                gatewayProperties(ANONYMOUS_MAX_CHAINS));
+                GatewayPropertiesFixture.builder().maxChains(ANONYMOUS_MAX_CHAINS).build());
     }
 
-    private static GatewayProperties gatewayProperties(int maxChains) {
-        return new GatewayProperties(
-                new GatewayProperties.Cors(List.of("http://localhost:5173")),
-                new GatewayProperties.Auth("12345678901234567890123456789012", Duration.ofMinutes(15),
-                        Duration.ofDays(30), 5, Duration.ofMinutes(15), false),
-                new GatewayProperties.Mail("test@example.com", "contact@example.com"),
-                new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
-                        Duration.ofSeconds(60), 5),
-                new GatewayProperties.Billing(Duration.ofDays(30), List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10))),
-                new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1)), maxChains),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
-                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
-        );
-    }
 
     @Test
     void getScanHistoryFiltersBySourceAndPaginates() {
@@ -472,6 +454,19 @@ class ScanServiceImplTest {
 
         assertThat(response.chains()).hasSize(ANONYMOUS_MAX_CHAINS);
         verify(scanEventPublisher, times(ANONYMOUS_MAX_CHAINS)).publishScanRequested(any());
+    }
+
+    @Test
+    void requestScanRejectsAnonymousRequestForMoreExplicitChainsThanAllowed() {
+        String address = "0x" + "a".repeat(40);
+        when(chainService.requireScannable("ETHEREUM")).thenReturn(Chain.ETHEREUM);
+        when(chainService.requireScannable("OPTIMISM")).thenReturn(Chain.OPTIMISM);
+
+        assertThatThrownBy(() -> scanService.requestScan(CLIENT_IP, null,
+                new ScanCreateRequest(address, List.of("ETHEREUM", "OPTIMISM"))))
+                .isInstanceOf(PublicScanChainLimitException.class);
+
+        verifyNoInteractions(scanEventPublisher);
     }
 
     @Test

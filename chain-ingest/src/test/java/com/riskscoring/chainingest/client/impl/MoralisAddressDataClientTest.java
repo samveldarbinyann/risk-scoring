@@ -7,6 +7,7 @@ import com.riskscoring.chainingest.client.dto.moralis.MoralisTokenBalance;
 import com.riskscoring.chainingest.client.dto.moralis.MoralisTxRef;
 import com.riskscoring.chainingest.client.dto.Transfer;
 import com.riskscoring.chainingest.config.ChainIngestProperties;
+import com.riskscoring.chainingest.exception.ChainDataException;
 import com.riskscoring.chainingest.mapper.CounterpartyAggregator;
 import com.riskscoring.chainingest.mapper.MoralisValues;
 import com.riskscoring.chainingest.mapper.TransferMapper;
@@ -30,6 +31,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -150,6 +152,14 @@ class MoralisAddressDataClientTest {
         assertThat(facts.snapshot().tokenBalances()).containsExactly(
                 new TokenBalance("C", "3", 100.0),
                 new TokenBalance("B", "2", 50.0));
+    }
+
+    @Test
+    void tokenBalancesFailurePropagatesInsteadOfLookingLikeAnEmptyWallet() {
+        stubEmptyHistory();
+        when(moralisApi.tokenBalances("0xabc", CHAIN)).thenThrow(new ChainDataException("Moralis is rate limited"));
+
+        assertThatThrownBy(() -> client.fetch("0xABC", CHAIN)).isInstanceOf(ChainDataException.class);
     }
 
     private void stubEmptyHistory() {

@@ -1,6 +1,5 @@
 package com.riskscoring.gateway.service.impl;
 
-import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.ApiKeyCreatedView;
 import com.riskscoring.gateway.dto.CreateApiKeyRequest;
 import com.riskscoring.gateway.entity.ApiKey;
@@ -9,7 +8,6 @@ import com.riskscoring.gateway.exception.ApiKeyNotFoundException;
 import com.riskscoring.gateway.exception.NoActiveSubscriptionException;
 import com.riskscoring.gateway.mapper.ApiKeyMapper;
 import com.riskscoring.gateway.model.ApiKeyStatus;
-import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.repository.ApiKeyRepository;
 import com.riskscoring.gateway.security.ApiKeyPrincipal;
 import com.riskscoring.gateway.security.SecretGenerator;
@@ -23,12 +21,12 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.riskscoring.gateway.support.GatewayPropertiesFixture.gatewayProperties;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -182,20 +180,4 @@ class ApiKeyServiceImplTest {
                 .build();
     }
 
-    private static GatewayProperties gatewayProperties() {
-        return new GatewayProperties(
-                new GatewayProperties.Cors(List.of("http://localhost:5173")),
-                new GatewayProperties.Auth("12345678901234567890123456789012", Duration.ofMinutes(15),
-                        Duration.ofDays(30), 5, Duration.ofMinutes(15), false),
-                new GatewayProperties.Mail("test@example.com", "contact@example.com"),
-                new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
-                        Duration.ofSeconds(60), 5),
-                new GatewayProperties.Billing(Duration.ofDays(30), List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10))),
-                new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1)), 1),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
-                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
-        );
-    }
 }

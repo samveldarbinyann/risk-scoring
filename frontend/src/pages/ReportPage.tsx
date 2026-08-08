@@ -11,16 +11,18 @@ import { GraphPlaceholder } from "@/components/report/GraphPlaceholder";
 import { Spinner } from "@/components/ui/Spinner";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { TargetChip } from "@/components/ui/TargetChip";
+import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
 
 export function ReportPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const { t } = useI18n();
+  const { status } = useAuth();
   const [group, setGroup] = useState<ScanGroupReportView | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId || status === "loading") return;
     setError(null);
     getScanGroupReport(groupId)
       .then((data) => {
@@ -28,7 +30,7 @@ export function ReportPage() {
         setError(null);
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : t("report.loadError")));
-  }, [groupId, t]);
+  }, [groupId, status, t]);
 
   if (!group && error) {
     return (

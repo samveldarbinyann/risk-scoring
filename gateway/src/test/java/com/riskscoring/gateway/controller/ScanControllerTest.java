@@ -18,6 +18,7 @@ import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanReportNotReadyException;
 import com.riskscoring.gateway.model.UserRole;
+import com.riskscoring.gateway.security.ApiKeyPrincipal;
 import com.riskscoring.gateway.security.AuthenticatedUser;
 import com.riskscoring.gateway.service.ScanService;
 import org.junit.jupiter.api.Test;
@@ -183,6 +184,37 @@ class ScanControllerTest extends AbstractControllerTest {
         mockMvc.perform(get("/api/scans/{scanId}/report", scanId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("REPORT_NOT_READY"));
+    }
+
+    @Test
+    void getScanReportForwardsApiKeyOwnerAsRequester() throws Exception {
+        UUID scanId = UUID.randomUUID();
+        ApiKeyPrincipal principal = new ApiKeyPrincipal(UUID.randomUUID(), UUID.randomUUID());
+        given(scanService.getScanReport(scanId, principal.userId())).willReturn(new ScanReportView(
+                scanId, ScanTarget.ADDRESS, "0xabc", Chain.ETHEREUM, RiskLevel.LOW, 10,
+                "Nothing suspicious", List.of(), List.of(),
+                Instant.now(), null, "claude", Instant.now()));
+
+        mockMvc.perform(get("/api/scans/{scanId}/report", scanId).with(authenticatedAs(principal)))
+                .andExpect(status().isOk());
+
+        verify(scanService).getScanReport(scanId, principal.userId());
+    }
+
+    @Test
+    void requestScanIgnoresApiKeyPrincipalSoQuotaCannotBeBypassed() throws Exception {
+        ApiKeyPrincipal principal = new ApiKeyPrincipal(UUID.randomUUID(), UUID.randomUUID());
+        given(scanService.requestScan(anyString(), isNull(), any())).willReturn(
+                new ScanGroupAcceptedResponse(UUID.randomUUID(), ScanTarget.ADDRESS, "0xabc", List.of(Chain.ETHEREUM)));
+
+        mockMvc.perform(post("/api/scans").with(authenticatedAs(principal))
+                        .contentType("application/json")
+                        .content("""
+                                {"target": "0xabc"}
+                                """))
+                .andExpect(status().isAccepted());
+
+        verify(scanService).requestScan(anyString(), isNull(), any());
     }
 
     @Test

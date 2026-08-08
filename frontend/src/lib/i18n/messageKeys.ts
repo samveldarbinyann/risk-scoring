@@ -34,6 +34,7 @@ export type MessageKey =
   | "console.eventStream"
   | "console.session"
   | "console.waiting"
+  | "console.loadError"
   | "console.stage.PENDING"
   | "console.stage.FETCHING"
   | "console.stage.ENRICHING"

@@ -8,7 +8,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
-import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
@@ -41,10 +40,12 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             return message;
         }
 
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            authenticate(accessor);
-        } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-            authorizeSubscription(message, accessor);
+        switch (accessor.getCommand()) {
+            case CONNECT -> authenticate(accessor);
+            case SUBSCRIBE -> authorizeSubscription(message, accessor);
+            case SEND -> throw new MessageDeliveryException(message, "Client frames are not accepted");
+            case null, default -> {
+            }
         }
 
         return message;

@@ -106,18 +106,4 @@ class ApiKeyAuthenticationFilterTest {
         verify(request, never()).getHeader(ApiKeyAuthenticationFilter.API_KEY_HEADER);
         verify(filterChain).doFilter(request, response);
     }
-
-    @Test
-    void filtersTheApiKeySurface() {
-        when(request.getRequestURI()).thenReturn("/api/v1/scans");
-
-        assertThat(filter.shouldNotFilter(request)).isFalse();
-    }
-
-    @Test
-    void skipsWebEndpointsSoAnApiKeyCannotAuthenticateThere() {
-        when(request.getRequestURI()).thenReturn("/api/scans");
-
-        assertThat(filter.shouldNotFilter(request)).isTrue();
-    }
 }

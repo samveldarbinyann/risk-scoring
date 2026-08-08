@@ -110,7 +110,7 @@ class DeepSeekLlmClientTest {
     void completeThrowsLlmExceptionWhenChoicesIsEmpty() {
         stubPostChain();
         when(responseSpec.body(ChatCompletionResponse.class))
-                .thenReturn(new ChatCompletionResponse("id", "deepseek-chat", List.of(), null));
+                .thenReturn(new ChatCompletionResponse(List.of()));
 
         assertThatThrownBy(() -> client.complete("system prompt", "user prompt"))
                 .isInstanceOf(LlmException.class);
@@ -122,8 +122,8 @@ class DeepSeekLlmClientTest {
     }
 
     private static ChatCompletionResponse response(String content) {
-        ChatCompletionResponse.Choice choice = new ChatCompletionResponse.Choice(
-                0, new ChatMessage("assistant", content), "stop");
-        return new ChatCompletionResponse("id", "deepseek-chat", List.of(choice), null);
+        ChatCompletionResponse.Choice choice =
+                new ChatCompletionResponse.Choice(new ChatMessage("assistant", content));
+        return new ChatCompletionResponse(List.of(choice));
     }
 }
