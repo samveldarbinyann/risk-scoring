@@ -6,11 +6,11 @@ import com.riskscoring.gateway.dto.SubscriptionView;
 import com.riskscoring.gateway.entity.Subscription;
 import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.SubscriptionStatus;
+import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +20,10 @@ class BillingMapperTest {
     private static final Duration PERIOD = Duration.ofDays(30);
     private static final int MONTHLY_LIMIT = 10;
 
-    private final BillingMapper mapper = new BillingMapper(gatewayProperties());
+    private final BillingMapper mapper = new BillingMapper(GatewayPropertiesFixture.builder()
+            .billingPeriod(PERIOD)
+            .plans(GatewayPropertiesFixture.FREE_PLAN, GatewayPropertiesFixture.STARTER_PLAN)
+            .build());
 
     @Test
     void toPlanViewMapsAllFields() {
@@ -101,22 +104,4 @@ class BillingMapperTest {
                 .build();
     }
 
-    private static GatewayProperties gatewayProperties() {
-        return new GatewayProperties(
-                new GatewayProperties.Cors(List.of("http://localhost:5173")),
-                new GatewayProperties.Auth("12345678901234567890123456789012", Duration.ofMinutes(15),
-                        Duration.ofDays(30), 5, Duration.ofMinutes(15), false),
-                new GatewayProperties.Mail("test@example.com", "contact@example.com"),
-                new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
-                        Duration.ofSeconds(60), 5),
-                new GatewayProperties.Billing(PERIOD, List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10),
-                        new GatewayProperties.Plan(PlanCode.STARTER, 2_000, "USD", 1_000)
-                )),
-                new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1))),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
-                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
-        );
-    }
 }

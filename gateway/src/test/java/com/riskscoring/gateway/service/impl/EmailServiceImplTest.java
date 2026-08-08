@@ -1,14 +1,13 @@
 package com.riskscoring.gateway.service.impl;
 
 import com.riskscoring.common.model.Language;
-import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.entity.AppUser;
 import com.riskscoring.gateway.entity.ContactSubmission;
 import com.riskscoring.gateway.exception.EmailDeliveryException;
 import com.riskscoring.gateway.model.ContactStatus;
-import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.UserRole;
 import com.riskscoring.gateway.model.UserStatus;
+import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +21,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -51,7 +48,8 @@ class EmailServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new EmailServiceImpl(mailSender, templateEngine, messageSource, gatewayProperties());
+        service = new EmailServiceImpl(mailSender, templateEngine, messageSource,
+                GatewayPropertiesFixture.builder().mailFrom("noreply@example.com").build());
         lenient().when(messageSource.getMessage(anyString(), any(), any())).thenReturn("localized text");
         lenient().when(templateEngine.process(anyString(), any(Context.class))).thenReturn("<html>body</html>");
         lenient().when(mailSender.createMimeMessage()).thenAnswer(invocation -> newMimeMessage());
@@ -136,20 +134,4 @@ class EmailServiceImplTest {
                 .build();
     }
 
-    private static GatewayProperties gatewayProperties() {
-        return new GatewayProperties(
-                new GatewayProperties.Cors(List.of("http://localhost:5173")),
-                new GatewayProperties.Auth("12345678901234567890123456789012", Duration.ofMinutes(15),
-                        Duration.ofDays(30), 5, Duration.ofMinutes(15), false),
-                new GatewayProperties.Mail("noreply@example.com", "contact@example.com"),
-                new GatewayProperties.Verification("1234567890123456", Duration.ofMinutes(10),
-                        Duration.ofSeconds(60), 5),
-                new GatewayProperties.Billing(Duration.ofDays(30), List.of(
-                        new GatewayProperties.Plan(PlanCode.FREE, 0, "USD", 10))),
-                new GatewayProperties.ApiKeys("1234567890123456", "rsk_", 5, Duration.ofMinutes(5)),
-                new GatewayProperties.PublicScan(new GatewayProperties.RateLimit(10, Duration.ofHours(1))),
-                new GatewayProperties.Contact(new GatewayProperties.RateLimit(5, Duration.ofHours(1))),
-                new GatewayProperties.PasswordReset(new GatewayProperties.RateLimit(5, Duration.ofHours(1)))
-        );
-    }
 }

@@ -13,7 +13,6 @@ import com.riskscoring.gateway.dto.UserView;
 import com.riskscoring.gateway.dto.VerifyEmailRequest;
 import com.riskscoring.gateway.security.AuthenticatedUser;
 import com.riskscoring.gateway.service.AuthService;
-import com.riskscoring.gateway.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +52,7 @@ public class AuthController {
     @PostMapping("/verify-email")
     public ResponseEntity<AuthResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request,
                                                     HttpServletRequest httpRequest) {
-        return sessionResponse(authService.verifyEmail(request, userAgent(httpRequest), ClientIpResolver.resolve(httpRequest)));
+        return sessionResponse(authService.verifyEmail(request, userAgent(httpRequest), httpRequest.getRemoteAddr()));
     }
 
     @PostMapping("/resend-code")
@@ -65,25 +64,25 @@ public class AuthController {
     @PostMapping("/forgot-password")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
-        authService.forgotPassword(request.email(), ClientIpResolver.resolve(httpRequest));
+        authService.forgotPassword(request.email(), httpRequest.getRemoteAddr());
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request,
                                                        HttpServletRequest httpRequest) {
-        return sessionResponse(authService.resetPassword(request, userAgent(httpRequest), ClientIpResolver.resolve(httpRequest)));
+        return sessionResponse(authService.resetPassword(request, userAgent(httpRequest), httpRequest.getRemoteAddr()));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                               HttpServletRequest httpRequest) {
-        return sessionResponse(authService.login(request, userAgent(httpRequest), ClientIpResolver.resolve(httpRequest)));
+        return sessionResponse(authService.login(request, userAgent(httpRequest), httpRequest.getRemoteAddr()));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
                                                 HttpServletRequest httpRequest) {
-        return sessionResponse(authService.refresh(refreshToken, userAgent(httpRequest), ClientIpResolver.resolve(httpRequest)));
+        return sessionResponse(authService.refresh(refreshToken, userAgent(httpRequest), httpRequest.getRemoteAddr()));
     }
 
     @PostMapping("/logout")

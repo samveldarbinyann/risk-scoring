@@ -3,9 +3,10 @@ import { ApiKeyRow } from "@/components/settings/ApiKeyRow";
 import { ApiKeySecretReveal } from "@/components/settings/ApiKeySecretReveal";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { CardState } from "@/components/ui/CardState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Input } from "@/components/ui/Input";
-import { Spinner } from "@/components/ui/Spinner";
 import { useI18n } from "@/lib/i18n/context";
 import type { ApiKeyCreatedView, ApiKeyView } from "@/lib/types";
 
@@ -78,26 +79,22 @@ export function ApiKeysPanel({
 
         <ErrorMessage message={actionError} size="sm" />
 
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
-        ) : error ? (
-          <ErrorMessage message={error} size="sm" />
-        ) : keys.length === 0 ? (
-          <p className="font-mono text-sm text-text-faint">{t("settings.apiKeys.empty")}</p>
-        ) : (
-          <div>
-            {keys.map((key) => (
-              <ApiKeyRow
-                key={key.id}
-                apiKey={key}
-                isRevoking={revokingId === key.id}
-                onRevoke={onRevoke}
-              />
-            ))}
-          </div>
-        )}
+        <CardState isLoading={isLoading} error={error}>
+          {keys.length === 0 ? (
+            <EmptyState message={t("settings.apiKeys.empty")} />
+          ) : (
+            <div>
+              {keys.map((key) => (
+                <ApiKeyRow
+                  key={key.id}
+                  apiKey={key}
+                  isRevoking={revokingId === key.id}
+                  onRevoke={onRevoke}
+                />
+              ))}
+            </div>
+          )}
+        </CardState>
       </div>
     </Card>
   );

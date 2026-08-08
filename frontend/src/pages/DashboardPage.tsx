@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { motion, type Variants } from "motion/react";
+import { motion } from "motion/react";
 import { Navigate } from "react-router";
-import { ActivityLogCard } from "@/components/dashboard/ActivityLogCard";
+import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
 import { PortfolioHeroCard } from "@/components/dashboard/PortfolioHeroCard";
 import { QuotaSummaryCard } from "@/components/dashboard/QuotaSummaryCard";
 import { ScanHistoryCard } from "@/components/dashboard/ScanHistoryCard";
 import { WatchlistSummaryCard } from "@/components/dashboard/WatchlistSummaryCard";
 import { Spinner } from "@/components/ui/Spinner";
-import { ApiError, getRecentScans, getScanHistory, getSubscription, listAlerts, listWatchlist } from "@/lib/api";
+import { ApiError, getRecentScans, getScanHistory, getSubscription, listWatchlist } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
+import { GRID_VARIANTS, SECTION_VARIANTS } from "@/lib/pageMotion";
 import type {
-  AlertView,
   RecentScanGroupView,
   ScanHistoryPageView,
   ScanSource,
@@ -42,22 +42,11 @@ function toResourceState<T>(result: PromiseSettledResult<T>, emptyValue: T, fall
   return { data: emptyValue, error: result.reason instanceof Error ? result.reason.message : fallbackMessage };
 }
 
-const GRID_VARIANTS: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const SECTION_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 4 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-};
-
 export function DashboardPage() {
   const { t } = useI18n();
   const { status } = useAuth();
 
   const [watchlist, setWatchlist] = useState<ResourceState<WatchlistEntryView[]>>({ data: [], error: null });
-  const [alerts, setAlerts] = useState<ResourceState<AlertView[]>>({ data: [], error: null });
   const [subscription, setSubscription] = useState<ResourceState<SubscriptionView | null>>({
     data: null,
     error: null,
@@ -89,9 +78,8 @@ export function DashboardPage() {
   const load = useCallback(async () => {
     setIsLoading(true);
 
-    const [watchlistResult, alertsResult, subscriptionResult, recentScansResult] = await Promise.allSettled([
+    const [watchlistResult, subscriptionResult, recentScansResult] = await Promise.allSettled([
       listWatchlist(),
-      listAlerts(),
       getSubscription().catch((err: unknown) => {
         if (err instanceof ApiError && err.status === 404) return null;
         throw err;
@@ -100,7 +88,6 @@ export function DashboardPage() {
     ]);
 
     setWatchlist(toResourceState(watchlistResult, [], t("watchlist.loadError")));
-    setAlerts(toResourceState(alertsResult, [], t("alerts.loadError")));
     setSubscription(toResourceState(subscriptionResult, null, t("settings.subscription.loadError")));
     setRecentScans(toResourceState(recentScansResult, [], t("dashboard.recentScans.loadError")));
 
@@ -134,6 +121,13 @@ export function DashboardPage() {
       <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("dashboard.title")}</h1>
 
       <motion.div variants={GRID_VARIANTS} initial="hidden" animate="show" className="flex flex-col gap-6">
+        {!isLoading && !watchlist.error && !recentScans.error &&
+          watchlist.data.length === 0 && recentScans.data.length === 0 && (
+          <motion.div variants={SECTION_VARIANTS}>
+            <OnboardingChecklistCard />
+          </motion.div>
+        )}
+
         <motion.div variants={SECTION_VARIANTS}>
           <PortfolioHeroCard entries={watchlist.data} isLoading={isLoading} error={watchlist.error} />
         </motion.div>
@@ -141,15 +135,6 @@ export function DashboardPage() {
         <motion.div variants={SECTION_VARIANTS} className="grid gap-6 sm:grid-cols-2">
           <WatchlistSummaryCard entries={watchlist.data} isLoading={isLoading} error={watchlist.error} />
           <QuotaSummaryCard subscription={subscription.data} isLoading={isLoading} error={subscription.error} />
-        </motion.div>
-
-        <motion.div variants={SECTION_VARIANTS}>
-          <ActivityLogCard
-            scans={recentScans.data}
-            alerts={alerts.data}
-            isLoading={isLoading}
-            error={recentScans.error ?? alerts.error}
-          />
         </motion.div>
 
         <motion.div variants={SECTION_VARIANTS}>

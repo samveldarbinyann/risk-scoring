@@ -8,6 +8,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,5 +41,18 @@ class ContactControllerTest extends AbstractControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("VALIDATION_FAILED"));
+    }
+
+    @Test
+    void submitIgnoresForwardedForAndKeysOnTheTransportPeer() throws Exception {
+        mockMvc.perform(post("/api/contact")
+                        .header("X-Forwarded-For", "203.0.113.7")
+                        .contentType("application/json")
+                        .content("""
+                                {"email": "alice@example.com", "subject": "Question", "message": "Hi there"}
+                                """))
+                .andExpect(status().isAccepted());
+
+        verify(contactService).submit(eq(PEER_IP), any());
     }
 }

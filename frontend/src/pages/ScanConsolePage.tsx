@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { ConsoleLog } from "@/components/console/ConsoleLog";
 import { ScanPipeline } from "@/components/console/ScanPipeline";
 import { TargetChip } from "@/components/ui/TargetChip";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
 import { useScanGroupStream } from "@/hooks/useScanGroupStream";
 import { useI18n } from "@/lib/i18n/context";
@@ -15,7 +16,7 @@ export function ScanConsolePage() {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { lines, chainByScanId, completed, target } = useScanGroupStream(groupId ?? "");
+  const { lines, chainByScanId, completed, target, error } = useScanGroupStream(groupId ?? "");
   const [playedLines, setPlayedLines] = useState<ScanProgressMessage[]>([]);
   const [playbackComplete, setPlaybackComplete] = useState(false);
   const [sceneTop, setSceneTop] = useState<number | null>(null);
@@ -39,12 +40,20 @@ export function ScanConsolePage() {
   const handlePlaybackComplete = useCallback(() => setPlaybackComplete(true), []);
 
   useEffect(() => {
-    if (!completed || (!playbackComplete && lines.length > 0) || !groupId) return;
+    if (error || !completed || (!playbackComplete && lines.length > 0) || !groupId) return;
     const timeout = setTimeout(() => navigate(`/scan/${groupId}/report`), REPORT_TRANSITION_DELAY_MS);
     return () => clearTimeout(timeout);
-  }, [completed, groupId, lines.length, navigate, playbackComplete]);
+  }, [completed, error, groupId, lines.length, navigate, playbackComplete]);
 
   if (!groupId) return null;
+
+  if (error) {
+    return (
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-3 px-6 py-10">
+        <ErrorMessage message={error} size="sm" />
+      </div>
+    );
+  }
 
   return (
     <div ref={pageRef} className="relative flex flex-1 items-center justify-center px-6 py-12">

@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ClassUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -36,7 +37,11 @@ public class TestSecurityMvcConfigurer implements WebMvcConfigurer {
                                           @NonNull NativeWebRequest webRequest,
                                           WebDataBinderFactory binderFactory) {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                return authentication == null ? null : authentication.getPrincipal();
+                Object principal = authentication == null ? null : authentication.getPrincipal();
+
+                return principal != null && ClassUtils.isAssignable(parameter.getParameterType(), principal.getClass())
+                        ? principal
+                        : null;
             }
         });
     }

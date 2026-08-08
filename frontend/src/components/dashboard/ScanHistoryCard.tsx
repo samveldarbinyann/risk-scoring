@@ -1,9 +1,9 @@
 import { ScanHistoryRow } from "@/components/dashboard/ScanHistoryRow";
 import { Card } from "@/components/ui/Card";
 import { CardState } from "@/components/ui/CardState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Pagination } from "@/components/ui/Pagination";
 import { Select } from "@/components/ui/Select";
-import { TypewriterCaret } from "@/components/ui/TypewriterCaret";
 import { useI18n } from "@/lib/i18n/context";
 import { SCAN_SOURCE } from "@/lib/scanSource";
 import type { RecentScanGroupView, ScanSource } from "@/lib/types";
@@ -55,10 +55,7 @@ export function ScanHistoryCard({
 
       <CardState isLoading={isLoading} error={error}>
         {scans.length === 0 ? (
-          <p className="font-mono text-sm text-text-faint">
-            &gt; {t("dashboard.history.empty")}
-            <TypewriterCaret />
-          </p>
+          <EmptyState message={t("dashboard.history.empty")} />
         ) : (
           <>
             <div>

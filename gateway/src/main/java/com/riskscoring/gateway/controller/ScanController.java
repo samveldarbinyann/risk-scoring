@@ -10,8 +10,8 @@ import com.riskscoring.gateway.dto.ScanHistoryPageView;
 import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.security.AuthenticatedUser;
+import com.riskscoring.gateway.security.ScanRequester;
 import com.riskscoring.gateway.service.ScanService;
-import com.riskscoring.gateway.util.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +41,7 @@ public class ScanController {
     public ScanGroupAcceptedResponse requestScan(@Valid @RequestBody ScanCreateRequest request,
                                                  HttpServletRequest httpRequest,
                                                  @AuthenticationPrincipal AuthenticatedUser user) {
-        UUID userId = user == null ? null : user.id();
-        return scanService.requestScan(ClientIpResolver.resolve(httpRequest), userId, request);
+        return scanService.requestScan(httpRequest.getRemoteAddr(), requesterId(user), request);
     }
 
     @GetMapping("/recent")
@@ -59,22 +58,30 @@ public class ScanController {
     }
 
     @GetMapping("/groups/{groupId}")
-    public ScanGroupView getScanGroup(@PathVariable UUID groupId) {
-        return scanService.getScanGroup(groupId);
+    public ScanGroupView getScanGroup(@PathVariable UUID groupId,
+                                      @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScanGroup(groupId, requesterId(requester));
     }
 
     @GetMapping("/groups/{groupId}/report")
-    public ScanGroupReportView getScanGroupReport(@PathVariable UUID groupId) {
-        return scanService.getScanGroupReport(groupId);
+    public ScanGroupReportView getScanGroupReport(@PathVariable UUID groupId,
+                                                  @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScanGroupReport(groupId, requesterId(requester));
     }
 
     @GetMapping("/{scanId}")
-    public ScanView getScan(@PathVariable UUID scanId) {
-        return scanService.getScan(scanId);
+    public ScanView getScan(@PathVariable UUID scanId,
+                            @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScan(scanId, requesterId(requester));
     }
 
     @GetMapping("/{scanId}/report")
-    public ScanReportView getScanReport(@PathVariable UUID scanId) {
-        return scanService.getScanReport(scanId);
+    public ScanReportView getScanReport(@PathVariable UUID scanId,
+                                        @AuthenticationPrincipal ScanRequester requester) {
+        return scanService.getScanReport(scanId, requesterId(requester));
+    }
+
+    private static UUID requesterId(ScanRequester requester) {
+        return requester == null ? null : requester.userId();
     }
 }

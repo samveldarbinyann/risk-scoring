@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -110,6 +111,19 @@ class AuthControllerTest extends AbstractControllerTest {
                                 {"email": "alice@example.com"}
                                 """))
                 .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void forgotPasswordIgnoresForwardedForAndKeysOnTheTransportPeer() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .header("X-Forwarded-For", "203.0.113.7")
+                        .contentType("application/json")
+                        .content("""
+                                {"email": "alice@example.com"}
+                                """))
+                .andExpect(status().isAccepted());
+
+        verify(authService).forgotPassword("alice@example.com", PEER_IP);
     }
 
     @Test

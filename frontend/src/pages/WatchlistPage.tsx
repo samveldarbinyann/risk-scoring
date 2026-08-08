@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { motion, type Variants } from "motion/react";
+import { motion } from "motion/react";
 import { Navigate } from "react-router";
+import { PortfolioHeroCard } from "@/components/dashboard/PortfolioHeroCard";
 import { WatchlistEntryList } from "@/components/watchlist/WatchlistEntryList";
 import { WatchlistForm } from "@/components/watchlist/WatchlistForm";
-import { WatchlistHeroCard } from "@/components/watchlist/WatchlistHeroCard";
 import { Card } from "@/components/ui/Card";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Spinner } from "@/components/ui/Spinner";
@@ -12,18 +12,9 @@ import { useAuth } from "@/lib/auth/context";
 import { useChains } from "@/lib/chains/context";
 import type { Chain } from "@/lib/chains/registry";
 import { useI18n } from "@/lib/i18n/context";
+import { GRID_VARIANTS, SECTION_VARIANTS } from "@/lib/pageMotion";
 import { pollUntil } from "@/lib/poll";
 import type { WatchlistEntryView } from "@/lib/types";
-
-const GRID_VARIANTS: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const SECTION_VARIANTS: Variants = {
-  hidden: { opacity: 0, y: 4 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" } },
-};
 
 export function WatchlistPage() {
   const { t } = useI18n();
@@ -141,7 +132,7 @@ export function WatchlistPage() {
 
       <motion.div variants={GRID_VARIANTS} initial="hidden" animate="show" className="flex flex-col gap-6">
         <motion.div variants={SECTION_VARIANTS}>
-          <WatchlistHeroCard entries={entries} isLoading={isLoading} error={loadError} />
+          <PortfolioHeroCard entries={entries} isLoading={isLoading} error={loadError} showCta={false} />
         </motion.div>
 
         <motion.div variants={SECTION_VARIANTS}>

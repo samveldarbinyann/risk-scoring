@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router";
 import { QuotaBar } from "@/components/settings/QuotaBar";
-import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { CardState } from "@/components/ui/CardState";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/context";
@@ -18,20 +18,18 @@ interface QuotaSummaryCardProps {
 
 export function QuotaSummaryCard({ subscription, isLoading, error }: QuotaSummaryCardProps) {
   const { t, locale } = useI18n();
-  const navigate = useNavigate();
 
   return (
-    <Card title={t("dashboard.quota.title")}>
+    <Card title={t("dashboard.quota.title")} className="flex h-full flex-col">
       <CardState isLoading={isLoading} error={error}>
         {!subscription ? (
-          <div className="flex flex-col gap-4">
-            <p className="font-mono text-sm text-text-faint">{t("dashboard.quota.empty")}</p>
-            <Button type="button" variant="ghost" onClick={() => navigate("/pricing")} className="w-fit">
-              {t("dashboard.quota.cta")}
-            </Button>
-          </div>
+          <EmptyState
+            message={t("dashboard.quota.empty")}
+            ctaLabel={t("dashboard.quota.cta")}
+            ctaTo="/pricing"
+          />
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-1 flex-col gap-4">
             <div className="flex items-center justify-between gap-3">
               <span className="font-sans text-sm text-text">
                 {t(`pricing.plan.${subscription.planCode}` as MessageKey)}
@@ -60,9 +58,9 @@ export function QuotaSummaryCard({ subscription, isLoading, error }: QuotaSummar
               </p>
             )}
 
-            <Button type="button" variant="ghost" onClick={() => navigate("/settings")} className="w-fit">
+            <LinkButton to="/settings" variant="ghost" className="mt-auto w-fit">
               {t("settings.title")}
-            </Button>
+            </LinkButton>
           </div>
         )}
       </CardState>

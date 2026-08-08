@@ -18,6 +18,7 @@ import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanReportNotReadyException;
 import com.riskscoring.gateway.model.UserRole;
+import com.riskscoring.gateway.security.ApiKeyPrincipal;
 import com.riskscoring.gateway.security.AuthenticatedUser;
 import com.riskscoring.gateway.service.ScanService;
 import org.junit.jupiter.api.Test;
@@ -117,7 +118,7 @@ class ScanControllerTest extends AbstractControllerTest {
     @Test
     void getScanGroupReturnsGroupStatus() throws Exception {
         UUID groupId = UUID.randomUUID();
-        given(scanService.getScanGroup(groupId)).willReturn(new ScanGroupView(
+        given(scanService.getScanGroup(eq(groupId), isNull())).willReturn(new ScanGroupView(
                 groupId, ScanTarget.ADDRESS, "0xabc", true,
                 List.of(new ScanGroupChainStatus(Chain.ETHEREUM, UUID.randomUUID(), ScanStage.COMPLETED))));
 
@@ -129,7 +130,7 @@ class ScanControllerTest extends AbstractControllerTest {
     @Test
     void getScanGroupReturnsNotFound() throws Exception {
         UUID groupId = UUID.randomUUID();
-        given(scanService.getScanGroup(groupId)).willThrow(new ScanGroupNotFoundException(groupId));
+        given(scanService.getScanGroup(eq(groupId), isNull())).willThrow(new ScanGroupNotFoundException(groupId));
 
         mockMvc.perform(get("/api/scans/groups/{groupId}", groupId))
                 .andExpect(status().isNotFound())
@@ -139,7 +140,7 @@ class ScanControllerTest extends AbstractControllerTest {
     @Test
     void getScanGroupReportReturnsReports() throws Exception {
         UUID groupId = UUID.randomUUID();
-        given(scanService.getScanGroupReport(groupId)).willReturn(
+        given(scanService.getScanGroupReport(eq(groupId), isNull())).willReturn(
                 new ScanGroupReportView(groupId, ScanTarget.ADDRESS, "0xabc", List.of()));
 
         mockMvc.perform(get("/api/scans/groups/{groupId}/report", groupId))
@@ -150,7 +151,7 @@ class ScanControllerTest extends AbstractControllerTest {
     @Test
     void getScanReturnsScan() throws Exception {
         UUID scanId = UUID.randomUUID();
-        given(scanService.getScan(scanId)).willReturn(new ScanView(
+        given(scanService.getScan(eq(scanId), isNull())).willReturn(new ScanView(
                 scanId, ScanTarget.ADDRESS, "0xabc", Chain.ETHEREUM, ScanStage.COMPLETED,
                 ScanSource.USER, Instant.now(), Instant.now()));
 
@@ -162,7 +163,7 @@ class ScanControllerTest extends AbstractControllerTest {
     @Test
     void getScanReportReturnsReport() throws Exception {
         UUID scanId = UUID.randomUUID();
-        given(scanService.getScanReport(scanId)).willReturn(new ScanReportView(
+        given(scanService.getScanReport(eq(scanId), isNull())).willReturn(new ScanReportView(
                 scanId, ScanTarget.ADDRESS, "0xabc", Chain.ETHEREUM, RiskLevel.HIGH, 80,
                 "High risk due to mixer exposure", List.of("mixer_exposure"), List.of(),
                 Instant.now(), null, "claude", Instant.now()));
@@ -176,10 +177,71 @@ class ScanControllerTest extends AbstractControllerTest {
     @Test
     void getScanReportReturnsConflictWhenNotReady() throws Exception {
         UUID scanId = UUID.randomUUID();
-        given(scanService.getScanReport(scanId)).willThrow(new ScanReportNotReadyException(scanId, ScanStage.ANALYZING));
+        given(scanService.getScanReport(eq(scanId), isNull())).willThrow(new ScanReportNotReadyException(scanId, ScanStage.ANALYZING));
 
         mockMvc.perform(get("/api/scans/{scanId}/report", scanId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value("REPORT_NOT_READY"));
+    }
+
+    @Test
+    void getScanReportForwardsApiKeyOwnerAsRequester() throws Exception {
+        UUID scanId = UUID.randomUUID();
+        ApiKeyPrincipal principal = new ApiKeyPrincipal(UUID.randomUUID(), UUID.randomUUID());
+        given(scanService.getScanReport(scanId, principal.userId())).willReturn(new ScanReportView(
+                scanId, ScanTarget.ADDRESS, "0xabc", Chain.ETHEREUM, RiskLevel.LOW, 10,
+                "Nothing suspicious", List.of(), List.of(),
+                Instant.now(), null, "claude", Instant.now()));
+
+        mockMvc.perform(get("/api/scans/{scanId}/report", scanId).with(authenticatedAs(principal)))
+                .andExpect(status().isOk());
+
+        verify(scanService).getScanReport(scanId, principal.userId());
+    }
+
+    @Test
+    void requestScanIgnoresApiKeyPrincipalSoQuotaCannotBeBypassed() throws Exception {
+        ApiKeyPrincipal principal = new ApiKeyPrincipal(UUID.randomUUID(), UUID.randomUUID());
+        given(scanService.requestScan(anyString(), isNull(), any())).willReturn(
+                new ScanGroupAcceptedResponse(UUID.randomUUID(), ScanTarget.ADDRESS, "0xabc", List.of(Chain.ETHEREUM)));
+
+        mockMvc.perform(post("/api/scans").with(authenticatedAs(principal))
+                        .contentType("application/json")
+                        .content("""
+                                {"target": "0xabc"}
+                                """))
+                .andExpect(status().isAccepted());
+
+        verify(scanService).requestScan(anyString(), isNull(), any());
+    }
+
+    @Test
+    void getScanGroupForwardsAuthenticatedRequesterId() throws Exception {
+        UUID groupId = UUID.randomUUID();
+        given(scanService.getScanGroup(groupId, user.id())).willReturn(new ScanGroupView(
+                groupId, ScanTarget.ADDRESS, "0xabc", true,
+                List.of(new ScanGroupChainStatus(Chain.ETHEREUM, UUID.randomUUID(), ScanStage.COMPLETED))));
+
+        mockMvc.perform(get("/api/scans/groups/{groupId}", groupId).with(authenticatedAs(user)))
+                .andExpect(status().isOk());
+
+        verify(scanService).getScanGroup(groupId, user.id());
+    }
+
+    @Test
+    void requestScanIgnoresForwardedForAndKeysOnTheTransportPeer() throws Exception {
+        given(scanService.requestScan(eq(PEER_IP), isNull(), any())).willReturn(
+                new ScanGroupAcceptedResponse(UUID.randomUUID(), ScanTarget.ADDRESS, "0xabc",
+                        List.of(Chain.ETHEREUM)));
+
+        mockMvc.perform(post("/api/scans")
+                        .header("X-Forwarded-For", "203.0.113.7")
+                        .contentType("application/json")
+                        .content("""
+                                {"target": "0xabc"}
+                                """))
+                .andExpect(status().isAccepted());
+
+        verify(scanService).requestScan(eq(PEER_IP), isNull(), any());
     }
 }

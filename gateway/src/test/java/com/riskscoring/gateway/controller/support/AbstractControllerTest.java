@@ -15,6 +15,8 @@ import java.util.List;
 
 public abstract class AbstractControllerTest {
 
+    protected static final String PEER_IP = "127.0.0.1";
+
     @Autowired
     protected MockMvc mockMvc;
 

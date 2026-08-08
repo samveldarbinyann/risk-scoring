@@ -1,5 +1,6 @@
 server:
   port: 8081
+  forward-headers-strategy: native
 
 spring:
   application:
@@ -103,6 +104,7 @@ gateway:
     max-per-user: 5
     last-used-throttle: 5m
   public-scan:
+    max-chains: 1
     rate-limit:
       requests: 10
       window: 1h

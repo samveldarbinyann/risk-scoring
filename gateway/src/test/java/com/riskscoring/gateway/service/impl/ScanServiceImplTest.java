@@ -20,6 +20,7 @@ import com.riskscoring.gateway.dto.ScanReportView;
 import com.riskscoring.gateway.dto.ScanView;
 import com.riskscoring.gateway.entity.Scan;
 import com.riskscoring.gateway.entity.ScanGroup;
+import com.riskscoring.gateway.exception.PublicScanChainLimitException;
 import com.riskscoring.gateway.exception.QuotaExceededException;
 import com.riskscoring.gateway.exception.ScanGroupNotFoundException;
 import com.riskscoring.gateway.exception.ScanGroupReportNotReadyException;
@@ -37,6 +38,7 @@ import com.riskscoring.gateway.repository.ScanRiskSummary;
 import com.riskscoring.gateway.service.BillingService;
 import com.riskscoring.gateway.service.ChainService;
 import com.riskscoring.gateway.service.RateLimitService;
+import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +46,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -72,6 +73,8 @@ class ScanServiceImplTest {
 
     private static final UUID USER_ID = UUID.fromString("8dc2f3fd-f443-4481-842e-5d70a6cb4b88");
     private static final String CLIENT_IP = "203.0.113.10";
+    private static final int ANONYMOUS_MAX_CHAINS = 1;
+    private static final UUID OTHER_USER_ID = UUID.fromString("1f0b6a3c-9d2e-4a71-8f55-6c3b2a1d4e90");
 
     @Mock
     private ScanGroupRepository scanGroupRepository;
@@ -105,7 +108,8 @@ class ScanServiceImplTest {
     @BeforeEach
     void setUp() {
         scanService = new ScanServiceImpl(scanGroupRepository, scanRepository, scanReportRepository,
-                new ScanMapper(), scanEventPublisher, billingService, rateLimitService, chainService);
+                new ScanMapper(), scanEventPublisher, billingService, rateLimitService, chainService,
+                GatewayPropertiesFixture.builder().maxChains(ANONYMOUS_MAX_CHAINS).build());
     }
 
     @Test
@@ -296,19 +300,22 @@ class ScanServiceImplTest {
 
     @Test
     void getScanGroupThrowsScanGroupNotFoundExceptionWhenNoScansExist() {
-        UUID groupId = UUID.randomUUID();
-        when(scanRepository.findByGroupId(groupId)).thenReturn(List.of());
+        ScanGroup group = scanGroup();
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+        when(scanRepository.findByGroupId(group.getId())).thenReturn(List.of());
 
-        assertThatThrownBy(() -> scanService.getScanGroup(groupId)).isInstanceOf(ScanGroupNotFoundException.class);
+        assertThatThrownBy(() -> scanService.getScanGroup(group.getId(), USER_ID))
+                .isInstanceOf(ScanGroupNotFoundException.class);
     }
 
     @Test
     void getScanGroupReturnsMappedViewWhenScansExist() {
         ScanGroup group = scanGroup();
         Scan scan = completedScan(group.getId());
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
         when(scanRepository.findByGroupId(group.getId())).thenReturn(List.of(scan));
 
-        ScanGroupView view = scanService.getScanGroup(group.getId());
+        ScanGroupView view = scanService.getScanGroup(group.getId(), USER_ID);
 
         assertThat(view.groupId()).isEqualTo(group.getId());
         assertThat(view.completed()).isTrue();
@@ -327,9 +334,10 @@ class ScanServiceImplTest {
                 .source(ScanSource.USER)
                 .requestedAt(Instant.now())
                 .build();
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
         when(scanRepository.findByGroupId(group.getId())).thenReturn(List.of(pending));
 
-        assertThatThrownBy(() -> scanService.getScanGroupReport(group.getId()))
+        assertThatThrownBy(() -> scanService.getScanGroupReport(group.getId(), USER_ID))
                 .isInstanceOf(ScanGroupReportNotReadyException.class);
     }
 
@@ -337,10 +345,11 @@ class ScanServiceImplTest {
     void getScanGroupReportSilentlyDropsChainsWithoutAReportRowYet() {
         ScanGroup group = scanGroup();
         Scan scan = completedScan(group.getId());
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
         when(scanRepository.findByGroupId(group.getId())).thenReturn(List.of(scan));
         when(scanReportRepository.findByScanId(scan.getId())).thenReturn(Optional.empty());
 
-        ScanGroupReportView report = scanService.getScanGroupReport(group.getId());
+        ScanGroupReportView report = scanService.getScanGroupReport(group.getId(), USER_ID);
 
         assertThat(report.reports()).isEmpty();
     }
@@ -350,11 +359,12 @@ class ScanServiceImplTest {
         ScanGroup group = scanGroup();
         Scan ethereum = completedScan(group.getId(), Chain.ETHEREUM);
         Scan bitcoin = completedScan(group.getId(), Chain.BITCOIN);
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
         when(scanRepository.findByGroupId(group.getId())).thenReturn(List.of(ethereum, bitcoin));
         when(scanReportRepository.findByScanId(ethereum.getId())).thenReturn(Optional.of(reportRow(ethereum)));
         when(scanReportRepository.findByScanId(bitcoin.getId())).thenReturn(Optional.of(reportRow(bitcoin)));
 
-        ScanGroupReportView report = scanService.getScanGroupReport(group.getId());
+        ScanGroupReportView report = scanService.getScanGroupReport(group.getId(), USER_ID);
 
         assertThat(report.reports()).hasSize(2);
         assertThat(report.reports()).extracting(ScanReportView::chain).containsExactly(Chain.ETHEREUM, Chain.BITCOIN);
@@ -365,15 +375,17 @@ class ScanServiceImplTest {
         UUID scanId = UUID.randomUUID();
         when(scanRepository.findById(scanId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> scanService.getScan(scanId)).isInstanceOf(ScanNotFoundException.class);
+        assertThatThrownBy(() -> scanService.getScan(scanId, USER_ID)).isInstanceOf(ScanNotFoundException.class);
     }
 
     @Test
     void getScanReturnsMappedViewWhenFound() {
-        Scan scan = completedScan(UUID.randomUUID());
+        ScanGroup group = scanGroup();
+        Scan scan = completedScan(group.getId());
         when(scanRepository.findById(scan.getId())).thenReturn(Optional.of(scan));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
 
-        ScanView view = scanService.getScan(scan.getId());
+        ScanView view = scanService.getScan(scan.getId(), USER_ID);
 
         assertThat(view.scanId()).isEqualTo(scan.getId());
     }
@@ -383,14 +395,16 @@ class ScanServiceImplTest {
         UUID scanId = UUID.randomUUID();
         when(scanRepository.findById(scanId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> scanService.getScanReport(scanId)).isInstanceOf(ScanNotFoundException.class);
+        assertThatThrownBy(() -> scanService.getScanReport(scanId, USER_ID))
+                .isInstanceOf(ScanNotFoundException.class);
     }
 
     @Test
     void getScanReportThrowsScanReportNotReadyExceptionWhenScanNotYetCompleted() {
+        ScanGroup group = scanGroup();
         Scan pending = Scan.builder()
                 .id(UUID.randomUUID())
-                .groupId(UUID.randomUUID())
+                .groupId(group.getId())
                 .targetType(ScanTarget.ADDRESS)
                 .target("0xabc")
                 .chain(Chain.ETHEREUM)
@@ -399,30 +413,164 @@ class ScanServiceImplTest {
                 .requestedAt(Instant.now())
                 .build();
         when(scanRepository.findById(pending.getId())).thenReturn(Optional.of(pending));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
 
-        assertThatThrownBy(() -> scanService.getScanReport(pending.getId()))
+        assertThatThrownBy(() -> scanService.getScanReport(pending.getId(), USER_ID))
                 .isInstanceOf(ScanReportNotReadyException.class);
     }
 
     @Test
     void getScanReportThrowsScanReportNotReadyExceptionWhenReportRowIsMissingDespiteCompletedStatus() {
-        Scan scan = completedScan(UUID.randomUUID());
+        ScanGroup group = scanGroup();
+        Scan scan = completedScan(group.getId());
         when(scanRepository.findById(scan.getId())).thenReturn(Optional.of(scan));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
         when(scanReportRepository.findByScanId(scan.getId())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> scanService.getScanReport(scan.getId()))
+        assertThatThrownBy(() -> scanService.getScanReport(scan.getId(), USER_ID))
                 .isInstanceOf(ScanReportNotReadyException.class);
     }
 
     @Test
     void getScanReportReturnsMappedReportViewWhenFound() {
-        Scan scan = completedScan(UUID.randomUUID());
+        ScanGroup group = scanGroup();
+        Scan scan = completedScan(group.getId());
         when(scanRepository.findById(scan.getId())).thenReturn(Optional.of(scan));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
         when(scanReportRepository.findByScanId(scan.getId())).thenReturn(Optional.of(reportRow(scan)));
 
-        ScanReportView report = scanService.getScanReport(scan.getId());
+        ScanReportView report = scanService.getScanReport(scan.getId(), USER_ID);
 
         assertThat(report.scanId()).isEqualTo(scan.getId());
+    }
+
+    @Test
+    void requestScanCapsAnonymousFanOutToConfiguredMaxChains() {
+        String address = "0x" + "a".repeat(40);
+
+        ScanGroupAcceptedResponse response = scanService.requestScan(
+                CLIENT_IP, null, new ScanCreateRequest(address, null));
+
+        assertThat(response.chains()).hasSize(ANONYMOUS_MAX_CHAINS);
+        verify(scanEventPublisher, times(ANONYMOUS_MAX_CHAINS)).publishScanRequested(any());
+    }
+
+    @Test
+    void requestScanRejectsAnonymousRequestForMoreExplicitChainsThanAllowed() {
+        String address = "0x" + "a".repeat(40);
+        when(chainService.requireScannable("ETHEREUM")).thenReturn(Chain.ETHEREUM);
+        when(chainService.requireScannable("OPTIMISM")).thenReturn(Chain.OPTIMISM);
+
+        assertThatThrownBy(() -> scanService.requestScan(CLIENT_IP, null,
+                new ScanCreateRequest(address, List.of("ETHEREUM", "OPTIMISM"))))
+                .isInstanceOf(PublicScanChainLimitException.class);
+
+        verifyNoInteractions(scanEventPublisher);
+    }
+
+    @Test
+    void getScanGroupThrowsScanGroupNotFoundExceptionForAnotherUsersGroup() {
+        ScanGroup group = scanGroup();
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+
+        assertThatThrownBy(() -> scanService.getScanGroup(group.getId(), OTHER_USER_ID))
+                .isInstanceOf(ScanGroupNotFoundException.class);
+
+        verifyNoInteractions(scanRepository);
+    }
+
+    @Test
+    void getScanGroupThrowsScanGroupNotFoundExceptionForAnonymousRequesterOfAnOwnedGroup() {
+        ScanGroup group = scanGroup();
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+
+        assertThatThrownBy(() -> scanService.getScanGroup(group.getId(), null))
+                .isInstanceOf(ScanGroupNotFoundException.class);
+    }
+
+    @Test
+    void getScanGroupReturnsAnonymousGroupToAnyRequester() {
+        ScanGroup group = anonymousScanGroup();
+        Scan scan = completedScan(group.getId());
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+        when(scanRepository.findByGroupId(group.getId())).thenReturn(List.of(scan));
+
+        ScanGroupView view = scanService.getScanGroup(group.getId(), null);
+
+        assertThat(view.groupId()).isEqualTo(group.getId());
+    }
+
+    @Test
+    void getScanThrowsScanNotFoundExceptionForAnotherUsersScan() {
+        ScanGroup group = scanGroup();
+        Scan scan = completedScan(group.getId());
+        when(scanRepository.findById(scan.getId())).thenReturn(Optional.of(scan));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+
+        assertThatThrownBy(() -> scanService.getScan(scan.getId(), OTHER_USER_ID))
+                .isInstanceOf(ScanNotFoundException.class);
+    }
+
+    @Test
+    void getScanReportThrowsScanNotFoundExceptionForAnotherUsersScan() {
+        ScanGroup group = scanGroup();
+        Scan scan = completedScan(group.getId());
+        when(scanRepository.findById(scan.getId())).thenReturn(Optional.of(scan));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+
+        assertThatThrownBy(() -> scanService.getScanReport(scan.getId(), OTHER_USER_ID))
+                .isInstanceOf(ScanNotFoundException.class);
+
+        verifyNoInteractions(scanReportRepository);
+    }
+
+    @Test
+    void canAccessGroupIsTrueOnlyForTheOwnerOrForAnAnonymousGroup() {
+        ScanGroup owned = scanGroup();
+        ScanGroup anonymous = anonymousScanGroup();
+        when(scanGroupRepository.findById(owned.getId())).thenReturn(Optional.of(owned));
+        when(scanGroupRepository.findById(anonymous.getId())).thenReturn(Optional.of(anonymous));
+
+        assertThat(scanService.canAccessGroup(owned.getId(), USER_ID)).isTrue();
+        assertThat(scanService.canAccessGroup(owned.getId(), OTHER_USER_ID)).isFalse();
+        assertThat(scanService.canAccessGroup(owned.getId(), null)).isFalse();
+        assertThat(scanService.canAccessGroup(anonymous.getId(), OTHER_USER_ID)).isTrue();
+    }
+
+    @Test
+    void canAccessGroupIsFalseForAnUnknownGroup() {
+        UUID groupId = UUID.randomUUID();
+        when(scanGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+
+        assertThat(scanService.canAccessGroup(groupId, USER_ID)).isFalse();
+    }
+
+    @Test
+    void canAccessScanResolvesOwnershipThroughItsGroup() {
+        ScanGroup group = scanGroup();
+        Scan scan = completedScan(group.getId());
+        when(scanRepository.findById(scan.getId())).thenReturn(Optional.of(scan));
+        when(scanGroupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+
+        assertThat(scanService.canAccessScan(scan.getId(), USER_ID)).isTrue();
+        assertThat(scanService.canAccessScan(scan.getId(), OTHER_USER_ID)).isFalse();
+    }
+
+    @Test
+    void canAccessScanIsFalseForAnUnknownScan() {
+        UUID scanId = UUID.randomUUID();
+        when(scanRepository.findById(scanId)).thenReturn(Optional.empty());
+
+        assertThat(scanService.canAccessScan(scanId, USER_ID)).isFalse();
+    }
+
+    private static ScanGroup anonymousScanGroup() {
+        return ScanGroup.builder()
+                .id(UUID.randomUUID())
+                .targetType(ScanTarget.ADDRESS)
+                .target("0xabc")
+                .requestedAt(Instant.now())
+                .build();
     }
 
     private static ScanGroup scanGroup() {

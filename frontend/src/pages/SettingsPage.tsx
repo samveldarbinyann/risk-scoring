@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "motion/react";
 import { Navigate } from "react-router";
 import { ApiKeysPanel } from "@/components/settings/ApiKeysPanel";
+import { PlanFeaturesPanel } from "@/components/settings/PlanFeaturesPanel";
 import { SubscriptionPanel } from "@/components/settings/SubscriptionPanel";
 import { Spinner } from "@/components/ui/Spinner";
 import {
@@ -14,6 +16,7 @@ import {
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
 import { useI18n } from "@/lib/i18n/context";
+import { GRID_VARIANTS, SECTION_VARIANTS } from "@/lib/pageMotion";
 import type { ApiKeyCreatedView, ApiKeyView, SubscriptionView } from "@/lib/types";
 
 type ResourceState<T> = {
@@ -199,29 +202,39 @@ export function SettingsPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10">
       <h1 className="font-sans text-xs uppercase tracking-widest text-text-dim">{t("settings.title")}</h1>
 
-      <SubscriptionPanel
-        subscription={subscription.data}
-        isLoading={busy.loading}
-        error={subscription.loadError}
-        actionError={subscription.actionError}
-        isConfirming={busy.confirming}
-        isCanceling={busy.canceling}
-        onConfirm={() => void handleConfirm()}
-        onCancel={() => void handleCancel()}
-      />
+      <motion.div variants={GRID_VARIANTS} initial="hidden" animate="show" className="flex flex-col gap-6">
+        <motion.div variants={SECTION_VARIANTS}>
+          <SubscriptionPanel
+            subscription={subscription.data}
+            isLoading={busy.loading}
+            error={subscription.loadError}
+            actionError={subscription.actionError}
+            isConfirming={busy.confirming}
+            isCanceling={busy.canceling}
+            onConfirm={() => void handleConfirm()}
+            onCancel={() => void handleCancel()}
+          />
+        </motion.div>
 
-      <ApiKeysPanel
-        keys={keys.data}
-        isLoading={busy.loading}
-        error={keys.loadError}
-        actionError={keys.actionError}
-        canCreate={subscription.data?.status === "ACTIVE"}
-        isCreating={busy.creatingKey}
-        revokingId={busy.revokingId}
-        createdSecret={createdSecret}
-        onCreate={handleCreateKey}
-        onRevoke={(id) => void handleRevokeKey(id)}
-      />
+        <motion.div variants={SECTION_VARIANTS}>
+          <ApiKeysPanel
+            keys={keys.data}
+            isLoading={busy.loading}
+            error={keys.loadError}
+            actionError={keys.actionError}
+            canCreate={subscription.data?.status === "ACTIVE"}
+            isCreating={busy.creatingKey}
+            revokingId={busy.revokingId}
+            createdSecret={createdSecret}
+            onCreate={handleCreateKey}
+            onRevoke={(id) => void handleRevokeKey(id)}
+          />
+        </motion.div>
+
+        <motion.div variants={SECTION_VARIANTS}>
+          <PlanFeaturesPanel />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
