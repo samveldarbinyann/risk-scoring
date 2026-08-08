@@ -15,6 +15,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -68,6 +69,18 @@ public class Subscription {
 
     @Column(name = "canceled_at")
     private Instant canceledAt;
+
+    @Column(name = "payment_address", length = 64)
+    private String paymentAddress;
+
+    @Column(name = "payment_amount", precision = 24, scale = 6)
+    private BigDecimal paymentAmount;
+
+    @Column(name = "payment_expires_at")
+    private Instant paymentExpiresAt;
+
+    @Column(name = "paid_tx_hash", length = 80)
+    private String paidTxHash;
 
     @Override
     public boolean equals(Object other) {

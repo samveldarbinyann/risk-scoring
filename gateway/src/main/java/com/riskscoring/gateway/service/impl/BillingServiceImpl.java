@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.service.impl;
 
+import com.riskscoring.common.event.UsdtPaymentDetected;
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.PlanView;
 import com.riskscoring.gateway.dto.SubscriptionView;
@@ -9,7 +10,6 @@ import com.riskscoring.gateway.exception.NoActiveSubscriptionException;
 import com.riskscoring.gateway.exception.QuotaExceededException;
 import com.riskscoring.gateway.exception.SubscriptionAlreadyActiveException;
 import com.riskscoring.gateway.exception.SubscriptionNotFoundException;
-import com.riskscoring.gateway.exception.SubscriptionNotPendingException;
 import com.riskscoring.gateway.mapper.BillingMapper;
 import com.riskscoring.gateway.model.BillingPeriods;
 import com.riskscoring.gateway.model.PlanCode;
@@ -18,23 +18,30 @@ import com.riskscoring.gateway.repository.SubscriptionRepository;
 import com.riskscoring.gateway.service.ApiKeyService;
 import com.riskscoring.gateway.service.BillingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BillingServiceImpl implements BillingService {
 
     private static final Set<SubscriptionStatus> LIVE_STATUSES =
             EnumSet.of(SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING_PAYMENT);
+    private static final int MAX_AMOUNT_GENERATION_ATTEMPTS = 20;
 
     private final SubscriptionRepository subscriptionRepository;
     private final BillingMapper billingMapper;
@@ -74,23 +81,43 @@ public class BillingServiceImpl implements BillingService {
 
     @Override
     @Transactional
-    public SubscriptionView confirmPayment(UUID userId, UUID subscriptionId) {
-        Subscription subscription = subscriptionRepository.findById(subscriptionId)
-                .orElseThrow(SubscriptionNotFoundException::new);
-        if (!subscription.getUserId().equals(userId)) {
-            throw new SubscriptionNotFoundException();
-        }
-        if (subscription.getStatus() != SubscriptionStatus.PENDING_PAYMENT) {
-            throw new SubscriptionNotPendingException(subscriptionId);
-        }
+    public void confirmPaymentFromChain(UsdtPaymentDetected event) {
+        BigDecimal amount = event.amount().setScale(6, RoundingMode.HALF_UP);
+        subscriptionRepository.findByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, amount)
+                .filter(subscription -> subscription.getPaymentExpiresAt() != null
+                        && event.blockTimestamp().isBefore(subscription.getPaymentExpiresAt()))
+                .ifPresentOrElse(
+                        subscription -> activateFromChainPayment(subscription, event),
+                        () -> log.info("No PENDING_PAYMENT subscription matched on-chain USDT payment amount={} txHash={}",
+                                amount, event.txHash()));
+    }
 
+    private void activateFromChainPayment(Subscription subscription, UsdtPaymentDetected event) {
         Instant now = Instant.now();
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription.setRequestsUsed(0);
         subscription.setCurrentPeriodStart(now);
         subscription.setCurrentPeriodEnd(now.plus(gatewayProperties.billing().period()));
+        subscription.setPaidTxHash(event.txHash());
         subscription.setUpdatedAt(now);
-        return billingMapper.toView(subscription);
+        log.info("Activated subscription {} via on-chain USDT payment txHash={}", subscription.getId(), event.txHash());
+    }
+
+    @Override
+    @Scheduled(fixedDelayString = "${gateway.billing.payment.reaper-fixed-delay}")
+    @Transactional
+    public void expireOverduePayments() {
+        Instant now = Instant.now();
+        List<Subscription> overdue = subscriptionRepository.findByStatusAndPaymentExpiresAtBefore(
+                SubscriptionStatus.PENDING_PAYMENT, now);
+        for (Subscription subscription : overdue) {
+            subscription.setStatus(SubscriptionStatus.EXPIRED);
+            subscription.setUpdatedAt(now);
+        }
+        if (!overdue.isEmpty()) {
+            subscriptionRepository.saveAll(overdue);
+            log.info("Expired {} overdue PENDING_PAYMENT subscription(s)", overdue.size());
+        }
     }
 
     @Override
@@ -202,11 +229,12 @@ public class BillingServiceImpl implements BillingService {
         subscription.setCurrency(plan.currency());
         subscription.setMonthlyRequestLimit(plan.monthlyRequestLimit());
         subscription.setUpdatedAt(now);
+        applyPaymentRequest(subscription, plan, now);
         return subscription;
     }
 
     private Subscription newPendingSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {
-        return Subscription.builder()
+        Subscription subscription = Subscription.builder()
                 .id(UUID.randomUUID())
                 .userId(userId)
                 .planCode(plan.code())
@@ -218,6 +246,31 @@ public class BillingServiceImpl implements BillingService {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
+        applyPaymentRequest(subscription, plan, now);
+        return subscription;
+    }
+
+    private void applyPaymentRequest(Subscription subscription, GatewayProperties.Plan plan, Instant now) {
+        GatewayProperties.Payment paymentConfig = gatewayProperties.billing().payment();
+        // 1 USD cent = 0.01 USDT: the product treats USDT as a 1:1 USD-pegged stablecoin.
+        BigDecimal basePrice = BigDecimal.valueOf(plan.priceCents(), 2);
+        subscription.setPaymentAddress(paymentConfig.address());
+        subscription.setPaymentAmount(generateUniquePaymentAmount(basePrice, paymentConfig));
+        subscription.setPaymentExpiresAt(now.plus(paymentConfig.window()));
+        subscription.setPaidTxHash(null);
+    }
+
+    private BigDecimal generateUniquePaymentAmount(BigDecimal basePrice, GatewayProperties.Payment paymentConfig) {
+        for (int attempt = 0; attempt < MAX_AMOUNT_GENERATION_ATTEMPTS; attempt++) {
+            int tailMicroUsdt = ThreadLocalRandom.current()
+                    .nextInt(paymentConfig.tailMinMicroUsdt(), paymentConfig.tailMaxMicroUsdt() + 1);
+            BigDecimal amount = basePrice.add(BigDecimal.valueOf(tailMicroUsdt, 6));
+            if (!subscriptionRepository.existsByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, amount)) {
+                return amount;
+            }
+        }
+        throw new IllegalStateException(
+                "Could not generate a unique payment amount after " + MAX_AMOUNT_GENERATION_ATTEMPTS + " attempts");
     }
 
     private Subscription newActiveSubscription(UUID userId, GatewayProperties.Plan plan, Instant now) {

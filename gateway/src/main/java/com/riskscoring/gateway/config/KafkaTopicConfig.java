@@ -43,4 +43,12 @@ public class KafkaTopicConfig {
                 .replicas(REPLICAS)
                 .build();
     }
+
+    @Bean
+    public NewTopic usdtPaymentDetectedTopic() {
+        return TopicBuilder.name(Topics.USDT_PAYMENT_DETECTED)
+                .partitions(PARTITIONS)
+                .replicas(REPLICAS)
+                .build();
+    }
 }

@@ -58,7 +58,8 @@ public record GatewayProperties(
 
     public record Billing(
             @NotNull Duration period,
-            @NotEmpty @Valid List<Plan> plans
+            @NotEmpty @Valid List<Plan> plans,
+            @NotNull @Valid Payment payment
     ) {
         public Plan requirePlan(PlanCode code) {
             return plans.stream()
@@ -73,6 +74,18 @@ public record GatewayProperties(
             @PositiveOrZero int priceCents,
             @NotBlank @Size(min = 3, max = 3) String currency,
             @Positive int monthlyRequestLimit
+    ) {
+    }
+
+    // address left unvalidated on purpose: an unconfigured payment address must not block
+    // gateway startup, only the activation of a paid plan (see BillingServiceImpl.applyPaymentRequest).
+    public record Payment(
+            String address,
+            @NotBlank String tokenContractAddress,
+            @NotNull Duration window,
+            @Positive int tailMinMicroUsdt,
+            @Positive int tailMaxMicroUsdt,
+            @NotNull Duration reaperFixedDelay
     ) {
     }
 

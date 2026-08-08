@@ -41,6 +41,8 @@ class GatewayPropertiesTest {
     }
 
     private static GatewayProperties.Billing billing(GatewayProperties.Plan... plans) {
-        return new GatewayProperties.Billing(Duration.ofDays(30), List.of(plans));
+        GatewayProperties.Payment payment = new GatewayProperties.Payment(
+                "0xTestPaymentAddress", "0xTestUsdtContract", Duration.ofMinutes(45), 1, 9999, Duration.ofMinutes(5));
+        return new GatewayProperties.Billing(Duration.ofDays(30), List.of(plans), payment);
     }
 }

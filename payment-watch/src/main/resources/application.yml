@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: payment-watch
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:risk}
+    username: ${DB_USER:risk}
+    password: ${DB_PASSWORD:risk}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: paymentwatch
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: paymentwatch
+    liquibase-schema: paymentwatch
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      acks: all
+
+payment-watch:
+  target-address: ${PAYMENT_ADDRESS_BSC:}
+  chain: BNB_SMART_CHAIN
+  usdt-contract-address: ${USDT_BSC_CONTRACT:0x55d398326f99059fF775485246999027B3197955}
+  poll-interval: 30s
+  confirmation-window: 45s
+  lookback-window: 30m
+  moralis:
+    base-url: ${MORALIS_BASE_URL:https://deep-index.moralis.io/api/v2.2}
+    api-key: ${MORALIS_API_KEY}
+    calls-per-second: 2
+    rate-limit-retries: 3
+    rate-limit-backoff: 2s
+    connect-timeout: 5s
+    read-timeout: 10s
+
+logging:
+  level:
+    com.riskscoring: DEBUG
