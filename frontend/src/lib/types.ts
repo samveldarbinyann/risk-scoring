@@ -315,6 +315,10 @@ export interface SubscriptionView {
   currentPeriodEnd: string | null;
   createdAt: string;
   canceledAt: string | null;
+  paymentAddress: string | null;
+  paymentAmount: number | null;
+  paymentExpiresAt: string | null;
+  paymentUri: string | null;
 }
 
 export interface ApiKeyView {

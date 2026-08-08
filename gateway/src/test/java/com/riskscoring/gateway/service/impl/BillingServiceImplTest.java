@@ -1,5 +1,7 @@
 package com.riskscoring.gateway.service.impl;
 
+import com.riskscoring.common.event.UsdtPaymentDetected;
+import com.riskscoring.common.model.Chain;
 import com.riskscoring.gateway.config.GatewayProperties;
 import com.riskscoring.gateway.dto.PlanView;
 import com.riskscoring.gateway.dto.SubscriptionView;
@@ -8,7 +10,6 @@ import com.riskscoring.gateway.exception.NoActiveSubscriptionException;
 import com.riskscoring.gateway.exception.QuotaExceededException;
 import com.riskscoring.gateway.exception.SubscriptionAlreadyActiveException;
 import com.riskscoring.gateway.exception.SubscriptionNotFoundException;
-import com.riskscoring.gateway.exception.SubscriptionNotPendingException;
 import com.riskscoring.gateway.mapper.BillingMapper;
 import com.riskscoring.gateway.model.PlanCode;
 import com.riskscoring.gateway.model.SubscriptionStatus;
@@ -24,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -35,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -129,6 +132,30 @@ class BillingServiceImplTest {
         assertThat(subscription.getStatus()).isEqualTo(SubscriptionStatus.PENDING_PAYMENT);
         assertThat(subscription.getCurrentPeriodStart()).isNull();
         assertThat(subscription.getCurrentPeriodEnd()).isNull();
+        assertThat(subscription.getPaymentAddress()).isEqualTo("0xTestPaymentAddress");
+        assertThat(subscription.getPaymentAmount())
+                .isGreaterThanOrEqualTo(new BigDecimal("20.000001"))
+                .isLessThanOrEqualTo(new BigDecimal("20.009999"));
+        assertThat(subscription.getPaymentExpiresAt())
+                .isAfter(Instant.now())
+                .isBeforeOrEqualTo(Instant.now().plus(Duration.ofMinutes(45)));
+        assertThat(subscription.getPaidTxHash()).isNull();
+    }
+
+    @Test
+    void activateRetriesPaymentAmountGenerationOnCollision() {
+        stubSubscriptionView();
+        when(subscriptionRepository.findByUserIdAndStatusIn(any(), any())).thenReturn(Optional.empty());
+        when(subscriptionRepository.save(any(Subscription.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(subscriptionRepository.existsByStatusAndPaymentAmount(eq(SubscriptionStatus.PENDING_PAYMENT), any()))
+                .thenReturn(true, false);
+
+        billingService.activate(USER_ID, PlanCode.STARTER);
+
+        verify(subscriptionRepository, times(2))
+                .existsByStatusAndPaymentAmount(eq(SubscriptionStatus.PENDING_PAYMENT), any());
+        verify(subscriptionRepository).save(subscriptionCaptor.capture());
+        assertThat(subscriptionCaptor.getValue().getPaymentAmount()).isNotNull();
     }
 
     @Test
@@ -249,45 +276,61 @@ class BillingServiceImplTest {
     }
 
     @Test
-    void confirmPaymentThrowsSubscriptionNotFoundExceptionWhenNotFound() {
-        UUID subscriptionId = UUID.randomUUID();
-        when(subscriptionRepository.findById(subscriptionId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> billingService.confirmPayment(USER_ID, subscriptionId))
-                .isInstanceOf(SubscriptionNotFoundException.class);
-    }
-
-    @Test
-    void confirmPaymentThrowsSubscriptionNotFoundExceptionWhenOwnedByAnotherUser() {
-        Subscription pending = pendingSubscription(UUID.randomUUID());
-        when(subscriptionRepository.findById(pending.getId())).thenReturn(Optional.of(pending));
-
-        assertThatThrownBy(() -> billingService.confirmPayment(USER_ID, pending.getId()))
-                .isInstanceOf(SubscriptionNotFoundException.class);
-    }
-
-    @Test
-    void confirmPaymentThrowsSubscriptionNotPendingExceptionWhenAlreadyActive() {
-        Subscription active = liveSubscription();
-        when(subscriptionRepository.findById(active.getId())).thenReturn(Optional.of(active));
-
-        assertThatThrownBy(() -> billingService.confirmPayment(USER_ID, active.getId()))
-                .isInstanceOf(SubscriptionNotPendingException.class);
-    }
-
-    @Test
-    void confirmPaymentActivatesPendingSubscriptionAndResetsUsage() {
+    void confirmPaymentFromChainActivatesTheMatchingPendingSubscription() {
         Subscription pending = pendingSubscription(USER_ID);
-        pending.setRequestsUsed(7);
-        when(subscriptionRepository.findById(pending.getId())).thenReturn(Optional.of(pending));
-        stubSubscriptionView();
+        pending.setPaymentAmount(new BigDecimal("20.004137"));
+        pending.setPaymentExpiresAt(Instant.now().plus(Duration.ofMinutes(30)));
+        when(subscriptionRepository.findByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, new BigDecimal("20.004137")))
+                .thenReturn(Optional.of(pending));
 
-        billingService.confirmPayment(USER_ID, pending.getId());
+        billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
+                "0xabc", "0xTestPaymentAddress", new BigDecimal("20.004137"), Chain.BNB_SMART_CHAIN,
+                1L, Instant.now(), Instant.now()));
 
         assertThat(pending.getStatus()).isEqualTo(SubscriptionStatus.ACTIVE);
+        assertThat(pending.getPaidTxHash()).isEqualTo("0xabc");
         assertThat(pending.getRequestsUsed()).isZero();
         assertThat(pending.getCurrentPeriodStart()).isNotNull();
-        assertThat(pending.getCurrentPeriodEnd()).isEqualTo(pending.getCurrentPeriodStart().plus(Duration.ofDays(30)));
+    }
+
+    @Test
+    void confirmPaymentFromChainIgnoresEventWhenNoSubscriptionMatchesTheAmount() {
+        when(subscriptionRepository.findByStatusAndPaymentAmount(eq(SubscriptionStatus.PENDING_PAYMENT), any()))
+                .thenReturn(Optional.empty());
+
+        billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
+                "0xabc", "0xTestPaymentAddress", new BigDecimal("1.230000"), Chain.BNB_SMART_CHAIN,
+                1L, Instant.now(), Instant.now()));
+
+        verify(subscriptionRepository, never()).save(any());
+    }
+
+    @Test
+    void confirmPaymentFromChainIgnoresEventWhenThePaymentWindowExpired() {
+        Subscription pending = pendingSubscription(USER_ID);
+        pending.setPaymentAmount(new BigDecimal("20.004137"));
+        pending.setPaymentExpiresAt(Instant.now().minus(Duration.ofMinutes(1)));
+        when(subscriptionRepository.findByStatusAndPaymentAmount(SubscriptionStatus.PENDING_PAYMENT, new BigDecimal("20.004137")))
+                .thenReturn(Optional.of(pending));
+
+        billingService.confirmPaymentFromChain(new UsdtPaymentDetected(
+                "0xabc", "0xTestPaymentAddress", new BigDecimal("20.004137"), Chain.BNB_SMART_CHAIN,
+                1L, Instant.now(), Instant.now()));
+
+        assertThat(pending.getStatus()).isEqualTo(SubscriptionStatus.PENDING_PAYMENT);
+    }
+
+    @Test
+    void expireOverduePaymentsMarksOverduePendingSubscriptionsAsExpired() {
+        Subscription overdue = pendingSubscription(USER_ID);
+        overdue.setPaymentExpiresAt(Instant.now().minus(Duration.ofMinutes(1)));
+        when(subscriptionRepository.findByStatusAndPaymentExpiresAtBefore(eq(SubscriptionStatus.PENDING_PAYMENT), any()))
+                .thenReturn(List.of(overdue));
+
+        billingService.expireOverduePayments();
+
+        assertThat(overdue.getStatus()).isEqualTo(SubscriptionStatus.EXPIRED);
+        verify(subscriptionRepository).saveAll(List.of(overdue));
     }
 
     @Test
@@ -453,6 +496,10 @@ class BillingServiceImplTest {
                 Instant.now(),
                 Instant.now().plus(Duration.ofDays(30)),
                 Instant.now(),
+                null,
+                null,
+                null,
+                null,
                 null
         );
     }

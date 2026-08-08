@@ -9,6 +9,7 @@ import com.riskscoring.gateway.model.SubscriptionStatus;
 import com.riskscoring.gateway.support.GatewayPropertiesFixture;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -85,6 +86,27 @@ class BillingMapperTest {
         SubscriptionView view = mapper.toView(subscription);
 
         assertThat(view.requestsRemaining()).isZero();
+    }
+
+    @Test
+    void toViewBuildsAnEip681PaymentUriWhenPaymentFieldsAreSet() {
+        Subscription subscription = subscription(SubscriptionStatus.PENDING_PAYMENT, null, null, 0);
+        subscription.setPaymentAddress("0xTestRecipient");
+        subscription.setPaymentAmount(new BigDecimal("1.004137"));
+
+        SubscriptionView view = mapper.toView(subscription);
+
+        assertThat(view.paymentUri()).isEqualTo(
+                "ethereum:0xTestUsdtContract@56/transfer?address=0xTestRecipient&uint256=1004137000000000000");
+    }
+
+    @Test
+    void toViewLeavesPaymentUriNullWhenSubscriptionHasNoPendingPayment() {
+        Subscription subscription = subscription(SubscriptionStatus.ACTIVE, Instant.now(), Instant.now().plus(PERIOD), 0);
+
+        SubscriptionView view = mapper.toView(subscription);
+
+        assertThat(view.paymentUri()).isNull();
     }
 
     private static Subscription subscription(SubscriptionStatus status, Instant periodStart, Instant periodEnd, int requestsUsed) {

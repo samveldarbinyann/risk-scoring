@@ -74,16 +74,6 @@ class BillingControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void confirmPaymentActivatesPendingSubscription() throws Exception {
-        UUID subscriptionId = UUID.randomUUID();
-        given(billingService.confirmPayment(user.id(), subscriptionId)).willReturn(subscription());
-
-        mockMvc.perform(post("/api/billing/subscription/{id}/confirm", subscriptionId).with(authenticatedAs(user)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
-    }
-
-    @Test
     void cancelCancelsCurrentSubscription() throws Exception {
         given(billingService.cancel(user.id())).willReturn(subscription());
 
@@ -95,6 +85,7 @@ class BillingControllerTest extends AbstractControllerTest {
     private static SubscriptionView subscription() {
         return new SubscriptionView(
                 UUID.randomUUID(), PlanCode.STARTER, SubscriptionStatus.ACTIVE, 2000, "USD", 1000, 10, 990,
-                Instant.now(), Instant.now().plusSeconds(2_592_000), Instant.now(), null);
+                Instant.now(), Instant.now().plusSeconds(2_592_000), Instant.now(), null,
+                null, null, null, null);
     }
 }

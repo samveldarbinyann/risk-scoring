@@ -1,5 +1,6 @@
 package com.riskscoring.gateway.service;
 
+import com.riskscoring.common.event.UsdtPaymentDetected;
 import com.riskscoring.gateway.dto.PlanView;
 import com.riskscoring.gateway.dto.SubscriptionView;
 import com.riskscoring.gateway.model.PlanCode;
@@ -15,7 +16,9 @@ public interface BillingService {
 
     SubscriptionView activate(UUID userId, PlanCode planCode);
 
-    SubscriptionView confirmPayment(UUID userId, UUID subscriptionId);
+    void confirmPaymentFromChain(UsdtPaymentDetected event);
+
+    void expireOverduePayments();
 
     SubscriptionView cancel(UUID userId);
 

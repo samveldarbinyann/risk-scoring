@@ -81,6 +81,13 @@ gateway:
     max-attempts: 5
   billing:
     period: 30d
+    payment:
+      address: ${PAYMENT_ADDRESS_BSC:}
+      token-contract-address: ${USDT_BSC_CONTRACT:0x55d398326f99059fF775485246999027B3197955}
+      window: 45m
+      tail-min-micro-usdt: 1
+      tail-max-micro-usdt: 9999
+      reaper-fixed-delay: 5m
     plans:
       - code: FREE
         price-cents: 0

@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-emitted-transfer
+      author: sam
+      changes:
+        - createTable:
+            tableName: emitted_transfer
+            columns:
+              - column:
+                  name: tx_hash
+                  type: varchar(80)
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_emitted_transfer
+                    nullable: false
+              - column:
+                  name: emitted_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false

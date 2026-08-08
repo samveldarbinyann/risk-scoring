@@ -25,3 +25,7 @@ databaseChangeLog:
       file: db/changelog/changes/012-remove-sepolia-scans.yaml
   - include:
       file: db/changelog/changes/013-scan-group-user-id.yaml
+  - include:
+      file: db/changelog/changes/014-subscription-payment-columns.yaml
+  - include:
+      file: db/changelog/changes/015-subscription-payment-indexes.yaml

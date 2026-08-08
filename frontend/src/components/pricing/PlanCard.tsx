@@ -7,7 +7,7 @@ import type { MessageKey } from "@/lib/i18n/messageKeys";
 import { POPULAR_PLAN } from "@/lib/plans";
 import type { PlanView, SubscriptionView } from "@/lib/types";
 
-export type PlanCtaKind = "signIn" | "select" | "confirm" | "current" | "cancelFirst";
+export type PlanCtaKind = "signIn" | "select" | "pending" | "current" | "cancelFirst";
 
 interface PlanCardProps {
   plan: PlanView;
@@ -15,7 +15,7 @@ interface PlanCardProps {
   ctaKind: PlanCtaKind;
   isBusy: boolean;
   onSelect: (plan: PlanView) => void;
-  onConfirm: (subscriptionId: string) => void;
+  onResumePayment: () => void;
   onSignIn: () => void;
 }
 
@@ -25,7 +25,7 @@ export function PlanCard({
   ctaKind,
   isBusy,
   onSelect,
-  onConfirm,
+  onResumePayment,
   onSignIn,
 }: PlanCardProps) {
   const { t, locale } = useI18n();
@@ -69,7 +69,7 @@ export function PlanCard({
         kind={ctaKind}
         isBusy={isBusy}
         onSelect={() => onSelect(plan)}
-        onConfirm={() => subscription && onConfirm(subscription.id)}
+        onResumePayment={onResumePayment}
         onSignIn={onSignIn}
       />
     </article>
@@ -80,11 +80,11 @@ interface PlanCtaProps {
   kind: PlanCtaKind;
   isBusy: boolean;
   onSelect: () => void;
-  onConfirm: () => void;
+  onResumePayment: () => void;
   onSignIn: () => void;
 }
 
-function PlanCta({ kind, isBusy, onSelect, onConfirm, onSignIn }: PlanCtaProps) {
+function PlanCta({ kind, isBusy, onSelect, onResumePayment, onSignIn }: PlanCtaProps) {
   const { t } = useI18n();
 
   switch (kind) {
@@ -105,10 +105,10 @@ function PlanCta({ kind, isBusy, onSelect, onConfirm, onSignIn }: PlanCtaProps) 
           {t("pricing.cta.select")}
         </Button>
       );
-    case "confirm":
+    case "pending":
       return (
-        <Button type="button" isLoading={isBusy} onClick={onConfirm} className="w-full">
-          {t("pricing.cta.confirm")}
+        <Button type="button" onClick={onResumePayment} className="w-full">
+          {t("pricing.cta.pending")}
         </Button>
       );
     case "current":

@@ -11,6 +11,7 @@ public final class Topics {
     public static final String SCAN_AUDIT = "scan.audit";
     public static final String WATCHLIST_ADD_REQUESTED = "watchlist.add.requested";
     public static final String WATCHLIST_REMOVE_REQUESTED = "watchlist.remove.requested";
+    public static final String USDT_PAYMENT_DETECTED = "usdt.payment.detected";
 
     private Topics() {
     }

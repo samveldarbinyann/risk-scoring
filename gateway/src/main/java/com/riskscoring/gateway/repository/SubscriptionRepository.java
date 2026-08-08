@@ -7,8 +7,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +21,12 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
     Optional<Subscription> findByUserIdAndStatusIn(UUID userId, Collection<SubscriptionStatus> statuses);
 
     Optional<Subscription> findFirstByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    Optional<Subscription> findByStatusAndPaymentAmount(SubscriptionStatus status, BigDecimal paymentAmount);
+
+    boolean existsByStatusAndPaymentAmount(SubscriptionStatus status, BigDecimal paymentAmount);
+
+    List<Subscription> findByStatusAndPaymentExpiresAtBefore(SubscriptionStatus status, Instant threshold);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

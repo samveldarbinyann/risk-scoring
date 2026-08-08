@@ -3,9 +3,9 @@ import { motion } from "motion/react";
 import { Navigate } from "react-router";
 import { AlertRow } from "@/components/alerts/AlertRow";
 import { AlertsAboutPanel } from "@/components/alerts/AlertsAboutPanel";
+import { GetStartedPanel } from "@/components/onboarding/GetStartedPanel";
 import { Card } from "@/components/ui/Card";
 import { CardState } from "@/components/ui/CardState";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Spinner } from "@/components/ui/Spinner";
 import { listAlerts } from "@/lib/api";
 import { useAuth } from "@/lib/auth/context";
@@ -63,12 +63,7 @@ export function AlertsPage() {
           <Card>
             <CardState isLoading={isLoading} error={error}>
               {alerts.length === 0 ? (
-                <EmptyState
-                  message={t("alerts.empty")}
-                  hint={t("alerts.empty.hint")}
-                  ctaLabel={t("dashboard.hero.emptyCta")}
-                  ctaTo="/watchlist"
-                />
+                <GetStartedPanel ctaTo="/" />
               ) : (
                 <div>
                   {alerts.map((alert) => (

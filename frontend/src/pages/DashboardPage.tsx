@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Navigate } from "react-router";
-import { OnboardingChecklistCard } from "@/components/dashboard/OnboardingChecklistCard";
+import { GetStartedPanel } from "@/components/onboarding/GetStartedPanel";
 import { PortfolioHeroCard } from "@/components/dashboard/PortfolioHeroCard";
 import { QuotaSummaryCard } from "@/components/dashboard/QuotaSummaryCard";
 import { ScanHistoryCard } from "@/components/dashboard/ScanHistoryCard";
@@ -124,7 +124,7 @@ export function DashboardPage() {
         {!isLoading && !watchlist.error && !recentScans.error &&
           watchlist.data.length === 0 && recentScans.data.length === 0 && (
           <motion.div variants={SECTION_VARIANTS}>
-            <OnboardingChecklistCard />
+            <GetStartedPanel ctaTo="/" />
           </motion.div>
         )}
 
