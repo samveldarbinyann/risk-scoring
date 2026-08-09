@@ -3,7 +3,6 @@ import { LinkButton } from "@/components/ui/LinkButton";
 import { RiskBadge } from "@/components/ui/RiskBadge";
 import { ChainIcon } from "@/components/ui/ChainIcon";
 import { useI18n } from "@/lib/i18n/context";
-import { useChains } from "@/lib/chains/context";
 import type { RiskLevel } from "@/lib/types";
 
 interface Example {
@@ -44,7 +43,6 @@ interface GetStartedPanelProps {
 
 export function GetStartedPanel({ ctaTo = "/" }: GetStartedPanelProps) {
   const { t } = useI18n();
-  const { label } = useChains();
 
   const example = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
 
@@ -98,7 +96,7 @@ export function GetStartedPanel({ ctaTo = "/" }: GetStartedPanelProps) {
         <LinkButton to={ctaTo} variant="primary" className="w-full">
           {t("onboarding.scanNow")}
         </LinkButton>
-        <LinkButton to="/watchlist" variant="secondary" className="w-full">
+        <LinkButton to="/watchlist" variant="ghost" className="w-full">
           {t("onboarding.addToWatchlist")}
         </LinkButton>
       </div>
