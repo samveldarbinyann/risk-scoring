@@ -44,7 +44,7 @@ export function ScanConsolePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center px-6 py-12">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
       <div className="w-full max-w-4xl">
         <div className="overflow-hidden rounded-panel border border-border bg-surface">
           <header className="flex items-center justify-between p-4">
