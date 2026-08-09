@@ -34,23 +34,11 @@ export function NavBar() {
   return (
     <nav ref={menuRef} className="relative flex items-center justify-between gap-4 border-b border-border bg-surface px-6 py-4 lg:gap-8">
       <NavLink to="/" className="flex items-start gap-2.5">
-        <motion.div
-          animate={{
-            filter: [
-              "drop-shadow(0 0 0 transparent)",
-              "drop-shadow(0 0 2px color-mix(in srgb, var(--color-accent) 14%, transparent))",
-              "drop-shadow(0 0 0 transparent)",
-            ],
-          }}
-          transition={{ duration: 4.5, ease: "easeInOut", repeat: Infinity }}
-          className="flex items-start gap-2.5"
-        >
-          <img src="/logo.svg" alt="" className="h-9 w-auto" />
-          <div className="inline-flex h-9 w-fit flex-col justify-between">
-            <span className="font-mono text-lg font-bold leading-none tracking-normal text-accent">ADDRESSLENS</span>
-            <span className="block font-mono text-xs leading-none text-text-dim">{t("nav.tagline")}</span>
-          </div>
-        </motion.div>
+        <img src="/logo.svg" alt="" className="h-9 w-auto" />
+        <div className="inline-flex h-9 w-fit flex-col justify-between">
+          <span className="font-mono text-lg font-bold leading-none tracking-normal text-accent">ADDRESSLENS</span>
+          <span className="block font-mono text-xs leading-none text-text-dim">{t("nav.tagline")}</span>
+        </div>
       </NavLink>
       <ul className="hidden flex-1 items-center gap-5 lg:flex">
         {NAV_ITEMS.map((item) => {

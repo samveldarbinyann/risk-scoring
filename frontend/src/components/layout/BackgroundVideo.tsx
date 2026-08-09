@@ -14,11 +14,11 @@ export function BackgroundVideo() {
     <>
       <motion.video
         aria-hidden
-        className="pointer-events-none fixed inset-0 h-full w-full object-cover saturate-50 brightness-75"
+        className="pointer-events-none fixed inset-0 h-full w-full object-cover"
         initial={{ opacity: 0 }}
         animate={{ opacity: isVisible ? OPACITY : 0 }}
         transition={{ duration: FADE_IN_S, ease: "easeInOut" }}
-        src="/backround.webm"
+        src="/backround.mp4"
         autoPlay
         loop
         muted

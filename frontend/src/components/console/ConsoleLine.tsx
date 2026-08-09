@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "motion/react";
 import type { ScanStage } from "@/lib/types";
 import { formatTime } from "@/lib/format";
@@ -13,7 +14,7 @@ interface ConsoleLineProps {
   msPerChar?: number;
 }
 
-export function ConsoleLine({ stage, message, at, chain, msPerChar }: ConsoleLineProps) {
+export const ConsoleLine = memo(function ConsoleLine({ stage, message, at, chain, msPerChar }: ConsoleLineProps) {
   const { locale, t } = useI18n();
 
   return (
@@ -36,4 +37,4 @@ export function ConsoleLine({ stage, message, at, chain, msPerChar }: ConsoleLin
       <TypewriterText as="span" text={message} msPerChar={msPerChar} className="w-full text-text sm:w-auto" />
     </motion.div>
   );
-}
+});
