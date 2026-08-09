@@ -5,18 +5,12 @@ import type { UserView } from "@/lib/types";
 import { useDismissableMenu } from "@/hooks/useDismissableMenu";
 import { useI18n } from "@/lib/i18n/context";
 import { cn } from "@/lib/cn";
+import { ACCOUNT_LINKS } from "@/lib/navLinks";
 
 interface AccountMenuProps {
   user: UserView;
   onLogout: () => Promise<void>;
 }
-
-const ACCOUNT_LINKS = [
-  { to: "/dashboard", labelKey: "nav.dashboard" },
-  { to: "/watchlist", labelKey: "nav.watchlist" },
-  { to: "/alerts", labelKey: "nav.alerts" },
-  { to: "/settings", labelKey: "nav.settings" },
-] as const;
 
 export function AccountMenu({ user, onLogout }: AccountMenuProps) {
   const { t } = useI18n();

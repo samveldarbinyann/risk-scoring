@@ -151,7 +151,7 @@ export function DocsPage() {
           <h2 className="font-sans text-lg font-semibold text-text">{t("docs.cta.title")}</h2>
           <p className="text-sm text-text-dim">{t("docs.cta.body")}</p>
         </div>
-        <div className="flex shrink-0 gap-3">
+        <div className="flex shrink-0 flex-wrap gap-3">
           <LinkButton to="/pricing">{t("docs.cta.pricing")}</LinkButton>
           <LinkButton to="/contact" variant="ghost">
             {t("docs.cta.contact")}

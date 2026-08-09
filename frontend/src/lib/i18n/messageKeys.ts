@@ -16,6 +16,7 @@ export type MessageKey =
   | "nav.register"
   | "nav.language"
   | "nav.tagline"
+  | "nav.menu"
   | "landing.title"
   | "landing.subtitle"
   | "landing.targetPlaceholder"

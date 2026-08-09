@@ -28,12 +28,12 @@ export function ScanPipeline({ lines }: ScanPipelineProps) {
   );
 
   return (
-    <section className="p-4">
+    <section className="p-3 sm:p-4">
       <div className="mb-4 flex items-center gap-3">
         <span className="h-2 w-2 rounded-base bg-accent" />
         <h2 className="font-mono text-xs uppercase tracking-widest text-text-dim">{t("console.pipeline")}</h2>
       </div>
-      <div className="flex items-start">
+      <div className="flex items-start overflow-x-auto">
         {PIPELINE_STAGES.map((stage, index) => {
           const isLastStage = index === PIPELINE_STAGES.length - 1;
           const variant: NodeVariant = failed

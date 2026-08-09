@@ -31,7 +31,7 @@ export function HeroInput({
         onKeyDown={(event) => event.key === "Enter" && onSubmit()}
         disabled={disabled}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-lg text-text outline-none placeholder:text-text-faint disabled:text-text-faint"
+        className="w-full min-w-0 flex-1 bg-transparent text-lg text-text outline-none placeholder:text-text-faint disabled:text-text-faint"
       />
       <button
         type="button"

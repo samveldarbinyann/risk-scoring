@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ConsoleLog } from "@/components/console/ConsoleLog";
 import { ScanPipeline } from "@/components/console/ScanPipeline";
@@ -10,7 +10,6 @@ import { useI18n } from "@/lib/i18n/context";
 import type { ScanProgressMessage } from "@/lib/types";
 
 const REPORT_TRANSITION_DELAY_MS = 900;
-const PAGE_VERTICAL_PADDING_PX = 48;
 
 export function ScanConsolePage() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -19,21 +18,10 @@ export function ScanConsolePage() {
   const { lines, chainByScanId, completed, target, error } = useScanGroupStream(groupId ?? "");
   const [playedLines, setPlayedLines] = useState<ScanProgressMessage[]>([]);
   const [playbackComplete, setPlaybackComplete] = useState(false);
-  const [sceneTop, setSceneTop] = useState<number | null>(null);
-  const pageRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setPlayedLines([]);
     setPlaybackComplete(false);
-  }, [groupId]);
-
-  useLayoutEffect(() => {
-    const page = pageRef.current;
-    const scene = sceneRef.current;
-    if (!page || !scene) return;
-
-    setSceneTop(Math.max(PAGE_VERTICAL_PADDING_PX, (page.clientHeight - scene.offsetHeight) / 2));
   }, [groupId]);
 
   const handlePlaybackChange = useCallback((nextLines: ScanProgressMessage[]) => setPlayedLines(nextLines), []);
@@ -56,12 +44,8 @@ export function ScanConsolePage() {
   }
 
   return (
-    <div ref={pageRef} className="relative flex flex-1 items-center justify-center px-6 py-12">
-      <div
-        ref={sceneRef}
-        className={sceneTop === null ? "w-full max-w-4xl" : "absolute left-6 right-6 mx-auto max-w-4xl"}
-        style={sceneTop === null ? undefined : { top: sceneTop }}
-      >
+    <div className="flex flex-1 flex-col items-center px-6 py-12">
+      <div className="w-full max-w-4xl">
         <div className="overflow-hidden rounded-panel border border-border bg-surface">
           <header className="flex items-center justify-between p-4">
             <div className="flex items-center gap-4">

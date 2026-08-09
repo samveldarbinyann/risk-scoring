@@ -53,7 +53,7 @@ export function PlanComparisonTable({ plans }: PlanComparisonTableProps) {
         {t("pricing.comparison.title")}
       </h2>
       <div className="overflow-x-auto rounded-panel border border-border">
-        <table className="w-full min-w-[560px] border-collapse text-sm">
+        <table className="w-full min-w-140 border-collapse text-sm">
           <thead>
             <tr className="border-b border-border">
               <th className="p-4 text-left font-sans text-xs font-normal uppercase tracking-wider text-text-faint">

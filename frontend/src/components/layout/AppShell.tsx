@@ -14,7 +14,7 @@ export function AppShell() {
   const hidden = prefersReducedMotion ? SCAN_FLOW_VISIBLE : SCAN_FLOW_HIDDEN;
 
   return (
-   <div className="flex min-h-screen flex-col">
+   <div className="flex min-h-screen min-h-dvh flex-col">
       {isScanFlow && <BackgroundVideo />}
       <NavBar />
       <main className="relative flex flex-1 flex-col">
