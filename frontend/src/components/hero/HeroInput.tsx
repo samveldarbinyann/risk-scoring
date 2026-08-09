@@ -21,9 +21,10 @@ export function HeroInput({
 }: HeroInputProps) {
   return (
     <div
-      className="flex w-full flex-1 items-center gap-3 rounded-base border border-border
-                    bg-surface py-2 pl-6 pr-2 font-mono transition-[border-color,box-shadow]
-                    focus-within:border-accent focus-within:shadow-[0_0_28px_-6px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]"
+      className="flex w-full flex-1 items-center gap-2 rounded-base border border-border
+                    bg-surface py-2 pl-4 pr-2 font-mono transition-[border-color,box-shadow]
+                    focus-within:border-accent focus-within:shadow-[0_0_28px_-6px_color-mix(in_srgb,var(--color-accent)_18%,transparent)]
+                    sm:gap-3 sm:pl-6"
     >
       <input
         value={value}
@@ -31,7 +32,7 @@ export function HeroInput({
         onKeyDown={(event) => event.key === "Enter" && onSubmit()}
         disabled={disabled}
         placeholder={placeholder}
-        className="w-full min-w-0 flex-1 bg-transparent text-lg text-text outline-none placeholder:text-text-faint disabled:text-text-faint"
+        className="w-full min-w-0 flex-1 truncate bg-transparent text-sm text-text outline-none placeholder:text-text-faint disabled:text-text-faint sm:text-lg"
       />
       <button
         type="button"

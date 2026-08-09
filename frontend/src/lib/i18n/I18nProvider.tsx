@@ -10,7 +10,7 @@ type MessageBundles = Record<Locale, Record<string, string>>;
 function detectLocale(): Locale {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === "en" || stored === "ru") return stored;
-  return navigator.language.toLowerCase().startsWith("ru") ? "ru" : "en";
+  return "en";
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
