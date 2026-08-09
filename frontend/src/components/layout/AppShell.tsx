@@ -1,8 +1,18 @@
+import { Suspense } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useLocation, useOutlet } from "react-router";
 import { NavBar } from "@/components/layout/NavBar";
 import { BackgroundVideo } from "@/components/layout/BackgroundVideo";
+import { Spinner } from "@/components/ui/Spinner";
 import { SCAN_FLOW_HIDDEN, SCAN_FLOW_TRANSITION, SCAN_FLOW_VISIBLE } from "@/lib/scanFlowMotion";
+
+function PageFallback() {
+  return (
+    <div className="flex flex-1 items-center justify-center">
+      <Spinner className="h-6 w-6" />
+    </div>
+  );
+}
 
 const SCAN_FLOW_PATH = /^\/scan\/[^/]+(?:\/report)?\/?$/;
 
@@ -35,11 +45,11 @@ export function AppShell() {
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left bg-accent"
               />
-              {outlet}
+              <Suspense fallback={<PageFallback />}>{outlet}</Suspense>
             </motion.div>
           ) : (
             <div key={pathname} className="flex flex-1 flex-col">
-              {outlet}
+              <Suspense fallback={<PageFallback />}>{outlet}</Suspense>
             </div>
           )}
         </AnimatePresence>

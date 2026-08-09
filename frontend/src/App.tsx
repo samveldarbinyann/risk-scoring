@@ -1,7 +1,6 @@
-import { lazy, Suspense } from "react";
+import { lazy } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AppShell } from "@/components/layout/AppShell";
-import { Spinner } from "@/components/ui/Spinner";
 
 const LandingPage = lazy(() => import("@/pages/LandingPage").then((m) => ({ default: m.LandingPage })));
 const ScanConsolePage = lazy(() => import("@/pages/ScanConsolePage").then((m) => ({ default: m.ScanConsolePage })));
@@ -21,38 +20,28 @@ const SettingsPage = lazy(() => import("@/pages/SettingsPage").then((m) => ({ de
 const DashboardPage = lazy(() => import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })));
 
-function RouteFallback() {
-  return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <Spinner className="h-6 w-6" />
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route element={<AppShell />}>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/scan/:groupId" element={<ScanConsolePage />} />
-            <Route path="/scan/:groupId/report" element={<ReportPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/pricing/pay" element={<PaymentPage />} />
-            <Route path="/docs" element={<DocsPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/watchlist" element={<WatchlistPage />} />
-            <Route path="/alerts" element={<AlertsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/auth" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-        </Routes>
-      </Suspense>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/scan/:groupId" element={<ScanConsolePage />} />
+          <Route path="/scan/:groupId/report" element={<ReportPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/pricing/pay" element={<PaymentPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/alerts" element={<AlertsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/auth" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
