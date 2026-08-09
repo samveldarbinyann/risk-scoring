@@ -1,0 +1,17 @@
+target/
+frontend/node_modules/
+frontend/dist/
+.git/
+.idea/
+.vscode/
+.settings/
+logs/
+*.log
+hs_err_pid*.log
+replay_pid*.log
+.env
+.env.*
+!.env.example
+SECURITY-AUDIT.md
+CLAUDE.md
+.claude/

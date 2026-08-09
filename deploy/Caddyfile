@@ -1,0 +1,24 @@
+{
+    email s.darbinyan204@gmail.com
+}
+
+addresslens.site {
+    encode zstd gzip
+
+    handle /api/* {
+        reverse_proxy gateway:8081
+    }
+
+    handle /ws* {
+        reverse_proxy gateway:8081
+    }
+
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}
