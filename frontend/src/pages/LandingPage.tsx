@@ -106,13 +106,13 @@ export function LandingPage() {
                 <TypewriterText
                   as="h1"
                   text={t("landing.title")}
-                  className="min-h-9 text-balance font-sans text-3xl font-semibold text-text sm:min-h-14 sm:text-4xl"
+                  className="min-h-9 text-balance font-sans text-2xl font-semibold text-text sm:min-h-14 sm:text-4xl"
                 />
                 <TypewriterText
                   as="p"
                   text={t("landing.subtitle")}
                   delayMs={typewriterDurationMs(t("landing.title")) + 150}
-                  className="relative -top-3 min-h-5 text-sm text-accent"
+                  className="min-h-5 text-sm text-accent"
                 />
               </div>
 

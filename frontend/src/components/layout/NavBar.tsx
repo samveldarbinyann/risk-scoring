@@ -48,7 +48,7 @@ export function NavBar() {
           <img src="/logo.svg" alt="" className="h-9 w-auto" />
           <div className="inline-flex h-9 w-fit flex-col justify-between">
             <span className="font-mono text-lg font-bold leading-none tracking-normal text-accent">ADDRESSLENS</span>
-            <span className="hidden font-mono text-xs leading-none text-text-dim sm:block">{t("nav.tagline")}</span>
+            <span className="block font-mono text-xs leading-none text-text-dim">{t("nav.tagline")}</span>
           </div>
         </motion.div>
       </NavLink>

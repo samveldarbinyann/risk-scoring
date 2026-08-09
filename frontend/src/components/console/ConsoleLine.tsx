@@ -21,17 +21,19 @@ export function ConsoleLine({ stage, message, at, chain, msPerChar }: ConsoleLin
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="flex shrink-0 items-baseline gap-3 font-mono text-sm"
+      className="flex shrink-0 flex-col items-start gap-1 font-mono text-sm sm:flex-row sm:items-baseline sm:gap-3"
     >
-      <span className="shrink-0 text-accent">&gt;</span>
-      <span className="shrink-0 text-text-faint">{formatTime(at, locale)}</span>
-      {chain && <span className="shrink-0 text-xs text-text-dim">[{chain}]</span>}
-      <span className="shrink-0 text-xs uppercase tracking-wider">
-        <span className="text-text-faint">[</span>
-        <span className={STAGE_TONE[stage]}>{t(STAGE_CODENAME[stage])}</span>
-        <span className="text-text-faint">]</span>
-      </span>
-      <TypewriterText as="span" text={message} msPerChar={msPerChar} className="text-text" />
+      <div className="flex flex-wrap items-baseline gap-3">
+        <span className="shrink-0 text-accent">&gt;</span>
+        <span className="shrink-0 text-text-faint">{formatTime(at, locale)}</span>
+        {chain && <span className="shrink-0 text-xs text-text-dim">[{chain}]</span>}
+        <span className="shrink-0 text-xs uppercase tracking-wider">
+          <span className="text-text-faint">[</span>
+          <span className={STAGE_TONE[stage]}>{t(STAGE_CODENAME[stage])}</span>
+          <span className="text-text-faint">]</span>
+        </span>
+      </div>
+      <TypewriterText as="span" text={message} msPerChar={msPerChar} className="w-full text-text sm:w-auto" />
     </motion.div>
   );
 }
