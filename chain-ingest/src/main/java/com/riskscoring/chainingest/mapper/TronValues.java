@@ -51,6 +51,10 @@ public class TronValues implements ChainAddressValues {
         return BigInteger.valueOf(Objects.requireNonNullElse(value.amount(), 0L));
     }
 
+    public int decimals(Integer decimals) {
+        return Objects.requireNonNullElse(decimals, 0);
+    }
+
     public boolean succeeded(TronTransaction transaction) {
         return Objects.requireNonNullElse(transaction.ret(), List.<TronRet>of()).stream()
                 .map(TronRet::contractRet)

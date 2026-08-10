@@ -94,7 +94,7 @@ public class TronTransactionSnapshotMapper {
                         values.address(transfer.tokenInfo().address()),
                         values.address(transfer.from()),
                         values.address(transfer.to()),
-                        values.scaled(transfer.value(), transfer.tokenInfo().decimals())))
+                        values.scaled(transfer.value(), values.decimals(transfer.tokenInfo().decimals()))))
                 .toList();
     }
 }

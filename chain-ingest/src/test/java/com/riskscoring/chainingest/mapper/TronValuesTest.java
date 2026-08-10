@@ -59,6 +59,12 @@ class TronValuesTest {
     }
 
     @Test
+    void decimalsDefaultsToZeroForNull() {
+        assertThat(values.decimals(null)).isZero();
+        assertThat(values.decimals(6)).isEqualTo(6);
+    }
+
+    @Test
     void succeededIsTrueForNullOrEmptyRetList() {
         assertThat(values.succeeded(transactionWithRet(null))).isTrue();
         assertThat(values.succeeded(transactionWithRet(List.of()))).isTrue();

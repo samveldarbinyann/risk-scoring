@@ -6,7 +6,7 @@ import java.util.List;
 
 public record TronTransaction(
         String txID,
-        @JsonProperty("block_timestamp") long blockTimestamp,
+        @JsonProperty("block_timestamp") Long blockTimestamp,
         List<TronRet> ret,
         @JsonProperty("raw_data") TronRawData rawData
 ) {

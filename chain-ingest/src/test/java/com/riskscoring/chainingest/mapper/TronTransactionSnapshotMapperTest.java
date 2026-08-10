@@ -98,6 +98,20 @@ class TronTransactionSnapshotMapperTest {
     }
 
     @Test
+    void tokenTransfersTreatNullDecimalsAsZero() {
+        TronTransaction transaction = new TronTransaction("txid", BLOCK_TIMESTAMP, List.of(), new TronRawData(List.of()));
+        TronTransactionInfo info = new TronTransactionInfo(BLOCK_TIMESTAMP);
+        List<TronTrc20Transfer> tokenTransfers = List.of(
+                new TronTrc20Transfer("txid", BLOCK_TIMESTAMP, OWNER, "Tr1", "1000000",
+                        new TronTokenInfo("USDT", "Ttoken", null)));
+
+        TransactionSnapshot snapshot = mapper().fromTronGrid(transaction, info, tokenTransfers);
+
+        assertThat(snapshot.tokenTransfers()).containsExactly(
+                new TokenTransfer("USDT", "Ttoken", OWNER, "Tr1", "1000000"));
+    }
+
+    @Test
     void blockTimestampComesFromTransactionInfo() {
         TronTransaction transaction = transaction(OWNER, "Trecipient", 100L, List.of());
         TronTransactionInfo info = new TronTransactionInfo(BLOCK_TIMESTAMP);

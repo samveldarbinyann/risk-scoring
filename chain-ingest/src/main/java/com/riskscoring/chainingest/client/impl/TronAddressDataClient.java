@@ -111,7 +111,7 @@ public class TronAddressDataClient implements ChainDataClient {
     private Optional<TokenBalance> balance(TronTokenInfo token, String rawBalance) {
         return Optional.ofNullable(token)
                 .map(known -> new TokenBalance(
-                        known.symbol(), values.scaled(rawBalance, known.decimals()), null));
+                        known.symbol(), values.scaled(rawBalance, values.decimals(known.decimals())), null));
     }
 
     private record AccountActivity(TransferSample sample, List<TronTrc20Transfer> tokenTransfers) {

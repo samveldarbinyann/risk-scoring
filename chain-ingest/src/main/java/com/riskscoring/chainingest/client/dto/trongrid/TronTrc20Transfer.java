@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record TronTrc20Transfer(
         @JsonProperty("transaction_id") String transactionId,
-        @JsonProperty("block_timestamp") long blockTimestamp,
+        @JsonProperty("block_timestamp") Long blockTimestamp,
         String from,
         String to,
         String value,
